@@ -1,0 +1,49 @@
+Active
+Afraid
+Alert
+Amused
+Angry
+Ashamed
+Attentive
+Bored
+Calm
+Crazy
+Determined
+Disgusted
+Distressed
+Dreamy
+Energetic
+Enthusiastic
+Excited
+Frustrated
+Guilty
+Happy
+High
+Hostile
+Hungry
+In emotional pain
+In love
+In physical pain
+Inspired
+Interested
+Irritable
+Jittery
+Lonely
+Nervous
+Normal
+Nostalgic
+Optimistic
+Physically sick
+Proud
+Romantic
+Sad
+Scared
+Serious
+Sexy
+Sleepy
+Stressed
+Strong
+Tired
+Untroubled
+Upset
+Worried

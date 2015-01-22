@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">ExtraSensory</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="data_collection_label">Data collection:</string>
+    <string name="data_collection_on">on</string>
+    <string name="data_collection_off">off</string>
+    <string name="database_name">extra_sensory_db</string>
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="action_active_feedback">active feedback</string>
+    <string name="title_activity_setting">SettingActivity</string>
+    <string name="title_activity_feedback">FeedbackActivity</string>
+
+</resources>

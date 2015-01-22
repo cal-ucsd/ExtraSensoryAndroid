@@ -1,0 +1,88 @@
+Lifting weights|Sports
+Playing baseball|Sports
+Playing basketball|Sports
+Playing lacrosse|Sports
+Skateboarding|Sports|Transportation
+Playing soccer|Sports
+Playing frisbee|Sports
+Exercising|Sports
+Stretching|Sports
+Yoga|Sports
+Elliptical machine|Sports
+Treadmill|Sports
+Stationary bike|Sports
+Cooking
+Cleaning|Housework
+Gardening|Housework
+Doing laundry|Housework
+Mowing the lawn|Housework
+Raking leaves|Housework
+Vacuuming|Housework
+Washing dishes|Housework
+Washing car|Housework
+Manual labor|Housework
+Dancing|Leisure
+Listening to music|Leisure
+Playing musical instrument|Leisure
+Singing|Leisure
+Wistling|Leisure
+Playing videogames|Leisure
+Playing phone-games|Leisure
+Relaxing|Leisure
+Strolling|Leisure
+Hiking|Leisure
+Shopping
+Watching TV|Leisure
+Talking with friends|Leisure
+Reading a book|Leisure
+Drinking (alcohol)|Leisure
+Eating|Basic needs
+Drinking (non-alcohol)|Leisure|Basic needs
+Sleeping|Basic needs
+Toilet|Basic needs
+Bath|Basic needs
+Shower|Basic needs
+Grooming|Basic needs
+Stairs - going up|Physical
+Stairs - going down|Physical
+Limping|Physical
+Jumping|Physical
+Laughing|Physical
+Crying|Physical
+Lab work|Work
+Written work|Work
+Drawing|Work
+Texting|Work,Leisure
+Surfing the internet|Work,Leisure
+Computer work|Work
+Studying|Work
+In class|Location
+In a meeting|Work,Location
+At home|Location,Housework
+At work|Location,Work
+At school|Location,Work
+At a bar|Location,Leisure
+At a concert|Location,Leisure
+At a party|Location,Leisure
+At the beach|Location,Leisure
+At sea|Location,Leisure
+At the pool|Sports,Location,Leisure
+At the gym|Sports,Location,Leisure
+At a restaurant|Location,Leisure
+Outside|Location
+Indoors|Location
+On a bus|Location,Transportation
+On a plane|Location,Transportation
+On a train|Location,Transportation
+On a boat|Location,Transportation,Leisure
+Elevator|Location,Transportation
+Motorbike|Location,Transportation
+Riding an animal|Location,Transportation
+Drive - I'm the driver|Transportation
+Drive - I'm a passenger|Transportation
+In a car|Location,Transportation
+Phone in pocket|Phone
+Phone in hand|Phone
+Phone in bag|Phone
+Phone on table|Phone
+Phone away from me|Phone

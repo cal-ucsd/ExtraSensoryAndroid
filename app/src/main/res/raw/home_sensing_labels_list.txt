@@ -1,0 +1,14 @@
+Household - shower
+Household - toilet
+Household - eating
+Household - cooking
+Household - exercise
+Household - after exercise
+Household - no one home
+Household - everyone home
+Household - sleep
+Household - cleaning
+Household - alcohol
+Household - having guests
+Household - party
+Household - scented candle
