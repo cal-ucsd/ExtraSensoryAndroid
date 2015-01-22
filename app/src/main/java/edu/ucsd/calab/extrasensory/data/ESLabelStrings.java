@@ -25,7 +25,7 @@ public class ESLabelStrings {
 
     public static String[] getMainActivities() {
         if (_mainActivities == null) {
-  //          _mainActivities = readLabelsFromFile(R.raw.mainActivitiesList);
+            _mainActivities = readLabelsFromFile(R.raw.main_activities_list);
         }
 
         return _mainActivities;
@@ -33,7 +33,7 @@ public class ESLabelStrings {
 
     public static String[] getSecondaryActivities() {
         if (_secondaryActivities == null) {
-//            _secondaryActivities = readLabelsFromFile(R.raw.secondary_activities_list);
+            _secondaryActivities = readLabelsFromFile(R.raw.secondary_activities_list);
         }
 
         return _secondaryActivities;
@@ -41,7 +41,7 @@ public class ESLabelStrings {
 
     public static String[] getMoods() {
         if (_moods == null) {
-//            _moods = readLabelsFromFile(R.raw.moodsList);
+            _moods = readLabelsFromFile(R.raw.moods_list);
         }
 
         return _moods;
@@ -49,7 +49,7 @@ public class ESLabelStrings {
 
     public static String[] getHomeSensingLabels() {
         if (_homeSensingLabels == null) {
-    //        _homeSensingLabels = readLabelsFromFile(R.raw.homeSensingLabelsList);
+            _homeSensingLabels = readLabelsFromFile(R.raw.home_sensing_labels_list);
         }
 
         return _homeSensingLabels;
