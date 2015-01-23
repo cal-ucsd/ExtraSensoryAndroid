@@ -150,6 +150,8 @@ public class ESContinuousActivity {
      * by merging every sequence of consecutive atomic activities with the same labels into a single
      * continuous activity object. For collections of labels (secondary activities or moods) the order
      * of the Strings in the array doesn't matter, just the set of strings.
+     * Consecutive ESActivity objects in the array with timestamps of 120 seconds apart or more
+     * will be considered as belonging to two separate continuous activities.
      *
      * @param minuteActivities The sequence of atomic activities (assumed sorted in ascending order of timestamp)
      * @return The sequence of continuous activities, sorted in ascending order of start-timestamp
