@@ -72,6 +72,22 @@ public class ESActivity {
         return _moods;
     }
 
+
+
+    // Utility public info functions:
+    public boolean hasUserCorrectedMainLabel() {
+        return (_mainActivityUserCorrection != null);
+    }
+
+    public String mostUpToDateMainActivity() {
+        if (hasUserCorrectedMainLabel()) {
+            return _mainActivityUserCorrection;
+        }
+        else {
+            return _mainActivityServerPrediction;
+        }
+    }
+
     // Setters available only inside the package:
     void set_labelSource(ESLabelSource _labelSource) {
         this._labelSource = _labelSource;

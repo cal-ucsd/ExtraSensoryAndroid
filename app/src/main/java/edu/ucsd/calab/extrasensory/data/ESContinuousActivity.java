@@ -1,5 +1,9 @@
 package edu.ucsd.calab.extrasensory.data;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * ESContinuousActivity represents an activity that has a duration longer than a minute,
  * and corresponds to an array of consecutive ESActivity records/objects
@@ -11,6 +15,8 @@ package edu.ucsd.calab.extrasensory.data;
 public class ESContinuousActivity {
 
     public static final int EMPTY_ACTIVITY_TIMESTAMP = -1;
+
+    private static final int MAX_TIME_GAP_FOR_MERGING_ACTIVITIES = 120;
 
     private ESActivity[] _minuteActivities;
     private ESContinuousActivity(ESActivity[] minuteActivities) {
@@ -157,7 +163,7 @@ public class ESContinuousActivity {
      * @return The sequence of continuous activities, sorted in ascending order of start-timestamp
      */
     public static ESContinuousActivity[] mergeContinuousActivities(ESActivity[] minuteActivities) {
-        //TODO.................
+        ArrayList<ESContinuousActivity> continuousActivities = new ArrayList<ESContinuousActivity>(1);
         return null;
     }
 
@@ -170,7 +176,61 @@ public class ESContinuousActivity {
      * @return True iff both sets contain exactly the same labels
      */
     private static boolean areTwoSetsOfLabelsTheSame(String[] labelSet1,String[] labelSet2) {
-        //TODO..............
-        return false;
+        Set<String> set1 = getSetFromArray(labelSet1);
+        Set<String> set2 = getSetFromArray(labelSet2);
+
+        return set1.equals(set2);
     }
+
+    private static Set<String> getSetFromArray(String[] array) {
+        HashSet<String> set = new HashSet<String>();
+        for (int i = 0; i < array.length; i++) {
+            set.add(array[i]);
+        }
+
+        return set;
+    }
+
+    private boolean shouldMergeTwoAtomicActivities(ESActivity activity1,ESActivity activity2) {
+        // Compare timestamps:
+        int timeGap = activity2.get_timestamp() - activity1.get_timestamp();
+        if (timeGap > MAX_TIME_GAP_FOR_MERGING_ACTIVITIES) {
+            return false;
+        }
+
+        // Compare main activity:
+        if (activity1.hasUserCorrectedMainLabel() && !activity2.hasUserCorrectedMainLabel()) {
+            return false;
+        }
+        if (!activity1.hasUserCorrectedMainLabel() && activity2.hasUserCorrectedMainLabel()) {
+            return false;
+        }
+        String main1 = activity1.mostUpToDateMainActivity();
+        String main2 = activity2.mostUpToDateMainActivity();
+        if (main1 != null) {
+            if (!main1.equals(main2)) {
+                return false;
+            }
+        }
+        else {
+            if (main2 != null) {
+                return false;
+            }
+        }
+        // If reached here, main activity compares fine.
+
+        // Compare secondary activities:
+        if (!areTwoSetsOfLabelsTheSame(activity1.get_secondaryActivities(),activity2.get_secondaryActivities())) {
+            return false;
+        }
+
+        // Compare moods:
+        if (!areTwoSetsOfLabelsTheSame(activity1.get_moods(),activity2.get_moods())) {
+            return false;
+        }
+
+        // If reached here, everything compares fine.
+        return true;
+    }
+
 }
