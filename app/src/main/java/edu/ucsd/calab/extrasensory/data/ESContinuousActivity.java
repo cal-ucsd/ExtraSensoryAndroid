@@ -1,6 +1,7 @@
 package edu.ucsd.calab.extrasensory.data;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -13,8 +14,6 @@ import java.util.Set;
  * Created by Yonatan on 1/20/2015.
  */
 public class ESContinuousActivity {
-
-    public static final int EMPTY_ACTIVITY_TIMESTAMP = -1;
 
     private static final int MAX_TIME_GAP_FOR_MERGING_ACTIVITIES = 120;
 
@@ -50,9 +49,9 @@ public class ESContinuousActivity {
      * Get the timestamp of the start of this continuous activity.
      * @return The start timestamp
      */
-    public int getStartTimestamp() {
+    public ESTimestamp getStartTimestamp() {
         if (this.isEmpty()) {
-            return EMPTY_ACTIVITY_TIMESTAMP;
+            return null;
         }
 
         return _minuteActivities[0].get_timestamp();
@@ -63,12 +62,12 @@ public class ESContinuousActivity {
      *
      * @return The last timestamp of this continuous activity
      */
-    public int getEndTimestamp() {
+    public ESTimestamp getEndTimestamp() {
         if (this.isEmpty()) {
-            return EMPTY_ACTIVITY_TIMESTAMP;
+            return null;
         }
         if (_minuteActivities[this.getDurationInMinutes()-1] == null) {
-            return EMPTY_ACTIVITY_TIMESTAMP;
+            return null;
         }
 
         return _minuteActivities[this.getDurationInMinutes()-1].get_timestamp();
@@ -85,9 +84,9 @@ public class ESContinuousActivity {
             return null;
         }
 
-        for (int i=0; i < _minuteActivities.length; i++) {
-            if (_minuteActivities[i] != null) {
-                String pred = _minuteActivities[i].get_mainActivityServerPrediction();
+        for (ESActivity minuteActivity : _minuteActivities) {
+            if (minuteActivity != null) {
+                String pred = minuteActivity.get_mainActivityServerPrediction();
                 if (pred != null) {
                     return pred;
                 }
@@ -163,8 +162,39 @@ public class ESContinuousActivity {
      * @return The sequence of continuous activities, sorted in ascending order of start-timestamp
      */
     public static ESContinuousActivity[] mergeContinuousActivities(ESActivity[] minuteActivities) {
-        ArrayList<ESContinuousActivity> continuousActivities = new ArrayList<ESContinuousActivity>(1);
-        return null;
+        ArrayList<ESContinuousActivity> continuousActivities = new ArrayList<ESContinuousActivity>(minuteActivities.length);
+        ArrayList<ESActivity> mergedActivities = new ArrayList<ESActivity>(minuteActivities.length);
+
+        for (ESActivity minuteActivity : minuteActivities) {
+            if (mergedActivities.isEmpty()) {
+                // Then we are free to start adding similar activities:
+                mergedActivities.add(minuteActivity);
+                continue;
+            }
+
+            // Collected activities are not empty, so compare new activity to the last one:
+            if (shouldMergeTwoAtomicActivities(mergedActivities.get(mergedActivities.size() - 1), minuteActivity)) {
+                mergedActivities.add(minuteActivity);
+            } else {
+                // Then we should close the sequence of minute activities so far, and start a new one:
+                ESActivity[] activities = mergedActivities.toArray(new ESActivity[mergedActivities.size()]);
+                ESContinuousActivity continuousActivity = new ESContinuousActivity(activities);
+                continuousActivities.add(continuousActivity);
+
+                // Start the new sequence of minute activities:
+                mergedActivities.clear();
+                mergedActivities.add(minuteActivity);
+            }
+        }
+
+        // Handle the last sequence of minute activities:
+        if (!mergedActivities.isEmpty()) {
+            ESActivity[] activities = mergedActivities.toArray(new ESActivity[mergedActivities.size()]);
+            ESContinuousActivity continuousActivity = new ESContinuousActivity(activities);
+            continuousActivities.add(continuousActivity);
+        }
+
+        return continuousActivities.toArray(new ESContinuousActivity[continuousActivities.size()]);
     }
 
     /**
@@ -184,29 +214,27 @@ public class ESContinuousActivity {
 
     private static Set<String> getSetFromArray(String[] array) {
         HashSet<String> set = new HashSet<String>();
-        for (int i = 0; i < array.length; i++) {
-            set.add(array[i]);
-        }
+        Collections.addAll(set, array);
 
         return set;
     }
 
-    private boolean shouldMergeTwoAtomicActivities(ESActivity activity1,ESActivity activity2) {
+    private static boolean shouldMergeTwoAtomicActivities(ESActivity firstActivity,ESActivity secondActivity) {
         // Compare timestamps:
-        int timeGap = activity2.get_timestamp() - activity1.get_timestamp();
+        int timeGap = secondActivity.get_timestamp().differenceInSeconds(firstActivity.get_timestamp());
         if (timeGap > MAX_TIME_GAP_FOR_MERGING_ACTIVITIES) {
             return false;
         }
 
         // Compare main activity:
-        if (activity1.hasUserCorrectedMainLabel() && !activity2.hasUserCorrectedMainLabel()) {
+        if (firstActivity.hasUserCorrectedMainLabel() && !secondActivity.hasUserCorrectedMainLabel()) {
             return false;
         }
-        if (!activity1.hasUserCorrectedMainLabel() && activity2.hasUserCorrectedMainLabel()) {
+        if (!firstActivity.hasUserCorrectedMainLabel() && secondActivity.hasUserCorrectedMainLabel()) {
             return false;
         }
-        String main1 = activity1.mostUpToDateMainActivity();
-        String main2 = activity2.mostUpToDateMainActivity();
+        String main1 = firstActivity.mostUpToDateMainActivity();
+        String main2 = secondActivity.mostUpToDateMainActivity();
         if (main1 != null) {
             if (!main1.equals(main2)) {
                 return false;
@@ -220,12 +248,12 @@ public class ESContinuousActivity {
         // If reached here, main activity compares fine.
 
         // Compare secondary activities:
-        if (!areTwoSetsOfLabelsTheSame(activity1.get_secondaryActivities(),activity2.get_secondaryActivities())) {
+        if (!areTwoSetsOfLabelsTheSame(firstActivity.get_secondaryActivities(),secondActivity.get_secondaryActivities())) {
             return false;
         }
 
         // Compare moods:
-        if (!areTwoSetsOfLabelsTheSame(activity1.get_moods(),activity2.get_moods())) {
+        if (!areTwoSetsOfLabelsTheSame(firstActivity.get_moods(),secondActivity.get_moods())) {
             return false;
         }
 

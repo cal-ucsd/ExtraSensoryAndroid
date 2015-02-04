@@ -1,5 +1,11 @@
 package edu.ucsd.calab.extrasensory.data;
 
+import android.util.Log;
+
+import java.security.InvalidParameterException;
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * This class represents a single instance (roughly representing 1 minute) and describes the labels
  * relevant to this instance.
@@ -8,18 +14,49 @@ package edu.ucsd.calab.extrasensory.data;
  */
 public class ESActivity {
 
+    private static final String LOG_TAG = "[ESActivity]";
+
+
     public enum ESLabelSource {
-        ES_LABEL_SOURCE_DEFAULT,
-        ES_LABEL_SOURCE_ACTIVE_START,
-        ES_LABEL_SOURCE_ACTIVE_CONTINUE,
-        ES_LABEL_SOURCE_HISTORY,
-        ES_LABEL_SOURCE_NOTIFICATION_BLANK,
-        ES_LABEL_SOURCE_NOTIFICATION_ANSWER_CORRECT,
-        ES_LABEL_SOURCE_NOTIFICATION_ANSWER_NOT_EXACTLY
+        ES_LABEL_SOURCE_DEFAULT(-1),
+        ES_LABEL_SOURCE_ACTIVE_START(0),
+        ES_LABEL_SOURCE_ACTIVE_CONTINUE(1),
+        ES_LABEL_SOURCE_HISTORY(2),
+        ES_LABEL_SOURCE_NOTIFICATION_BLANK(3),
+        ES_LABEL_SOURCE_NOTIFICATION_ANSWER_CORRECT(4),
+        ES_LABEL_SOURCE_NOTIFICATION_ANSWER_NOT_EXACTLY(5);
+
+        private final int _value;
+        private ESLabelSource(final int value) {
+            _value = value;
+        }
+
+        private static Map<Integer, ESLabelSource> map = new HashMap<Integer, ESLabelSource>();
+
+        static {
+            for (ESLabelSource labelSource : ESLabelSource.values()) {
+                map.put(labelSource._value, labelSource);
+            }
+        }
+
+        static ESLabelSource labelSourceFromValue(int value) {
+            if (map.containsKey(value)) {
+                return map.get(value);
+            }
+            else {
+                String msg = "Got unsupported label source value " + value;
+                Log.e(LOG_TAG, msg);
+                throw new InvalidParameterException(msg);
+            }
+        }
+
+        int get_value() {
+            return _value;
+        }
     }
 
     // Data members of ESActivity:
-    private int _timestamp;
+    private ESTimestamp _timestamp;
     private ESLabelSource _labelSource;
     private String _mainActivityServerPrediction;
     private String _mainActivityUserCorrection;
@@ -27,7 +64,7 @@ public class ESActivity {
     private String[] _moods;
 
     // Constructors available only inside the package:
-    ESActivity(int timestamp) {
+    ESActivity(ESTimestamp timestamp) {
         _timestamp = timestamp;
         _labelSource = ESLabelSource.ES_LABEL_SOURCE_DEFAULT;
         _mainActivityServerPrediction = null;
@@ -36,7 +73,7 @@ public class ESActivity {
         _moods = null;
     }
 
-    ESActivity(int timestamp, ESLabelSource labelSource,
+    ESActivity(ESTimestamp timestamp, ESLabelSource labelSource,
                String mainActivityServerPrediction, String mainActivityUserCorrection,
                String[] secondaryActivities, String[] moods) {
         _timestamp = timestamp;
@@ -48,7 +85,7 @@ public class ESActivity {
     }
 
     // Public getters:
-    public int get_timestamp() {
+    public ESTimestamp get_timestamp() {
         return _timestamp;
     }
 
