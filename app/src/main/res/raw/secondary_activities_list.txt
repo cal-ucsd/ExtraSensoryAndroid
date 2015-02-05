@@ -2,7 +2,7 @@ Lifting weights|Sports
 Playing baseball|Sports
 Playing basketball|Sports
 Playing lacrosse|Sports
-Skateboarding|Sports|Transportation
+Skateboarding|Sports,Transportation
 Playing soccer|Sports
 Playing frisbee|Sports
 Exercising|Sports
@@ -11,7 +11,7 @@ Yoga|Sports
 Elliptical machine|Sports
 Treadmill|Sports
 Stationary bike|Sports
-Cooking
+Cooking|Housework
 Cleaning|Housework
 Gardening|Housework
 Doing laundry|Housework
@@ -22,7 +22,8 @@ Washing dishes|Housework
 Washing car|Housework
 Manual labor|Housework
 Dancing|Leisure
-Listening to music|Leisure
+Listening to music (with earphones)|Leisure
+Listening to music (no earphones)|Leisure
 Playing musical instrument|Leisure
 Singing|Leisure
 Wistling|Leisure
@@ -31,13 +32,14 @@ Playing phone-games|Leisure
 Relaxing|Leisure
 Strolling|Leisure
 Hiking|Leisure
-Shopping
+Shopping|Housework,Leisure,Basic needs
 Watching TV|Leisure
 Talking with friends|Leisure
 Reading a book|Leisure
 Drinking (alcohol)|Leisure
+Smoking|Leisure,Basic needs
 Eating|Basic needs
-Drinking (non-alcohol)|Leisure|Basic needs
+Drinking (non-alcohol)|Leisure,Basic needs
 Sleeping|Basic needs
 Toilet|Basic needs
 Bath|Basic needs
@@ -49,6 +51,8 @@ Limping|Physical
 Jumping|Physical
 Laughing|Physical
 Crying|Physical
+Using crutches|Physical
+Wheelchair|Physical,Transportation
 Lab work|Work
 Written work|Work
 Drawing|Work
@@ -86,3 +90,4 @@ Phone in hand|Phone
 Phone in bag|Phone
 Phone on table|Phone
 Phone away from me|Phone
+Phone strapped|Phone
