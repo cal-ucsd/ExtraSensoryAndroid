@@ -21,11 +21,14 @@ import edu.ucsd.calab.extrasensory.R;
 public class ESDatabaseAccessor {
 
     private static final String LOG_TAG = "[ESDatabaseAccessor]";
+    private static final int MAX_STORRED_EXAMPLES_DEFAULT = 120;
+    private static final int NOTIFICATION_INTERVAL_DEFAULT = 600;
+
 
     private static ESDatabaseAccessor _theSingleAccessor;
 
 
-    public ESDatabaseAccessor getESDatabaseAccessor(Context context) {
+    public static ESDatabaseAccessor getESDatabaseAccessor(Context context) {
         if (_theSingleAccessor == null) {
             _theSingleAccessor = new ESDatabaseAccessor(context);
         }
@@ -60,6 +63,16 @@ public class ESDatabaseAccessor {
         private static final String SQL_DELETE_ES_ACTIVITY_TABLE =
                 "DROP TABLE IF EXISTS " + ESDatabaseContract.ESActivityEntry.TABLE_NAME;
 
+        private static final String SQL_CREATE_ES_SETTINGS_TABLE =
+                "CREATE TABLE " + ESDatabaseContract.ESSettingsEntry.TABLE_NAME +
+                        " (" +
+                        ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_UUID + " TEXT PRIMARY KEY," +
+                        ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_MAX_STORED_EXAMPLES + " INTEGER," +
+                        ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_NOTIFICATION_INTERVAL_SECONDS + " INTEGER" +
+                        ")";
+        private static final String SQL_DELETE_ES_SETTINGS_TABLE =
+                "DROP TABLE IF EXISTS " + ESDatabaseContract.ESSettingsEntry.TABLE_NAME;
+
         public ESDBHelper(Context context) {
             super(context, context.getString(R.string.database_name),null,DATABASE_VERSION);
         }
@@ -67,13 +80,103 @@ public class ESDatabaseAccessor {
         @Override
         public void onCreate(SQLiteDatabase db) {
             db.execSQL(SQL_CREATE_ES_ACTIVITY_TABLE);
+            db.execSQL(SQL_CREATE_ES_SETTINGS_TABLE);
         }
 
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
             db.execSQL(SQL_DELETE_ES_ACTIVITY_TABLE);
+            db.execSQL(SQL_DELETE_ES_SETTINGS_TABLE);
             onCreate(db);
         }
+    }
+
+    // Settings:
+
+    /**
+     * Get the ESSettings object for the only record of settings in the DB.
+     * If it wasn't created yet, create this record and get it.
+     * @return the settings of the application
+     */
+    ESSettings getTheSettings() {
+        // Get the records (there should be zero or one records):
+        SQLiteDatabase db = _dbHelper.getReadableDatabase();
+
+        String[] projection = {
+                ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_UUID,
+                ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_MAX_STORED_EXAMPLES,
+                ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_NOTIFICATION_INTERVAL_SECONDS
+        };
+
+        Cursor cursor = db.query(ESDatabaseContract.ESSettingsEntry.TABLE_NAME,
+                projection,null,null,null,null,null);
+
+        int count = cursor.getCount();
+        if (count < 1) {
+            Log.i(LOG_TAG,"There is no settings record yet. Creating one");
+            cursor.close();
+            _dbHelper.close();
+            return createSettingsRecord();
+        }
+        if (count > 1) {
+            String msg = "Found more than one record for setting";
+            Log.e(LOG_TAG,msg);
+        }
+
+        cursor.moveToFirst();
+        ESSettings settings = extractSettingsFromCurrentRecord(cursor);
+        cursor.close();
+        _dbHelper.close();
+
+        return settings;
+    }
+
+    /**
+     * Create a new settings record for the application (including generating a unique user identifier).
+     * This should only be called when there is no current record in the settings table.
+     * The created record should be the only record in that table.
+     *
+     * @return an ESSettings object to represent the settings record
+     */
+    private ESSettings createSettingsRecord() {
+        SQLiteDatabase db = _dbHelper.getWritableDatabase();
+
+        String uuid = generateUUID();
+        ContentValues values = new ContentValues();
+        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_UUID,uuid);
+        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_MAX_STORED_EXAMPLES,MAX_STORRED_EXAMPLES_DEFAULT);
+        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_NOTIFICATION_INTERVAL_SECONDS,NOTIFICATION_INTERVAL_DEFAULT);
+
+        long rowID = db.insert(ESDatabaseContract.ESSettingsEntry.TABLE_NAME,null,values);
+        ESSettings settings = new ESSettings(uuid,MAX_STORRED_EXAMPLES_DEFAULT,NOTIFICATION_INTERVAL_DEFAULT);
+
+        _dbHelper.close();
+
+        return settings;
+    }
+
+    private String generateUUID() {
+        //TODO make this unique according to the device
+        return "";
+    }
+
+    /**
+     * Extract the settings record from the current position of the cursor and construct an
+     * ESSettings object from them.
+     * @param cursor A cursor, assumed currently pointing at the record of ESSettings.
+     * @return The ESSettings object
+     */
+    private ESSettings extractSettingsFromCurrentRecord(Cursor cursor) {
+        if (cursor == null) {
+            Log.e(LOG_TAG,"Given null cursor");
+            return null;
+        }
+
+        String uuid = cursor.getString(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_UUID));
+        int maxStored = cursor.getInt(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_MAX_STORED_EXAMPLES));
+        int notificationInterval = cursor.getInt(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_NOTIFICATION_INTERVAL_SECONDS));
+
+        return new ESSettings(uuid,maxStored,notificationInterval);
     }
 
     /**
@@ -170,8 +273,6 @@ public class ESDatabaseAccessor {
     public void setESActivityValues(ESActivity activity,ESActivity.ESLabelSource labelSource,
                                     String mainActivityServerPrediction,String mainActivityUserCorrection,
                                     String[] secondaryActivities,String[] moods) {
-        //TODO set the properties to the ESActivity object, and update the appropriate record in db
-        //TODO remember to copy the arrays and not simply shallow-copy their pointers
 
         SQLiteDatabase db = _dbHelper.getWritableDatabase();
 
@@ -206,6 +307,20 @@ public class ESDatabaseAccessor {
     }
 
     /**
+     * Get all the activities from the given time range, already merged to continuous activities.
+     * This method will extract the relevant information from the DB
+     * and return an array of corresponding objects in ascending order of time (timestamp).
+     *
+     * @param fromTimestamp The earliest time in the desired range
+     * @param toTimestamp The latest time in the desired range
+     * @return An array of continuous activities from the desired time range, in ascending order of time
+     */
+    public ESContinuousActivity[] getContinuousActivitiesFromTimeRange(ESTimestamp fromTimestamp,ESTimestamp toTimestamp) {
+        ESActivity[] minuteActivities = getActivitiesFromTimeRange(fromTimestamp,toTimestamp);
+        return ESContinuousActivity.mergeContinuousActivities(minuteActivities);
+    }
+
+    /**
      * Get all the activities from the given time range.
      * This method will extract the relevant information from the DB
      * and return an array of corresponding objects in ascending order of time (timestamp).
@@ -214,8 +329,7 @@ public class ESDatabaseAccessor {
      * @param toTimestamp The latest time in the desired range
      * @return An array of the desired activities, sorted in ascending order of time.
      */
-    public ESActivity[] getActivitiesFromTimeRange(ESTimestamp fromTimestamp,ESTimestamp toTimestamp) {
-        //TODO retrieve the relevant records from the db, sort them and create objects for them.
+    private ESActivity[] getActivitiesFromTimeRange(ESTimestamp fromTimestamp,ESTimestamp toTimestamp) {
         if (fromTimestamp.isLaterThan(toTimestamp)) {
             // Then there should be no records in the range
             return new ESActivity[0];

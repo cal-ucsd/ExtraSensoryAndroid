@@ -24,4 +24,14 @@ final class ESDatabaseContract {
         public static final String COLUMN_NAME_MOODS_CSV = "moods";
         public static final String COLUMN_NAME_LABEL_SOURCE = "label_source";
     }
+
+    /**
+     * Column names for table ESSettings (supposed to contain exactly a single record)
+     */
+    public static abstract class ESSettingsEntry {
+        public static final String TABLE_NAME = "es_settings";
+        public static final String COLUMN_NAME_UUID = "uuid";
+        public static final String COLUMN_NAME_MAX_STORED_EXAMPLES = "max_stored_examples";
+        public static final String COLUMN_NAME_NOTIFICATION_INTERVAL_SECONDS = "notification_interval";
+    }
 }
