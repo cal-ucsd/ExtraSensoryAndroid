@@ -8,6 +8,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.UUID;
 
 import edu.ucsd.calab.extrasensory.R;
 
@@ -94,6 +95,30 @@ public class ESDatabaseAccessor {
     // Settings:
 
     /**
+     * Create a new settings record for the application (including generating a unique user identifier).
+     * This should only be called when there is no current record in the settings table.
+     * The created record should be the only record in that table.
+     *
+     * @return an ESSettings object to represent the settings record
+     */
+    private ESSettings createSettingsRecord() {
+        SQLiteDatabase db = _dbHelper.getWritableDatabase();
+
+        String uuid = generateUUID();
+        ContentValues values = new ContentValues();
+        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_UUID,uuid);
+        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_MAX_STORED_EXAMPLES,MAX_STORRED_EXAMPLES_DEFAULT);
+        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_NOTIFICATION_INTERVAL_SECONDS,NOTIFICATION_INTERVAL_DEFAULT);
+
+        long rowID = db.insert(ESDatabaseContract.ESSettingsEntry.TABLE_NAME,null,values);
+        ESSettings settings = new ESSettings(uuid,MAX_STORRED_EXAMPLES_DEFAULT,NOTIFICATION_INTERVAL_DEFAULT);
+
+        _dbHelper.close();
+
+        return settings;
+    }
+
+    /**
      * Get the ESSettings object for the only record of settings in the DB.
      * If it wasn't created yet, create this record and get it.
      * @return the settings of the application
@@ -131,33 +156,28 @@ public class ESDatabaseAccessor {
         return settings;
     }
 
-    /**
-     * Create a new settings record for the application (including generating a unique user identifier).
-     * This should only be called when there is no current record in the settings table.
-     * The created record should be the only record in that table.
-     *
-     * @return an ESSettings object to represent the settings record
-     */
-    private ESSettings createSettingsRecord() {
+    ESSettings setSettings(int maxStoredExamples,int notificationInterval) {
         SQLiteDatabase db = _dbHelper.getWritableDatabase();
 
-        String uuid = generateUUID();
         ContentValues values = new ContentValues();
-        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_UUID,uuid);
-        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_MAX_STORED_EXAMPLES,MAX_STORRED_EXAMPLES_DEFAULT);
-        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_NOTIFICATION_INTERVAL_SECONDS,NOTIFICATION_INTERVAL_DEFAULT);
+        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_MAX_STORED_EXAMPLES,maxStoredExamples);
+        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_NOTIFICATION_INTERVAL_SECONDS,notificationInterval);
 
-        long rowID = db.insert(ESDatabaseContract.ESSettingsEntry.TABLE_NAME,null,values);
-        ESSettings settings = new ESSettings(uuid,MAX_STORRED_EXAMPLES_DEFAULT,NOTIFICATION_INTERVAL_DEFAULT);
+        int affectedCount = db.update(ESDatabaseContract.ESSettingsEntry.TABLE_NAME,values,null,null);
+        if (affectedCount <= 0) {
+            Log.e(LOG_TAG,"Settings update affected no records in the DB");
+        }
+        if (affectedCount > 1) {
+            Log.e(LOG_TAG,"Settings update affected more than one record in the DB");
+        }
 
         _dbHelper.close();
 
-        return settings;
+        return getTheSettings();
     }
 
     private String generateUUID() {
-        //TODO make this unique according to the device
-        return "";
+        return UUID.randomUUID().toString();
     }
 
     /**

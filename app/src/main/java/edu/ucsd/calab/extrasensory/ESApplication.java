@@ -35,7 +35,7 @@ public class ESApplication extends Application {
     public void onCreate() {
         super.onCreate();
         Log.v(LOG_TAG, "Application being created.");
-        _sensorManager = ESSensorManager.getESSensorManager(getApplicationContext());
+        _sensorManager = ESSensorManager.getESSensorManager();
         _alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 
         _appContext = getApplicationContext();

@@ -23,12 +23,10 @@ public class ESSettings {
     }
 
     private static ESSettings _settings = null;
-    private static Context _context = null;
 
     private static ESSettings getTheSettings() {
         if (_settings == null) {
-            _context = ESApplication.getTheAppContext();
-            _settings = ESDatabaseAccessor.getESDatabaseAccessor(_context).getTheSettings();
+            _settings = getTheDBAccessor().getTheSettings();
         }
 
         return _settings;
@@ -67,8 +65,7 @@ public class ESSettings {
      * @param maxStoredExamples The maximum allowed number of stored examples.
      */
     public static void setMaxStoredExamples(int maxStoredExamples) {
-        //TODO set record through dbAccessor and get from it the new ESSettings object
-        //TODO set the singleton _settings to the received object
+        _settings = getTheDBAccessor().setSettings(maxStoredExamples,notificationIntervalInSeconds());
     }
 
     /**
@@ -78,8 +75,11 @@ public class ESSettings {
      * @param notificationIntervalInSeconds The notification interval (in seconds)
      */
     public static void setNotificationIntervalInSeconds(int notificationIntervalInSeconds) {
-        //TODO set record through dbAccessor and get from it the new ESSettings object
-        //TODO set the singleton _settings to the received object
-
+        _settings = getTheDBAccessor().setSettings(maxStoredExamples(),notificationIntervalInSeconds);
     }
+
+    private static ESDatabaseAccessor getTheDBAccessor() {
+        return ESDatabaseAccessor.getESDatabaseAccessor(ESApplication.getTheAppContext());
+    }
+
 }
