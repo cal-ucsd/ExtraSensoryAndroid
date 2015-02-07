@@ -24,6 +24,7 @@ import java.util.zip.ZipOutputStream;
 
 import edu.ucsd.calab.extrasensory.ESApplication;
 import edu.ucsd.calab.extrasensory.data.ESSettings;
+import edu.ucsd.calab.extrasensory.network.ESNetworkAccessor;
 
 /**
  * This class is to handle the activation of sensors for the recording period,
@@ -103,7 +104,7 @@ public class ESSensorManager implements SensorEventListener {
         // Clear the high frequency map:
         _highFreqData = new HashMap<>(3);
         // Clear temporary data files:
-        //TODO clear the zip and what goes in the zip....
+        ESApplication.getTheAppContext().deleteFile(currentZipFilename());
     }
 
     /**
@@ -164,25 +165,38 @@ public class ESSensorManager implements SensorEventListener {
         writeFile(HIGH_FREQ_DATA_FILENAME,dataStr);
 
         // Zip the files:
+        String zipFilename = createZipFile(dataStr);
 
-        //TODO zip teh data
-        //TODO call the network accessor to upload
+        // Add this zip file to the network queue:
+        if (zipFilename != null) {
+            ESNetworkAccessor.getESNetworkAccessor().addToNetworkQueue(zipFilename);
+        }
     }
 
 
-    private String createZipFile() {
+    private String createZipFile(String highFreqDataStr) {
+        String zipFilename = currentZipFilename();
         try {
-            OutputStream os = new FileOutputStream(currentZipFilename());
+            OutputStream os = new FileOutputStream(zipFilename);
             ZipOutputStream zos = new ZipOutputStream(new BufferedOutputStream(os));
 
             // Add the data files:
-            ZipEntry zipEntry = new ZipEntry(HIGH_FREQ_DATA_FILENAME);
-            /////////////todo
+            // The high frequency measurements data:
+            zos.putNextEntry(new ZipEntry(HIGH_FREQ_DATA_FILENAME));
+            zos.write(highFreqDataStr.getBytes());
+            zos.closeEntry();
+
+            // Close the zip:
+            zos.close();
         } catch (FileNotFoundException e) {
             Log.e(LOG_TAG,e.getMessage());
+            return null;
+        } catch (IOException e) {
+            Log.e(LOG_TAG,e.getMessage());
+            return null;
         }
 
-        return null;
+        return zipFilename;
     }
 
     private boolean writeFile(String filename,String content) {
@@ -203,7 +217,7 @@ public class ESSensorManager implements SensorEventListener {
     }
 
     private String currentZipFilename() {
-        return _timestampStr + "-" + ESSettings.uuid();
+        return _timestampStr + "-" + ESSettings.uuid() + ".zip";
     }
 
     private boolean checkIfShouldFinishSession() {
