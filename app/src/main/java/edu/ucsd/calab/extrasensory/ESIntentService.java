@@ -4,6 +4,8 @@ import android.app.IntentService;
 import android.content.Intent;
 import android.util.Log;
 
+import edu.ucsd.calab.extrasensory.data.ESActivity;
+import edu.ucsd.calab.extrasensory.data.ESDatabaseAccessor;
 import edu.ucsd.calab.extrasensory.sensors.ESSensorManager;
 
 
@@ -41,7 +43,9 @@ public class ESIntentService extends IntentService {
 
         Log.v(LOG_TAG,"Got intent with action: " + action);
         if (ACTION_START_RECORDING.equals(action)) {
-            ESSensorManager.getESSensorManager(getApplicationContext()).startRecordingSensors();
+            ESActivity newActivity = ESDatabaseAccessor.getESDatabaseAccessor().createNewActivity();
+            String timestampStr = newActivity.get_timestamp().toString();
+            ESSensorManager.getESSensorManager().startRecordingSensors(timestampStr);
         } else {
             Log.e(LOG_TAG,"Got intent for unsupported action: " + action);
         }

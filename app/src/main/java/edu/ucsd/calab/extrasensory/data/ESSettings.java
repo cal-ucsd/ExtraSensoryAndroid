@@ -79,7 +79,7 @@ public class ESSettings {
     }
 
     private static ESDatabaseAccessor getTheDBAccessor() {
-        return ESDatabaseAccessor.getESDatabaseAccessor(ESApplication.getTheAppContext());
+        return ESDatabaseAccessor.getESDatabaseAccessor();
     }
 
 }

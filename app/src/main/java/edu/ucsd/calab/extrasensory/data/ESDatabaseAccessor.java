@@ -10,6 +10,7 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.UUID;
 
+import edu.ucsd.calab.extrasensory.ESApplication;
 import edu.ucsd.calab.extrasensory.R;
 
 
@@ -29,9 +30,9 @@ public class ESDatabaseAccessor {
     private static ESDatabaseAccessor _theSingleAccessor;
 
 
-    public static ESDatabaseAccessor getESDatabaseAccessor(Context context) {
+    public static ESDatabaseAccessor getESDatabaseAccessor() {
         if (_theSingleAccessor == null) {
-            _theSingleAccessor = new ESDatabaseAccessor(context);
+            _theSingleAccessor = new ESDatabaseAccessor(ESApplication.getTheAppContext());
         }
 
         return _theSingleAccessor;
