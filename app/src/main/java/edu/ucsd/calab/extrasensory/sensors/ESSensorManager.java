@@ -73,6 +73,8 @@ public class ESSensorManager implements SensorEventListener {
 
     private Sensor _accelerometer;
 
+    private boolean _debugSensorSimulationMode = true;
+
 
 
     /**
@@ -95,8 +97,27 @@ public class ESSensorManager implements SensorEventListener {
         clearRecordingSession();
         // Set the new timestamp:
         _timestampStr = timestampStr;
+        /////////////////////////
+        // This is just for debugging. With the simulator (that doesn't produce actual sensor events):
+        if (_debugSensorSimulationMode) {
+            simulateRecordingSession();
+            return;
+        }
+        /////////////////////////
+
         if (_accelerometer != null) {
             _sensorManager.registerListener(this,_accelerometer,SAMPLE_PERIOD_MILLIS);
+        }
+    }
+
+    private void simulateRecordingSession() {
+        for (int i = 0; i < NUM_SAMPLES_IN_SESSION; i ++) {
+            addHighFrequencyMeasurement(ACC_X,0);
+            addHighFrequencyMeasurement(ACC_Y,1);
+            addHighFrequencyMeasurement(ACC_Z,2);
+            if (addHighFrequencyMeasurement(ACC_TIME,111)) {
+                finishSessionIfReady();
+            }
         }
     }
 
@@ -236,6 +257,8 @@ public class ESSensorManager implements SensorEventListener {
         return true;
     }
 
+
+
     // Implementing the SensorEventListener interface:
     @Override
     public void onSensorChanged(SensorEvent event) {
@@ -249,6 +272,7 @@ public class ESSensorManager implements SensorEventListener {
                     // Then we've collected enough samples from accelerometer,
                     // and we can stop listening to it.
                     _sensorManager.unregisterListener(this,_accelerometer);
+                    finishSessionIfReady();
                 }
                 break;
             default:

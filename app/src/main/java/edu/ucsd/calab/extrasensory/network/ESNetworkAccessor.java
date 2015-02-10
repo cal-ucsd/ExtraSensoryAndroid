@@ -1,6 +1,7 @@
 package edu.ucsd.calab.extrasensory.network;
 
 import android.app.IntentService;
+import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.util.Log;
@@ -25,6 +26,8 @@ import java.util.Date;
 import edu.ucsd.calab.extrasensory.ESApplication;
 import edu.ucsd.calab.extrasensory.R;
 import edu.ucsd.calab.extrasensory.data.ESActivity;
+import edu.ucsd.calab.extrasensory.data.ESDatabaseAccessor;
+import edu.ucsd.calab.extrasensory.data.ESTimestamp;
 
 /**
  * This class handles the networking with the server.
@@ -41,6 +44,8 @@ public class ESNetworkAccessor {
 
     private static final String LOG_TAG = "[ESNetworkAccessor]";
     private static final long WAIT_TIME_AFTER_UPLOAD_IN_MILLIS = 15000;
+
+    private static final String KEY_ZIP_FILENAME = "zip_filename";
 
     private ArrayList<String> _networkQueue;
     private long _busyUntilTimeInMillis = 0;
@@ -75,7 +80,7 @@ public class ESNetworkAccessor {
         uploadWhatYouHave();
     }
 
-    private void zipFileWasSentSuccessfully(String zipFileName) {
+    private void deleteZipFileAndRemoveFromNetworkQueue(String zipFileName) {
         _networkQueue.remove(zipFileName);
         String filePath = zipFileName;
         File file = new File(filePath);
@@ -109,8 +114,10 @@ public class ESNetworkAccessor {
         _networkQueue.add(nextZip);
 
         // Send the next zip:
-        //todo...........
-        //TODO check if busy or not. Get the first in the queue and send it.
+        Intent intent = new Intent(ESApplication.getTheAppContext(),ESApiIntentService.class);
+        intent.setAction(ESApiIntentService.ACTION_UPLOAD_ZIP);
+        intent.putExtra(KEY_ZIP_FILENAME,nextZip);
+        ESApplication.getTheAppContext().startService(intent);
     }
 
     private boolean isThereWiFiConnectivity() {
@@ -123,6 +130,27 @@ public class ESNetworkAccessor {
 
     //TODO add the receive response functions............
     //TODO perhaps the receive is handled within the send functions..............
+
+    private void handleUploadedZip(ESTimestamp timestamp,String zipFilename,String predictedMainActivity) {
+        // Since zip uploaded successfully, can remove it from network queue and delete the file:
+        deleteZipFileAndRemoveFromNetworkQueue(zipFilename);
+        // Update the ESActivity record:
+        ESDatabaseAccessor dba = ESDatabaseAccessor.getESDatabaseAccessor();
+        ESActivity activity = dba.getESActivity(timestamp);
+        dba.setESActivityServerPrediction(activity,predictedMainActivity);
+        // If there is already user labels, send feedback to server:
+        if (activity.hasUserProvidedLabels()) {
+            sendFeedback(activity);
+        }
+
+        // Mark network is available:
+        markNetworkIsNotBusy();
+    }
+
+    private void markNetworkIsNotBusy() {
+        this._busyUntilTimeInMillis = 0;
+        uploadWhatYouHave();
+    }
 
 
     private class ESApiIntentService extends IntentService {
@@ -140,9 +168,16 @@ public class ESNetworkAccessor {
 
         private static final int READ_TIMEOUT_MILLIS = 10000;
         private static final int CONNECT_TIMEOUT_MILLIS = 15000;
+
         private static final String LINE_END = "\r\n";
         private static final String TWO_HYPHENS = "--";
         private static final String BOUNDARY = "0xKhTmLbOuNdArY";
+
+        private static final String RESPONSE_FIELD_TIMESTAMP = "timestamp";
+        private static final String RESPONSE_FIELD_SUCCESS = "success";
+        private static final String RESPONSE_FIELD_MESSAGE = "msg";
+        private static final String RESPONSE_FIELD_ZIP_FILE = "filename";
+        private static final String RESPONSE_FIELD_PREDICTED_MAIN_ACTIVITY = "predicted_activity";
 
         @Override
         protected void onHandleIntent(Intent intent) {
@@ -161,13 +196,17 @@ public class ESNetworkAccessor {
             if (ACTION_UPLOAD_ZIP.equals(action)) {
                 apiUploadZip(intent);
             }
+            else {
+                Log.e(LOG_TAG,"Got unsupported action: " + action);
+                return;
+            }
         }
 
         private void apiUploadZip(Intent intent) {
             try {
                 Resources resources = ESApplication.getTheAppContext().getResources();
 
-                String zipFilename = ".......";//TODO read from intent
+                String zipFilename = intent.getStringExtra(KEY_ZIP_FILENAME);
                 int bytesRead, bytesAvailable, bufferSize;
                 byte[] buffer;
                 int maxBufferSize = 1 * 1024 * 1024;
@@ -228,6 +267,15 @@ public class ESNetworkAccessor {
 
                 // Analyze the response:
                 JSONObject response = new JSONObject(serverResponseMessage);
+                ESTimestamp timestamp = new ESTimestamp(response.getInt(RESPONSE_FIELD_TIMESTAMP));
+                if (!response.getBoolean(RESPONSE_FIELD_SUCCESS)) {
+                    Log.e(LOG_TAG,"Server said upload failed.");
+                    Log.e(LOG_TAG,"Server message: " + response.getString(RESPONSE_FIELD_MESSAGE));
+                    return;
+                }
+                String responseZipFilename = response.getString(RESPONSE_FIELD_ZIP_FILE);
+                String predictedMainActivity = response.getString(RESPONSE_FIELD_PREDICTED_MAIN_ACTIVITY);
+
 
             } catch (MalformedURLException e) {
                 Log.e(LOG_TAG,"Failed with creating URI for uploading zip");

@@ -280,6 +280,20 @@ public class ESDatabaseAccessor {
     }
 
     /**
+     * Set the server prediction for this activity
+     * @param activity The ESActivity to set the prediction for
+     * @param mainActivityServerPrediction The server prediction to assign to the activity
+     */
+    public void setESActivityServerPrediction(ESActivity activity,String mainActivityServerPrediction) {
+        setESActivityValues(activity,
+                activity.get_labelSource(),
+                mainActivityServerPrediction,
+                activity.get_mainActivityUserCorrection(),
+                activity.get_secondaryActivities(),
+                activity.get_moods());
+    }
+
+    /**
      * Make changes to the values of the properties of an activity instance.
      * These changes will be reflected both in the given ESActivity object
      * and in the corresponding record in the DB.

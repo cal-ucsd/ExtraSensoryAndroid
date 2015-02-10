@@ -35,12 +35,18 @@ public class ESApplication extends Application {
     public void onCreate() {
         super.onCreate();
         Log.v(LOG_TAG, "Application being created.");
+        _appContext = getApplicationContext();
+
         _sensorManager = ESSensorManager.getESSensorManager();
         _alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 
-        _appContext = getApplicationContext();
+
         // Start the scheduling of periodic recordings:
 
+        Log.d(LOG_TAG,"Testing just once calling start recording:");
+        Intent intent = new Intent(getApplicationContext(),ESIntentService.class);
+        intent.setAction(ESIntentService.ACTION_START_RECORDING);
+        startService(intent);
     }
 
     /**

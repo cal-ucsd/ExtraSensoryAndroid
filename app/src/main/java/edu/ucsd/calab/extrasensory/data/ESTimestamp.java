@@ -67,10 +67,10 @@ public class ESTimestamp {
     }
 
     /**
-     * Constructor just for the database package
+     * Constructor with int value
      * @param secondsSinceEpoch
      */
-    ESTimestamp(int secondsSinceEpoch) {
+    public ESTimestamp(int secondsSinceEpoch) {
         _secondsSinceEpoch = secondsSinceEpoch;
     }
 

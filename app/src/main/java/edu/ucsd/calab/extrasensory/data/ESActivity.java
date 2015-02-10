@@ -112,6 +112,7 @@ public class ESActivity {
 
 
     // Utility public info functions:
+    public boolean hasUserProvidedLabels() {return hasUserCorrectedMainLabel(); }
     public boolean hasUserCorrectedMainLabel() {
         return (_mainActivityUserCorrection != null);
     }
