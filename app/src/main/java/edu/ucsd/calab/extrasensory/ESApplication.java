@@ -7,6 +7,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
+import java.io.File;
+
 import edu.ucsd.calab.extrasensory.data.ESActivity;
 import edu.ucsd.calab.extrasensory.sensors.ESSensorManager;
 
@@ -21,6 +23,7 @@ public class ESApplication extends Application {
     private static final String LOG_TAG = "[ESApplication]";
     private static final long WAIT_BEFORE_START_FIRST_RECORDING_MILLIS = 500;
     private static final long RECORDING_SESSIONS_INTERVAL_MILLIS = 1000*3;
+    private static final String ZIP_DIR_NAME = "zip";
 
     private static Context _appContext;
 
@@ -28,8 +31,14 @@ public class ESApplication extends Application {
         return _appContext;
     }
 
+    public static File getZipDir() {
+        return getTheAppContext().getDir(ZIP_DIR_NAME, Context.MODE_PRIVATE);
+    }
+
     private ESSensorManager _sensorManager;
     private AlarmManager _alarmManager;
+
+    public static boolean debugMode() { return true; }
 
     @Override
     public void onCreate() {

@@ -1,15 +1,13 @@
 package edu.ucsd.calab.extrasensory.network;
 
 import android.app.IntentService;
-import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.util.Log;
 
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.FileEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -76,19 +74,20 @@ public class ESNetworkAccessor {
      * @param zipFileName The path of the zip file to upload
      */
     public void addToNetworkQueue(String zipFileName) {
+        Log.v(LOG_TAG,"Adding to network queue: " + zipFileName);
         _networkQueue.add(zipFileName);
         uploadWhatYouHave();
     }
 
     private void deleteZipFileAndRemoveFromNetworkQueue(String zipFileName) {
         _networkQueue.remove(zipFileName);
-        String filePath = zipFileName;
-        File file = new File(filePath);
+        File file = new File(ESApplication.getZipDir(),zipFileName);
         file.delete();
         Log.i(LOG_TAG,"Deleted and removed from network queue file: " + zipFileName);
     }
 
     public void uploadWhatYouHave() {
+        Log.d(LOG_TAG,"uploadWhatYouHave()");
         if (_networkQueue.size() <= 0) {
             return;
         }
@@ -113,23 +112,31 @@ public class ESNetworkAccessor {
         // Keep it at the end of the queue (until getting response):
         _networkQueue.add(nextZip);
 
+        Log.v(LOG_TAG,"Popped zip from queue: " + nextZip);
+        Log.v(LOG_TAG,"Now queue has: " + _networkQueue);
+
         // Send the next zip:
         Intent intent = new Intent(ESApplication.getTheAppContext(),ESApiIntentService.class);
         intent.setAction(ESApiIntentService.ACTION_UPLOAD_ZIP);
         intent.putExtra(KEY_ZIP_FILENAME,nextZip);
+        Log.d(LOG_TAG,"Created api intent: " + intent);
         ESApplication.getTheAppContext().startService(intent);
     }
 
     private boolean isThereWiFiConnectivity() {
-        return false;
+        if (ESApplication.debugMode()) {
+            return true;
+        }
+        ConnectivityManager connectivityManager =
+                (ConnectivityManager)ESApplication.getTheAppContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+        return networkInfo.isConnected();
     }
 
     public void sendFeedback(ESActivity activity) {
         //TODO send the feedback api
     }
 
-    //TODO add the receive response functions............
-    //TODO perhaps the receive is handled within the send functions..............
 
     private void handleUploadedZip(ESTimestamp timestamp,String zipFilename,String predictedMainActivity) {
         // Since zip uploaded successfully, can remove it from network queue and delete the file:
@@ -181,6 +188,7 @@ public class ESNetworkAccessor {
 
         @Override
         protected void onHandleIntent(Intent intent) {
+            Log.v(LOG_TAG,"API intent handles: " + intent);
             if (intent == null) {
                 Log.e(LOG_TAG,"Got null intent.");
                 return;
@@ -210,7 +218,7 @@ public class ESNetworkAccessor {
                 int bytesRead, bytesAvailable, bufferSize;
                 byte[] buffer;
                 int maxBufferSize = 1 * 1024 * 1024;
-                File zipFile = new File(zipFilename);
+                File zipFile = new File(ESApplication.getZipDir(),zipFilename);
 
                 URL url = new URL(resources.getString(R.string.server_api_prefix) + resources.getString(R.string.api_upload_zip));
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -276,6 +284,7 @@ public class ESNetworkAccessor {
                 String responseZipFilename = response.getString(RESPONSE_FIELD_ZIP_FILE);
                 String predictedMainActivity = response.getString(RESPONSE_FIELD_PREDICTED_MAIN_ACTIVITY);
 
+                handleUploadedZip(timestamp,responseZipFilename,predictedMainActivity);
 
             } catch (MalformedURLException e) {
                 Log.e(LOG_TAG,"Failed with creating URI for uploading zip");

@@ -73,7 +73,9 @@ public class ESSensorManager implements SensorEventListener {
 
     private Sensor _accelerometer;
 
-    private boolean _debugSensorSimulationMode = true;
+    private boolean debugSensorSimulationMode() {
+        return ESApplication.debugMode();
+    }
 
 
 
@@ -99,7 +101,7 @@ public class ESSensorManager implements SensorEventListener {
         _timestampStr = timestampStr;
         /////////////////////////
         // This is just for debugging. With the simulator (that doesn't produce actual sensor events):
-        if (_debugSensorSimulationMode) {
+        if (debugSensorSimulationMode()) {
             simulateRecordingSession();
             return;
         }
@@ -159,7 +161,19 @@ public class ESSensorManager implements SensorEventListener {
 
         _highFreqData.get(key).add(measurement);
 
+        if (ACC_X.equals(key) && (_highFreqData.get(key).size() % 100) == 0) {
+            logCurrentSampleSize();
+        }
+
         return (_highFreqData.get(key).size() >= NUM_SAMPLES_IN_SESSION);
+    }
+
+    private void logCurrentSampleSize() {
+        int accSize = 0;
+        if (_highFreqData.containsKey(ACC_X)) {
+            accSize = _highFreqData.get(ACC_X).size();
+        }
+        Log.i(LOG_TAG,"Collected acc:" + accSize);
     }
 
     private void finishSessionIfReady() {
@@ -169,6 +183,7 @@ public class ESSensorManager implements SensorEventListener {
     }
 
     private void finishSession() {
+        Log.i(LOG_TAG,"Finishing recording session.");
         // Construct an object with all the data:
         JSONObject data = new JSONObject();
         for (String key : _highFreqData.keySet()) {
@@ -187,6 +202,7 @@ public class ESSensorManager implements SensorEventListener {
 
         // Zip the files:
         String zipFilename = createZipFile(dataStr);
+        Log.i(LOG_TAG,"Created zip file: " + zipFilename);
 
         // Add this zip file to the network queue:
         if (zipFilename != null) {
@@ -198,7 +214,8 @@ public class ESSensorManager implements SensorEventListener {
     private String createZipFile(String highFreqDataStr) {
         String zipFilename = currentZipFilename();
         try {
-            OutputStream os = new FileOutputStream(zipFilename);
+            File zipFile = new File(ESApplication.getZipDir(),zipFilename);
+            OutputStream os = new FileOutputStream(zipFile);
             ZipOutputStream zos = new ZipOutputStream(new BufferedOutputStream(os));
 
             // Add the data files:
@@ -223,7 +240,9 @@ public class ESSensorManager implements SensorEventListener {
     private boolean writeFile(String filename,String content) {
         FileOutputStream fos = null;
         try {
-            fos = ESApplication.getTheAppContext().openFileOutput(filename,Context.MODE_PRIVATE);
+            File outFile = new File(ESApplication.getZipDir(),filename);
+            fos = new FileOutputStream(outFile);
+//            fos = ESApplication.getTheAppContext().openFileOutput(filename,Context.MODE_PRIVATE);
             fos.write(content.getBytes());
             fos.close();
         } catch (FileNotFoundException e) {
