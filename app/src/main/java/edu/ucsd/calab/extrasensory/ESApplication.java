@@ -10,6 +10,7 @@ import android.util.Log;
 import java.io.File;
 
 import edu.ucsd.calab.extrasensory.data.ESActivity;
+import edu.ucsd.calab.extrasensory.data.ESLabelStrings;
 import edu.ucsd.calab.extrasensory.sensors.ESSensorManager;
 
 /**

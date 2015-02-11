@@ -2,7 +2,9 @@ package edu.ucsd.calab.extrasensory.data;
 
 import android.content.Context;
 
+import java.util.*;
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
@@ -85,11 +87,29 @@ public class ESLabelStrings {
      */
     private static String[] readLabelsFromFile(int textFileResourceID) {
         Context context = ESApplication.getTheAppContext();
-        InputStream inputStream = context.getResources().openRawResource(textFileResourceID);
-        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+        ArrayList<String> parsedLabels = new ArrayList<String>();
 
-        //TODO read line by line, parse each line (if has '|' character then the label is what's before the '|')
-        return null;
+        try {
+            InputStream inputStream = context.getResources().openRawResource(textFileResourceID);
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+
+            String[] splitLabel;
+            String line = "";
+            while ((line = bufferedReader.readLine()) != null) {
+                splitLabel = line.split("\\|");
+                parsedLabels.add(splitLabel[0]);
+            }
+            bufferedReader.close();
+
+         } catch (IOException e) {
+                e.printStackTrace();
+         }
+
+        String[] labels = new String[parsedLabels.size()];
+        for(int i=0; i < parsedLabels.size(); i++ ){
+            labels[i] = parsedLabels.get(i);
+        }
+        return labels;
     }
 
 }
