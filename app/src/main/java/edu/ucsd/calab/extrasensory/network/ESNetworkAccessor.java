@@ -12,16 +12,21 @@ import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import edu.ucsd.calab.extrasensory.ESApplication;
 import edu.ucsd.calab.extrasensory.R;
@@ -89,8 +94,9 @@ public class ESNetworkAccessor {
     }
 
     public void uploadWhatYouHave() {
-        Log.d(LOG_TAG,"uploadWhatYouHave()");
+        Log.v(LOG_TAG,"uploadWhatYouHave() was called.");
         if (_networkQueue.size() <= 0) {
+            Log.v(LOG_TAG, "Nothing to upload (queue is empty).");
             return;
         }
         // Check if there is WiFi connectivity:
@@ -147,6 +153,8 @@ public class ESNetworkAccessor {
         ESDatabaseAccessor dba = ESDatabaseAccessor.getESDatabaseAccessor();
         ESActivity activity = dba.getESActivity(timestamp);
         dba.setESActivityServerPrediction(activity,predictedMainActivity);
+        Log.i(LOG_TAG,"After getting server prediction, activity is now: " + activity);
+
         // If there is already user labels, send feedback to server:
         if (activity.hasUserProvidedLabels()) {
             sendFeedback(activity);
@@ -289,11 +297,21 @@ public class ESNetworkAccessor {
                 // Responses from the server (code and message)
                 int responseCode = conn.getResponseCode();
                 String serverResponseMessage = conn.getResponseMessage();
-                Log.i("uploadFile", "HTTP Response is : "
+                Log.i(LOG_TAG, "HTTP Response is : "
                         + serverResponseMessage + ": " + responseCode);
 
+                InputStream inputStream = conn.getInputStream();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+                StringBuilder stringBuilder = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    stringBuilder.append(line);
+                }
+                String responseStr = stringBuilder.toString();
+                Log.i(LOG_TAG,"RMW server responded: " + responseStr);
+
                 // Analyze the response:
-                JSONObject response = new JSONObject(serverResponseMessage);
+                JSONObject response = new JSONObject(responseStr);
                 ESTimestamp timestamp = new ESTimestamp(response.getInt(RESPONSE_FIELD_TIMESTAMP));
                 if (!response.getBoolean(RESPONSE_FIELD_SUCCESS)) {
                     Log.e(LOG_TAG,"Server said upload failed.");
@@ -303,7 +321,8 @@ public class ESNetworkAccessor {
                 String responseZipFilename = response.getString(RESPONSE_FIELD_ZIP_FILE);
                 String predictedMainActivity = response.getString(RESPONSE_FIELD_PREDICTED_MAIN_ACTIVITY);
 
-                params._requester.handleUploadedZip(timestamp,responseZipFilename,predictedMainActivity);
+                conn.disconnect();
+                params._requester.handleUploadedZip(timestamp, responseZipFilename, predictedMainActivity);
 
             } catch (MalformedURLException e) {
                 Log.e(LOG_TAG,"Failed with creating URI for uploading zip");

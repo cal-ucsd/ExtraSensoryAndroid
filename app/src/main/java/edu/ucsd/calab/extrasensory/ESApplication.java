@@ -23,7 +23,7 @@ public class ESApplication extends Application {
 
     private static final String LOG_TAG = "[ESApplication]";
     private static final long WAIT_BEFORE_START_FIRST_RECORDING_MILLIS = 500;
-    private static final long RECORDING_SESSIONS_INTERVAL_MILLIS = 1000*3;
+    private static final long RECORDING_SESSIONS_INTERVAL_MILLIS = 1000*60;
     private static final String ZIP_DIR_NAME = "zip";
 
     private static Context _appContext;
@@ -52,11 +52,13 @@ public class ESApplication extends Application {
 
 
         // Start the scheduling of periodic recordings:
-
+        startRecordingSchedule();
+        /*
         Log.d(LOG_TAG,"Testing just once calling start recording:");
         Intent intent = new Intent(getApplicationContext(),ESIntentService.class);
         intent.setAction(ESIntentService.ACTION_START_RECORDING);
         startService(intent);
+        */
     }
 
     /**
