@@ -94,8 +94,9 @@ public class ESNetworkAccessor {
     }
 
     public void uploadWhatYouHave() {
-        Log.d(LOG_TAG,"uploadWhatYouHave()");
+        Log.v(LOG_TAG,"uploadWhatYouHave() was called.");
         if (_networkQueue.size() <= 0) {
+            Log.v(LOG_TAG, "Nothing to upload (queue is empty).");
             return;
         }
         // Check if there is WiFi connectivity:
@@ -152,6 +153,8 @@ public class ESNetworkAccessor {
         ESDatabaseAccessor dba = ESDatabaseAccessor.getESDatabaseAccessor();
         ESActivity activity = dba.getESActivity(timestamp);
         dba.setESActivityServerPrediction(activity,predictedMainActivity);
+        Log.i(LOG_TAG,"After getting server prediction, activity is now: " + activity);
+
         // If there is already user labels, send feedback to server:
         if (activity.hasUserProvidedLabels()) {
             sendFeedback(activity);
@@ -306,7 +309,7 @@ public class ESNetworkAccessor {
                 }
                 String responseStr = stringBuilder.toString();
                 Log.i(LOG_TAG,"RMW server responded: " + responseStr);
-                
+
                 // Analyze the response:
                 JSONObject response = new JSONObject(responseStr);
                 ESTimestamp timestamp = new ESTimestamp(response.getInt(RESPONSE_FIELD_TIMESTAMP));

@@ -117,6 +117,16 @@ public class ESActivity {
         return (_mainActivityUserCorrection != null);
     }
 
+    @Override
+    public String toString() {
+        return "<timestamp: " + _timestamp +
+                ", label source: " + _labelSource +
+                ", main activity prediction: " + _mainActivityServerPrediction +
+                ",main activity correction: " + _mainActivityUserCorrection +
+                ",secondary: {" + _secondaryActivities + "}" +
+                ",mood: {" + _moods + "}>";
+    }
+
     public String mostUpToDateMainActivity() {
         if (hasUserCorrectedMainLabel()) {
             return _mainActivityUserCorrection;
