@@ -178,7 +178,7 @@ public class ESDatabaseAccessor {
     }
 
     private String generateUUID() {
-        return UUID.randomUUID().toString();
+        return UUID.randomUUID().toString().toUpperCase();
     }
 
     /**
@@ -316,9 +316,9 @@ public class ESDatabaseAccessor {
         values.put(ESDatabaseContract.ESActivityEntry.COLUMN_NAME_LABEL_SOURCE,labelSource.get_value());
         values.put(ESDatabaseContract.ESActivityEntry.COLUMN_NAME_MAIN_ACTIVITY_SERVER_PREDICTION,mainActivityServerPrediction);
         values.put(ESDatabaseContract.ESActivityEntry.COLUMN_NAME_MAIN_ACTIVITY_USER_CORRECTION,mainActivityUserCorrection);
-        String secondaryCSV = makeCSV(secondaryActivities);
+        String secondaryCSV = ESLabelStrings.makeCSV(secondaryActivities);
         values.put(ESDatabaseContract.ESActivityEntry.COLUMN_NAME_SECONDARY_ACTIVITIES_CSV,secondaryCSV);
-        String moodCSV = makeCSV(moods);
+        String moodCSV = ESLabelStrings.makeCSV(moods);
         values.put(ESDatabaseContract.ESActivityEntry.COLUMN_NAME_MOODS_CSV,moodCSV);
 
         String selection = ESDatabaseContract.ESActivityEntry.COLUMN_NAME_TIMESTAMP + " = " + activity.get_timestamp().get_secondsSinceEpoch();
@@ -435,22 +435,6 @@ public class ESDatabaseAccessor {
         return csv.split(",");
     }
 
-    /**
-     * This function assumes non of the components of the array are null
-     * @param labels The labels to represent in a single String. Assumed that no string contains comma.
-     * @return A single String representation of the array
-     */
-    private String makeCSV(String[] labels) {
-        if (labels == null || labels.length <= 0) {
-            return "";
-        }
-        String csv = labels[0];
-        for (int i = 1; i < labels.length; i ++) {
-            csv = csv + "," + labels[i];
-        }
-
-        return csv;
-    }
 
     private String[] copyStringArray(String[] source) {
         if (source == null) {

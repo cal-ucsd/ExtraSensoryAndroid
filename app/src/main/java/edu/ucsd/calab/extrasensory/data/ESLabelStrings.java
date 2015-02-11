@@ -56,6 +56,25 @@ public class ESLabelStrings {
     }
 
     /**
+     * Create a single String representation of the labels in the array, using Comma Separated Values.
+     * This function assumes non of the components of the array are null
+     * @param labels The labels to represent in a single String. Assumed that no string contains comma.
+     * @return A single String representation of the array
+     */
+    public static String makeCSV(String[] labels) {
+        if (labels == null || labels.length <= 0) {
+            return "";
+        }
+        String csv = labels[0];
+        for (int i = 1; i < labels.length; i ++) {
+            csv = csv + "," + labels[i];
+        }
+
+        return csv;
+    }
+
+
+    /**
      * Read the labels from the text file in resources.raw.
      * The format of the file should be that every line has a single label,
      * and possibly with extra information (if after the labels there is a pipe '|' and then some more text).

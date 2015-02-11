@@ -21,6 +21,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.ProtocolException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
@@ -32,6 +33,8 @@ import edu.ucsd.calab.extrasensory.ESApplication;
 import edu.ucsd.calab.extrasensory.R;
 import edu.ucsd.calab.extrasensory.data.ESActivity;
 import edu.ucsd.calab.extrasensory.data.ESDatabaseAccessor;
+import edu.ucsd.calab.extrasensory.data.ESLabelStrings;
+import edu.ucsd.calab.extrasensory.data.ESSettings;
 import edu.ucsd.calab.extrasensory.data.ESTimestamp;
 
 /**
@@ -67,6 +70,7 @@ public class ESNetworkAccessor {
      * Get the network accessor
      * @return The network accessor
      */
+
     public static ESNetworkAccessor getESNetworkAccessor() {
         if (_theSingleNetworkAccessor == null) {
             _theSingleNetworkAccessor = new ESNetworkAccessor();
@@ -142,7 +146,10 @@ public class ESNetworkAccessor {
     }
 
     public void sendFeedback(ESActivity activity) {
-        //TODO send the feedback api
+        ESApiHandler.ESApiParams params = new ESApiHandler.ESApiParams(ESApiHandler.API_TYPE.API_TYPE_FEEDBACK,null,activity,this);
+        Log.d(LOG_TAG,"Created api params: " + params);
+        ESApiHandler api = new ESApiHandler();
+        api.execute(params);
     }
 
 
@@ -230,11 +237,105 @@ public class ESNetworkAccessor {
                     apiUploadZip(params);
                     break;
                 case API_TYPE_FEEDBACK:
+                    apiFeedback(params);
                     break;
                 default:
                     Log.e(LOG_TAG,"Unsupported api type: " + params._apiType);
             }
 
+        }
+
+        private void apiFeedback(ESApiParams params) {
+            Resources resources = ESApplication.getTheAppContext().getResources();
+            String apiSuffix = resources.getString(R.string.api_feedback) + "?" + prepareFeedbackApiParameters(params._activityForFeedback);
+            Log.i(LOG_TAG,"Feedback api call: " + apiSuffix);
+            String apiUrl = resources.getString(R.string.server_api_prefix) + apiSuffix;
+            Log.i(LOG_TAG,"Feedback api url: " + apiUrl);
+
+            try {
+                URL url = new URL(apiUrl);
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setConnectTimeout(CONNECT_TIMEOUT_MILLIS);
+                conn.setReadTimeout(READ_TIMEOUT_MILLIS);
+                conn.setDoOutput(true);
+                conn.setDoInput(true); // Allow Inputs
+                conn.setUseCaches(false); // Don't use a Cached Copy
+                conn.setRequestMethod("POST");
+                conn.setRequestProperty("Connection", "Keep-Alive");
+
+                conn.connect();
+
+                getServerResponseAndDisconnect(conn,"feedback");
+
+            } catch (MalformedURLException e) {
+                Log.e(LOG_TAG,"Problem with api URL");
+                e.printStackTrace();
+            } catch (ProtocolException e) {
+                Log.e(LOG_TAG,"Bad HTTP protocol");
+                e.printStackTrace();
+            } catch (IOException e) {
+                Log.e(LOG_TAG,"Failed with feedback api");
+                e.printStackTrace();
+            }
+        }
+
+        private JSONObject getServerResponseAndDisconnect(HttpURLConnection conn,String api_type) {
+            try {
+                // Responses from the server (code and message)
+                int responseCode = conn.getResponseCode();
+                String serverResponseMessage = conn.getResponseMessage();
+                Log.i(LOG_TAG, "HTTP Response is : "
+                        + serverResponseMessage + ": " + responseCode);
+
+                InputStream inputStream = conn.getInputStream();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+                StringBuilder stringBuilder = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    stringBuilder.append(line);
+                }
+                String responseStr = stringBuilder.toString();
+                Log.i(LOG_TAG, "RMW server responded: " + responseStr);
+
+                conn.disconnect();
+
+                // Analyze the response:
+                JSONObject response = new JSONObject(responseStr);
+                if (!response.getBoolean(RESPONSE_FIELD_SUCCESS)) {
+                    Log.e(LOG_TAG, "Server said "+ api_type + " failed.");
+                    Log.e(LOG_TAG, "Server message: " + response.getString(RESPONSE_FIELD_MESSAGE));
+                }
+
+                return response;
+            }
+            catch (IOException e) {
+                Log.e(LOG_TAG,"Failed with feedback api");
+                e.printStackTrace();
+            }
+            catch (JSONException e) {
+                Log.e(LOG_TAG,"Failed analyze RMW server response");
+                e.printStackTrace();
+            }
+
+            return null;
+        }
+
+        private String prepareFeedbackApiParameters(ESActivity activity) {
+            String uuidStr = "uuid=" + ESSettings.uuid();
+            String timestampStr = "timestamp=" + activity.get_timestamp();
+            String labelSourceStr = "label_source=" + activity.get_labelSource();
+            String mainPredictionStr = "predicted_activity=" + activity.get_mainActivityServerPrediction();
+            String mainUserStr = "corrected_activity=" + activity.get_mainActivityUserCorrection();
+            String secondaryStr = "secondary_activities=" + ESLabelStrings.makeCSV(activity.get_secondaryActivities());
+            String moodStr = "moods=" + ESLabelStrings.makeCSV(activity.get_moods());
+
+            return uuidStr + "&" +
+                    timestampStr + "&" +
+                    labelSourceStr + "&" +
+                    mainPredictionStr + "&" +
+                    mainUserStr + "&" +
+                    secondaryStr + "&" +
+                    moodStr + "&";
         }
 
         private void apiUploadZip(ESApiParams params) {
@@ -294,30 +395,8 @@ public class ESNetworkAccessor {
                 // Send the request:
                 conn.connect();
 
-                // Responses from the server (code and message)
-                int responseCode = conn.getResponseCode();
-                String serverResponseMessage = conn.getResponseMessage();
-                Log.i(LOG_TAG, "HTTP Response is : "
-                        + serverResponseMessage + ": " + responseCode);
-
-                InputStream inputStream = conn.getInputStream();
-                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-                StringBuilder stringBuilder = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    stringBuilder.append(line);
-                }
-                String responseStr = stringBuilder.toString();
-                Log.i(LOG_TAG,"RMW server responded: " + responseStr);
-
-                // Analyze the response:
-                JSONObject response = new JSONObject(responseStr);
+                JSONObject response = getServerResponseAndDisconnect(conn,"upload");
                 ESTimestamp timestamp = new ESTimestamp(response.getInt(RESPONSE_FIELD_TIMESTAMP));
-                if (!response.getBoolean(RESPONSE_FIELD_SUCCESS)) {
-                    Log.e(LOG_TAG,"Server said upload failed.");
-                    Log.e(LOG_TAG,"Server message: " + response.getString(RESPONSE_FIELD_MESSAGE));
-                    return;
-                }
                 String responseZipFilename = response.getString(RESPONSE_FIELD_ZIP_FILE);
                 String predictedMainActivity = response.getString(RESPONSE_FIELD_PREDICTED_MAIN_ACTIVITY);
 

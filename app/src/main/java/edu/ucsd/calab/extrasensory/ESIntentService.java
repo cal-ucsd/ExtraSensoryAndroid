@@ -46,7 +46,8 @@ public class ESIntentService extends IntentService {
             ESActivity newActivity = ESDatabaseAccessor.getESDatabaseAccessor().createNewActivity();
             String timestampStr = newActivity.get_timestamp().toString();
             ESSensorManager.getESSensorManager().startRecordingSensors(timestampStr);
-        } else {
+        }
+        else {
             Log.e(LOG_TAG,"Got intent for unsupported action: " + action);
         }
 
