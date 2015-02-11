@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.res.Resources;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.AsyncTask;
 import android.util.Log;
 
 import org.json.JSONException;
@@ -20,6 +21,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 
 import edu.ucsd.calab.extrasensory.ESApplication;
 import edu.ucsd.calab.extrasensory.R;
@@ -116,11 +118,11 @@ public class ESNetworkAccessor {
         Log.v(LOG_TAG,"Now queue has: " + _networkQueue);
 
         // Send the next zip:
-        Intent intent = new Intent(ESApplication.getTheAppContext(),ESApiIntentService.class);
-        intent.setAction(ESApiIntentService.ACTION_UPLOAD_ZIP);
-        intent.putExtra(KEY_ZIP_FILENAME,nextZip);
-        Log.d(LOG_TAG,"Created api intent: " + intent);
-        ESApplication.getTheAppContext().startService(intent);
+        ESApiHandler.ESApiParams params = new ESApiHandler.ESApiParams(
+                ESApiHandler.API_TYPE.API_TYPE_UPLOAD_ZIP,nextZip,null,this);
+        Log.d(LOG_TAG,"Created api params: " + params);
+        ESApiHandler api = new ESApiHandler();
+        api.execute(params);
     }
 
     private boolean isThereWiFiConnectivity() {
@@ -160,18 +162,39 @@ public class ESNetworkAccessor {
     }
 
 
-    private class ESApiIntentService extends IntentService {
+    private static class ESApiHandler extends AsyncTask<ESApiHandler.ESApiParams,Void,String> {
 
-        /**
-         * Creates an IntentService.  Invoked by your subclass's constructor.
-         *
-         */
-        public ESApiIntentService() {
-            super("ESApiIntentService");
+
+        @Override
+        protected String doInBackground(ESApiParams... parameters) {
+            ESApiParams params = parameters[0];
+            doApiRequest(params);
+            return null;
         }
 
-        public static final String ACTION_UPLOAD_ZIP = "edu.ucsd.calab.extrasensory.api.action.UPLOAD_ZIP";
-        public static final String ACTION_FEEDBACK = "edu.ucsd.calab.extrasensory.api.action.FEEDBACK";
+        public enum API_TYPE {
+            API_TYPE_UPLOAD_ZIP,
+            API_TYPE_FEEDBACK
+        }
+
+        public static class ESApiParams {
+            public API_TYPE _apiType;
+            public String _zipFilenameForUpload;
+            public ESActivity _activityForFeedback;
+            public ESNetworkAccessor _requester;
+
+            public ESApiParams(API_TYPE apiType,String zipFilenameForUpload,ESActivity activity,ESNetworkAccessor requester) {
+                _apiType = apiType;
+                _zipFilenameForUpload = zipFilenameForUpload;
+                _activityForFeedback = activity;
+                _requester = requester;
+            }
+
+            @Override
+            public String toString() {
+                return "<apiType: " + _apiType + ", zipFilename: " + _zipFilenameForUpload + ", activity: " + _activityForFeedback + ">";
+            }
+        }
 
         private static final int READ_TIMEOUT_MILLIS = 10000;
         private static final int CONNECT_TIMEOUT_MILLIS = 15000;
@@ -186,35 +209,31 @@ public class ESNetworkAccessor {
         private static final String RESPONSE_FIELD_ZIP_FILE = "filename";
         private static final String RESPONSE_FIELD_PREDICTED_MAIN_ACTIVITY = "predicted_activity";
 
-        @Override
-        protected void onHandleIntent(Intent intent) {
-            Log.v(LOG_TAG,"API intent handles: " + intent);
-            if (intent == null) {
-                Log.e(LOG_TAG,"Got null intent.");
+
+        private void doApiRequest(ESApiParams params) {
+            Log.v(LOG_TAG,"API params: " + params);
+            if (params == null) {
+                Log.e(LOG_TAG,"Got null params.");
                 return;
             }
 
-            final String action = intent.getAction();
-            if (action == null) {
-                Log.e(LOG_TAG,"Got intent with null action.");
-                return;
+            switch (params._apiType) {
+                case API_TYPE_UPLOAD_ZIP:
+                    apiUploadZip(params);
+                    break;
+                case API_TYPE_FEEDBACK:
+                    break;
+                default:
+                    Log.e(LOG_TAG,"Unsupported api type: " + params._apiType);
             }
 
-            Log.v(LOG_TAG,"Got intent with action: " + action);
-            if (ACTION_UPLOAD_ZIP.equals(action)) {
-                apiUploadZip(intent);
-            }
-            else {
-                Log.e(LOG_TAG,"Got unsupported action: " + action);
-                return;
-            }
         }
 
-        private void apiUploadZip(Intent intent) {
+        private void apiUploadZip(ESApiParams params) {
             try {
                 Resources resources = ESApplication.getTheAppContext().getResources();
 
-                String zipFilename = intent.getStringExtra(KEY_ZIP_FILENAME);
+                String zipFilename = params._zipFilenameForUpload;
                 int bytesRead, bytesAvailable, bufferSize;
                 byte[] buffer;
                 int maxBufferSize = 1 * 1024 * 1024;
@@ -284,7 +303,7 @@ public class ESNetworkAccessor {
                 String responseZipFilename = response.getString(RESPONSE_FIELD_ZIP_FILE);
                 String predictedMainActivity = response.getString(RESPONSE_FIELD_PREDICTED_MAIN_ACTIVITY);
 
-                handleUploadedZip(timestamp,responseZipFilename,predictedMainActivity);
+                params._requester.handleUploadedZip(timestamp,responseZipFilename,predictedMainActivity);
 
             } catch (MalformedURLException e) {
                 Log.e(LOG_TAG,"Failed with creating URI for uploading zip");
