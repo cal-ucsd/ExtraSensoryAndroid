@@ -137,6 +137,7 @@ public class ESNetworkAccessor {
 
     private boolean isThereWiFiConnectivity() {
         if (ESApplication.debugMode()) {
+            Log.v(LOG_TAG,"Debug mode so saying 'wifi available'.");
             return true;
         }
         ConnectivityManager connectivityManager =
@@ -159,6 +160,7 @@ public class ESNetworkAccessor {
         // Update the ESActivity record:
         ESDatabaseAccessor dba = ESDatabaseAccessor.getESDatabaseAccessor();
         ESActivity activity = dba.getESActivity(timestamp);
+        predictedMainActivity = adjustPredictedActivity(predictedMainActivity);
         dba.setESActivityServerPrediction(activity,predictedMainActivity);
         Log.i(LOG_TAG,"After getting server prediction, activity is now: " + activity);
 
@@ -169,6 +171,19 @@ public class ESNetworkAccessor {
 
         // Mark network is available:
         markNetworkIsNotBusy();
+    }
+
+    private String adjustPredictedActivity(String predictedMainActivity) {
+        if ("Driving".equals(predictedMainActivity)) {
+            Log.v(LOG_TAG,"Got prediction 'Driving'. Changing it to 'Sitting'");
+            return "Sitting";
+        }
+        if ("Standing".equals(predictedMainActivity)) {
+            Log.v(LOG_TAG,"Got prediction 'Standing'. Changing it to 'Standing in place'");
+            return "Standing in place";
+        }
+
+        return predictedMainActivity;
     }
 
     private void markNetworkIsNotBusy() {
@@ -329,13 +344,16 @@ public class ESNetworkAccessor {
             String secondaryStr = "secondary_activities=" + ESLabelStrings.makeCSV(activity.get_secondaryActivities());
             String moodStr = "moods=" + ESLabelStrings.makeCSV(activity.get_moods());
 
-            return uuidStr + "&" +
+            String apiParams = uuidStr + "&" +
                     timestampStr + "&" +
                     labelSourceStr + "&" +
                     mainPredictionStr + "&" +
                     mainUserStr + "&" +
                     secondaryStr + "&" +
                     moodStr + "&";
+
+            apiParams = apiParams.replaceAll(" ","_");
+            return apiParams;
         }
 
         private void apiUploadZip(ESApiParams params) {
@@ -406,12 +424,15 @@ public class ESNetworkAccessor {
             } catch (MalformedURLException e) {
                 Log.e(LOG_TAG,"Failed with creating URI for uploading zip");
                 e.printStackTrace();
+                params._requester.markNetworkIsNotBusy();
             } catch (IOException e) {
                 Log.e(LOG_TAG,"Failed with uploading zip");
                 e.printStackTrace();
+                params._requester.markNetworkIsNotBusy();
             } catch (JSONException e) {
                 Log.e(LOG_TAG,"Error parsing the server response");
                 e.printStackTrace();
+                params._requester.markNetworkIsNotBusy();
             }
 
         }

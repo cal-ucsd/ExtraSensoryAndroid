@@ -39,7 +39,7 @@ public class ESApplication extends Application {
     private ESSensorManager _sensorManager;
     private AlarmManager _alarmManager;
 
-    public static boolean debugMode() { return true; }
+    public static boolean debugMode() { return false; }
 
     @Override
     public void onCreate() {
