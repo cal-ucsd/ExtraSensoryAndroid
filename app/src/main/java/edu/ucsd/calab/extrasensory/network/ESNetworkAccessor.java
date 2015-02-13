@@ -85,6 +85,11 @@ public class ESNetworkAccessor {
      * @param zipFileName The path of the zip file to upload
      */
     public void addToNetworkQueue(String zipFileName) {
+        if (_networkQueue.contains(zipFileName)) {
+            Log.e(LOG_TAG,"Network queue already contains zip file: " + zipFileName);
+            return;
+
+        }
         Log.v(LOG_TAG,"Adding to network queue: " + zipFileName);
         _networkQueue.add(zipFileName);
         uploadWhatYouHave();
@@ -365,6 +370,10 @@ public class ESNetworkAccessor {
                 byte[] buffer;
                 int maxBufferSize = 1 * 1024 * 1024;
                 File zipFile = new File(ESApplication.getZipDir(),zipFilename);
+                if (!zipFile.exists()) {
+                    Log.e(LOG_TAG,"Zip file doesn't exist: " + zipFilename);
+                    return;
+                }
 
                 URL url = new URL(resources.getString(R.string.server_api_prefix) + resources.getString(R.string.api_upload_zip));
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
