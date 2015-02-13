@@ -1,5 +1,6 @@
 package edu.ucsd.calab.extrasensory.sensors;
 
+import android.app.PendingIntent;
 import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -48,10 +49,60 @@ public class ESSensorManager implements SensorEventListener {
 
     private static final String HIGH_FREQ_DATA_FILENAME = "HF_DUR_DATA.txt";
 
-    private static final String ACC_X = "acc_x";
-    private static final String ACC_Y = "acc_y";
-    private static final String ACC_Z = "acc_z";
-    private static final String ACC_TIME = "raw_acc_timeref";
+    // Raw motion sensors:
+    private static final String RAW_ACC_X = "raw_acc_x";
+    private static final String RAW_ACC_Y = "raw_acc_y";
+    private static final String RAW_ACC_Z = "raw_acc_z";
+    private static final String RAW_ACC_TIME = "raw_acc_timeref";
+
+    private static final String RAW_MAGNET_X = "raw_magnet_x";
+    private static final String RAW_MAGNET_Y = "raw_magnet_y";
+    private static final String RAW_MAGNET_Z = "raw_magnet_z";
+    private static final String RAW_MAGNET_TIME = "raw_magnet_timeref";
+
+    private static final String RAW_GYRO_X = "raw_gyro_x";
+    private static final String RAW_GYRO_Y = "raw_gyro_y";
+    private static final String RAW_GYRO_Z = "raw_gyro_z";
+    private static final String RAW_GYRO_TIME = "raw_gyro_timeref";
+
+    // Processed motion sensors (software "sensors"):
+    private static final String PROC_ACC_X = "processed_user_acc_x";
+    private static final String PROC_ACC_Y = "processed_user_acc_y";
+    private static final String PROC_ACC_Z = "processed_user_acc_z";
+    private static final String PROC_ACC_TIME = "processed_user_acc_timeref";
+
+    private static final String PROC_GRAV_X = "processed_gravity_x";
+    private static final String PROC_GRAV_Y = "processed_gravity_y";
+    private static final String PROC_GRAV_Z = "processed_gravity_z";
+    private static final String PROC_GRAV_TIME = "processed_gravity_timeref";
+
+    private static final String PROC_MAGNET_X = "processed_magnet_x";
+    private static final String PROC_MAGNET_Y = "processed_magnet_y";
+    private static final String PROC_MAGNET_Z = "processed_magnet_z";
+    private static final String PROC_MAGNET_TIME = "processed_magnet_timeref";
+
+    private static final String PROC_GYRO_X = "processed_gyro_x";
+    private static final String PROC_GYRO_Y = "processed_gyro_y";
+    private static final String PROC_GYRO_Z = "processed_gyro_z";
+    private static final String PROC_GYRO_TIME = "processed_gyro_timeref";
+
+    private static final String PROC_ROTATION_X = "processed_rotation_vector_x";
+    private static final String PROC_ROTATION_Y = "processed_rotation_vector_y";
+    private static final String PROC_ROTATION_Z = "processed_rotation_vector_z";
+    private static final String PROC_ROTATION_COS = "processed_rotation_vector_cosine";
+    private static final String PROC_ROTATION_ACCURACY = "processed_rotation_vector_accuracy";
+
+    // Location sensors:
+    private static final String LOC_LAT = "location_latitude";
+    private static final String LOC_LONG = "location_longitude";
+    private static final String LOC_ALT = "location_altitude";
+    private static final String LOC_FLOOR = "location_floor";
+    private static final String LOC_SPEED = "location_speed";
+
+    private static final String LOC_HOR_ACCURACY = "location_horizontal_accuracy";
+    private static final String LOC_VER_ACCURACY = "location_vertical_accuracy";
+
+    private static final String LOC_TIME = "location_timestamp";
 
     /**
      * Get the single instance of this class
@@ -71,7 +122,8 @@ public class ESSensorManager implements SensorEventListener {
     private HashMap<String,ArrayList<Float>> _highFreqData;
     private String _timestampStr;
 
-    private Sensor _accelerometer;
+    //private Sensor _accelerometer;
+    private ArrayList<Sensor> _sensors;
 
     private boolean debugSensorSimulationMode() {
         return ESApplication.debugMode();
@@ -84,8 +136,29 @@ public class ESSensorManager implements SensorEventListener {
      */
     private ESSensorManager() {
         _sensorManager = (SensorManager) ESApplication.getTheAppContext().getSystemService(Context.SENSOR_SERVICE);
-        _accelerometer = _sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        // Initialize the sensors:
+        _sensors = new ArrayList<>(10);
+        if (!tryToAddSensor(Sensor.TYPE_ACCELEROMETER,"raw accelerometer")) {
+            Log.e(LOG_TAG,"There is no accelerometer. Canceling recording.");
+            return;
+        }
+        tryToAddSensor(Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED,"raw magnetometer");
+        tryToAddSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED,"raw gyroscope");
+
         Log.v(LOG_TAG,"An instance of ESSensorManager was created.");
+    }
+
+    private boolean tryToAddSensor(int sensorType,String nameForLog) {
+        Sensor sensor = _sensorManager.getDefaultSensor(sensorType);
+        if (sensor == null) {
+            Log.i(LOG_TAG,"No available sensor: " + nameForLog);
+            return false;
+        }
+        else {
+            Log.i(LOG_TAG,"Adding sensor: " + nameForLog);
+            _sensors.add(sensor);
+            return true;
+        }
     }
 
     /**
@@ -107,17 +180,17 @@ public class ESSensorManager implements SensorEventListener {
         }
         /////////////////////////
 
-        if (_accelerometer != null) {
-            _sensorManager.registerListener(this,_accelerometer,SAMPLE_PERIOD_MILLIS);
+        for (Sensor sensor : _sensors) {
+            _sensorManager.registerListener(this,sensor,SAMPLE_PERIOD_MILLIS);
         }
     }
 
     private void simulateRecordingSession() {
         for (int i = 0; i < NUM_SAMPLES_IN_SESSION; i ++) {
-            addHighFrequencyMeasurement(ACC_X,0);
-            addHighFrequencyMeasurement(ACC_Y,1);
-            addHighFrequencyMeasurement(ACC_Z,2);
-            if (addHighFrequencyMeasurement(ACC_TIME,111)) {
+            addHighFrequencyMeasurement(RAW_ACC_X,0);
+            addHighFrequencyMeasurement(RAW_ACC_Y,1);
+            addHighFrequencyMeasurement(RAW_ACC_Z,2);
+            if (addHighFrequencyMeasurement(RAW_ACC_TIME,111)) {
                 finishSessionIfReady();
             }
         }
@@ -161,7 +234,7 @@ public class ESSensorManager implements SensorEventListener {
 
         _highFreqData.get(key).add(measurement);
 
-        if (ACC_X.equals(key) && (_highFreqData.get(key).size() % 100) == 0) {
+        if (RAW_ACC_X.equals(key) && (_highFreqData.get(key).size() % 100) == 0) {
             logCurrentSampleSize();
         }
 
@@ -170,8 +243,8 @@ public class ESSensorManager implements SensorEventListener {
 
     private void logCurrentSampleSize() {
         int accSize = 0;
-        if (_highFreqData.containsKey(ACC_X)) {
-            accSize = _highFreqData.get(ACC_X).size();
+        if (_highFreqData.containsKey(RAW_ACC_X)) {
+            accSize = _highFreqData.get(RAW_ACC_X).size();
         }
         Log.i(LOG_TAG,"Collected acc:" + accSize);
     }
@@ -242,7 +315,6 @@ public class ESSensorManager implements SensorEventListener {
         try {
             File outFile = new File(ESApplication.getZipDir(),filename);
             fos = new FileOutputStream(outFile);
-//            fos = ESApplication.getTheAppContext().openFileOutput(filename,Context.MODE_PRIVATE);
             fos.write(content.getBytes());
             fos.close();
         } catch (FileNotFoundException e) {
@@ -267,10 +339,8 @@ public class ESSensorManager implements SensorEventListener {
         }
 
         // Check accelerometer data:
-        if (_accelerometer != null) {
-            if (!_highFreqData.containsKey(ACC_X) || _highFreqData.get(ACC_X).size() < NUM_SAMPLES_IN_SESSION) {
-                return false;
-            }
+        if (!_highFreqData.containsKey(RAW_ACC_X) || _highFreqData.get(RAW_ACC_X).size() < NUM_SAMPLES_IN_SESSION) {
+            return false;
         }
 
         return true;
@@ -281,21 +351,36 @@ public class ESSensorManager implements SensorEventListener {
     // Implementing the SensorEventListener interface:
     @Override
     public void onSensorChanged(SensorEvent event) {
+        boolean sensorCollectedEnough = false;
+        float timestampSeconds = ((float)event.timestamp) / NANOSECONDS_IN_SECOND;
         switch (event.sensor.getType()) {
             case Sensor.TYPE_ACCELEROMETER:
-                addHighFrequencyMeasurement(ACC_X,event.values[0]);
-                addHighFrequencyMeasurement(ACC_Y,event.values[1]);
-                addHighFrequencyMeasurement(ACC_Z,event.values[2]);
-                float timestampSeconds = ((float)event.timestamp) / NANOSECONDS_IN_SECOND;
-                if (addHighFrequencyMeasurement(ACC_TIME,timestampSeconds)) {
-                    // Then we've collected enough samples from accelerometer,
-                    // and we can stop listening to it.
-                    _sensorManager.unregisterListener(this,_accelerometer);
-                    finishSessionIfReady();
-                }
+                addHighFrequencyMeasurement(RAW_ACC_X,event.values[0]);
+                addHighFrequencyMeasurement(RAW_ACC_Y,event.values[1]);
+                addHighFrequencyMeasurement(RAW_ACC_Z,event.values[2]);
+                sensorCollectedEnough = addHighFrequencyMeasurement(RAW_ACC_TIME,timestampSeconds);
+                break;
+            case Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED:
+                addHighFrequencyMeasurement(RAW_MAGNET_X,event.values[0]);
+                addHighFrequencyMeasurement(RAW_MAGNET_Y,event.values[1]);
+                addHighFrequencyMeasurement(RAW_MAGNET_Z,event.values[2]);
+                sensorCollectedEnough = addHighFrequencyMeasurement(RAW_MAGNET_TIME,timestampSeconds);
+                break;
+            case Sensor.TYPE_GYROSCOPE_UNCALIBRATED:
+                addHighFrequencyMeasurement(RAW_GYRO_X,event.values[0]);
+                addHighFrequencyMeasurement(RAW_GYRO_Y,event.values[1]);
+                addHighFrequencyMeasurement(RAW_GYRO_Z,event.values[2]);
+                sensorCollectedEnough = addHighFrequencyMeasurement(RAW_GYRO_TIME,timestampSeconds);
                 break;
             default:
                 Log.e(LOG_TAG,"Got event from unsupported sensor with type " + event.sensor.getType());
+        }
+
+        if (sensorCollectedEnough) {
+            // Then we've collected enough samples from accelerometer,
+            // and we can stop listening to it.
+            _sensorManager.unregisterListener(this,event.sensor);
+            finishSessionIfReady();
         }
     }
 
