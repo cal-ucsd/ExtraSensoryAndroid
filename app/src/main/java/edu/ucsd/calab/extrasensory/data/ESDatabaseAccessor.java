@@ -238,11 +238,12 @@ public class ESDatabaseAccessor {
     }
 
     /**
-     * Get an instance of ESActivity corresponding to the given timestamp.
+     * Get an instance of ESActivity corresponding to the given timestamp,
+     * of null if no such record exists.
      * Read the corresponding record's properties from the DB and return an object with these properties.
      *
      * @param timestamp The timestamp for the activity instance.
-     * @return The desired activity
+     * @return The desired activity, or null if there is no record for the timestamp.
      */
     public ESActivity getESActivity(ESTimestamp timestamp) {
         SQLiteDatabase db = _dbHelper.getReadableDatabase();
@@ -263,7 +264,7 @@ public class ESDatabaseAccessor {
 
         int count = cursor.getCount();
         if (count < 1) {
-            Log.e(LOG_TAG,"No matching ESActivity record for timestamp " + timestamp);
+            Log.i(LOG_TAG,"No matching ESActivity record for timestamp " + timestamp);
             return null;
         }
         if (count > 1) {

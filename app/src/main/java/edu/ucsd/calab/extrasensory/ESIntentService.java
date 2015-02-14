@@ -44,7 +44,12 @@ public class ESIntentService extends IntentService {
         Log.v(LOG_TAG,"Got intent with action: " + action);
         if (ACTION_START_RECORDING.equals(action)) {
             ESActivity newActivity = ESDatabaseAccessor.getESDatabaseAccessor().createNewActivity();
+            if (newActivity == null) {
+                Log.e(LOG_TAG,"Tried to create new activity but got null");
+                return;
+            }
             String timestampStr = newActivity.get_timestamp().toString();
+            Log.v(LOG_TAG,"Created new activity record with timestamp: " + timestampStr);
             ESSensorManager.getESSensorManager().startRecordingSensors(timestampStr);
         }
         else {

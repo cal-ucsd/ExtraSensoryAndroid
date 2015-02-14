@@ -124,6 +124,7 @@ public class ESSensorManager implements SensorEventListener {
 
     //private Sensor _accelerometer;
     private ArrayList<Sensor> _sensors;
+    private ArrayList<String> _sensorFeatureKeys;
 
     private boolean debugSensorSimulationMode() {
         return ESApplication.debugMode();
@@ -138,17 +139,25 @@ public class ESSensorManager implements SensorEventListener {
         _sensorManager = (SensorManager) ESApplication.getTheAppContext().getSystemService(Context.SENSOR_SERVICE);
         // Initialize the sensors:
         _sensors = new ArrayList<>(10);
-        if (!tryToAddSensor(Sensor.TYPE_ACCELEROMETER,"raw accelerometer")) {
+        _sensorFeatureKeys = new ArrayList<>(10);
+
+        // Add raw motion sensors:
+        if (!tryToAddSensor(Sensor.TYPE_ACCELEROMETER,"raw accelerometer",RAW_ACC_X)) {
             Log.e(LOG_TAG,"There is no accelerometer. Canceling recording.");
             return;
         }
-        tryToAddSensor(Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED,"raw magnetometer");
-        tryToAddSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED,"raw gyroscope");
+        tryToAddSensor(Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED,"raw magnetometer",RAW_MAGNET_X);
+        tryToAddSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED,"raw gyroscope",RAW_GYRO_X);
+        // Add processed motion sensors:
+        tryToAddSensor(Sensor.TYPE_GRAVITY,"gravity",PROC_GRAV_X);
+        tryToAddSensor(Sensor.TYPE_LINEAR_ACCELERATION,"linear acceleration",PROC_ACC_X);
+        tryToAddSensor(Sensor.TYPE_MAGNETIC_FIELD,"calibrated magnetometer",PROC_MAGNET_X);
+        tryToAddSensor(Sensor.TYPE_GYROSCOPE,"calibrated gyroscope",PROC_GYRO_X);
 
         Log.v(LOG_TAG,"An instance of ESSensorManager was created.");
     }
 
-    private boolean tryToAddSensor(int sensorType,String nameForLog) {
+    private boolean tryToAddSensor(int sensorType,String nameForLog,String featureKey) {
         Sensor sensor = _sensorManager.getDefaultSensor(sensorType);
         if (sensor == null) {
             Log.i(LOG_TAG,"No available sensor: " + nameForLog);
@@ -157,6 +166,7 @@ public class ESSensorManager implements SensorEventListener {
         else {
             Log.i(LOG_TAG,"Adding sensor: " + nameForLog);
             _sensors.add(sensor);
+            _sensorFeatureKeys.add(featureKey);
             return true;
         }
     }
@@ -168,7 +178,7 @@ public class ESSensorManager implements SensorEventListener {
      * @param timestampStr A string representation of this session's identifying timestamp
      */
     public void startRecordingSensors(String timestampStr) {
-        Log.i(LOG_TAG,"Starting recording.");
+        Log.i(LOG_TAG,"Starting recording for timestamp: " + timestampStr);
         clearRecordingSession();
         // Set the new timestamp:
         _timestampStr = timestampStr;
@@ -246,7 +256,16 @@ public class ESSensorManager implements SensorEventListener {
         if (_highFreqData.containsKey(RAW_ACC_X)) {
             accSize = _highFreqData.get(RAW_ACC_X).size();
         }
-        Log.i(LOG_TAG,"Collected acc:" + accSize);
+        int magnetSize = 0;
+        if (_highFreqData.containsKey(PROC_MAGNET_X)) {
+            magnetSize = _highFreqData.get(PROC_MAGNET_X).size();
+        }
+        int gyroSize = 0;
+        if (_highFreqData.containsKey(PROC_GYRO_X)) {
+            gyroSize = _highFreqData.get(PROC_GYRO_X).size();
+        }
+
+        Log.i(LOG_TAG,"Collected acc:" + accSize + ",magnet:" + magnetSize + ",gyro:" + gyroSize);
     }
 
     private void finishSessionIfReady() {
@@ -338,11 +357,21 @@ public class ESSensorManager implements SensorEventListener {
             return true;
         }
 
-        // Check accelerometer data:
-        if (!_highFreqData.containsKey(RAW_ACC_X) || _highFreqData.get(RAW_ACC_X).size() < NUM_SAMPLES_IN_SESSION) {
-            return false;
+        // Check expected feature keys:
+        for (String featureKey : _sensorFeatureKeys) {
+            if (!_highFreqData.containsKey(featureKey) ||
+                    _highFreqData.get(featureKey) == null ||
+                    _highFreqData.get(featureKey).size() < NUM_SAMPLES_IN_SESSION) {
+                // Then we should wait for this key's sensor to finish sampling
+                return false;
+            }
         }
 
+        // All the expected sensors sampled the required amount of data
+        Log.d(LOG_TAG,"=== checked and should finish.");
+        for (String featureKey : _sensorFeatureKeys) {
+            Log.d("===", featureKey + ": " + _highFreqData.get(featureKey).size());
+        }
         return true;
     }
 
@@ -371,6 +400,30 @@ public class ESSensorManager implements SensorEventListener {
                 addHighFrequencyMeasurement(RAW_GYRO_Y,event.values[1]);
                 addHighFrequencyMeasurement(RAW_GYRO_Z,event.values[2]);
                 sensorCollectedEnough = addHighFrequencyMeasurement(RAW_GYRO_TIME,timestampSeconds);
+                break;
+            case Sensor.TYPE_GRAVITY:
+                addHighFrequencyMeasurement(PROC_GRAV_X,event.values[0]);
+                addHighFrequencyMeasurement(PROC_GRAV_Y,event.values[1]);
+                addHighFrequencyMeasurement(PROC_GRAV_Z,event.values[2]);
+                sensorCollectedEnough = addHighFrequencyMeasurement(PROC_GRAV_TIME,timestampSeconds);
+                break;
+            case Sensor.TYPE_LINEAR_ACCELERATION:
+                addHighFrequencyMeasurement(PROC_ACC_X,event.values[0]);
+                addHighFrequencyMeasurement(PROC_ACC_Y,event.values[1]);
+                addHighFrequencyMeasurement(PROC_ACC_Z,event.values[2]);
+                sensorCollectedEnough = addHighFrequencyMeasurement(PROC_ACC_TIME,timestampSeconds);
+                break;
+            case Sensor.TYPE_MAGNETIC_FIELD:
+                addHighFrequencyMeasurement(PROC_MAGNET_X,event.values[0]);
+                addHighFrequencyMeasurement(PROC_MAGNET_Y,event.values[1]);
+                addHighFrequencyMeasurement(PROC_MAGNET_Z,event.values[2]);
+                sensorCollectedEnough = addHighFrequencyMeasurement(PROC_MAGNET_TIME,timestampSeconds);
+                break;
+            case Sensor.TYPE_GYROSCOPE:
+                addHighFrequencyMeasurement(PROC_GYRO_X,event.values[0]);
+                addHighFrequencyMeasurement(PROC_GYRO_Y,event.values[1]);
+                addHighFrequencyMeasurement(PROC_GYRO_Z,event.values[2]);
+                sensorCollectedEnough = addHighFrequencyMeasurement(PROC_GYRO_TIME,timestampSeconds);
                 break;
             default:
                 Log.e(LOG_TAG,"Got event from unsupported sensor with type " + event.sensor.getType());
