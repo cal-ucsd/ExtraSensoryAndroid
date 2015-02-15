@@ -45,7 +45,7 @@ public class ESSensorManager implements SensorEventListener {
     private static final int SAMPLE_PERIOD_MILLIS = 25;
     private static final int NUM_SAMPLES_IN_SESSION = 800;
 
-    private static final float NANOSECONDS_IN_SECOND = 1e-9f;
+    private static final double NANOSECONDS_IN_SECOND = 1e9f;
 
     private static final String HIGH_FREQ_DATA_FILENAME = "HF_DUR_DATA.txt";
 
@@ -381,7 +381,7 @@ public class ESSensorManager implements SensorEventListener {
     @Override
     public void onSensorChanged(SensorEvent event) {
         boolean sensorCollectedEnough = false;
-        float timestampSeconds = ((float)event.timestamp) / NANOSECONDS_IN_SECOND;
+        float timestampSeconds = (float) ( ((double)event.timestamp) / NANOSECONDS_IN_SECOND );
         switch (event.sensor.getType()) {
             case Sensor.TYPE_ACCELEROMETER:
                 addHighFrequencyMeasurement(RAW_ACC_X,event.values[0]);

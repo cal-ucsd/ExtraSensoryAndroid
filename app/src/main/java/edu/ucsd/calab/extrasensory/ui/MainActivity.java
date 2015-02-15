@@ -28,7 +28,7 @@ public class MainActivity extends ActionBarActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        System.out.println("Creating main activity");
+        Log.i(LOG_TAG,"Creating main activity");
         setContentView(R.layout.activity_main);
 
         fragmentTabHost = (FragmentTabHost)findViewById(android.R.id.tabhost);
