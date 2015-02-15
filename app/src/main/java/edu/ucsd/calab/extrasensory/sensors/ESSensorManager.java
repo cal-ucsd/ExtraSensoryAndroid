@@ -42,7 +42,7 @@ public class ESSensorManager implements SensorEventListener {
     private static ESSensorManager theSingleSensorManager;
     private static final String LOG_TAG = "[ESSensorManager]";
 
-    private static final int SAMPLE_PERIOD_MILLIS = 25;
+    private static final int SAMPLE_PERIOD_MICROSECONDS = 25000;
     private static final int NUM_SAMPLES_IN_SESSION = 800;
 
     private static final double NANOSECONDS_IN_SECOND = 1e9f;
@@ -191,7 +191,7 @@ public class ESSensorManager implements SensorEventListener {
         /////////////////////////
 
         for (Sensor sensor : _sensors) {
-            _sensorManager.registerListener(this,sensor,SAMPLE_PERIOD_MILLIS);
+            _sensorManager.registerListener(this,sensor,SAMPLE_PERIOD_MICROSECONDS);
         }
     }
 
