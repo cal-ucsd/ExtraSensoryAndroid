@@ -2,10 +2,12 @@ package edu.ucsd.calab.extrasensory.sensors;
 
 import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -37,6 +39,8 @@ import edu.ucsd.calab.extrasensory.network.ESNetworkAccessor;
  * Created by Yonatan on 1/15/2015.
  */
 public class ESSensorManager implements SensorEventListener {
+
+    public static final String BROADCAST_RECORDING_STATE_CHANGED = "edu.ucsd.calab.extrasensory.broadcast.recording_state";
 
     // Static part of the class:
     private static ESSensorManager theSingleSensorManager;
@@ -122,15 +126,25 @@ public class ESSensorManager implements SensorEventListener {
     private HashMap<String,ArrayList<Float>> _highFreqData;
     private String _timestampStr;
 
-    //private Sensor _accelerometer;
     private ArrayList<Sensor> _sensors;
     private ArrayList<String> _sensorFeatureKeys;
+
+    private boolean _recordingRightNow = false;
 
     private boolean debugSensorSimulationMode() {
         return ESApplication.debugMode();
     }
 
+    public boolean is_recordingRightNow() {
+        return _recordingRightNow;
+    }
 
+    private void set_recordingRightNow(boolean recordingRightNow) {
+        _recordingRightNow = recordingRightNow;
+        Intent broadcast = new Intent(BROADCAST_RECORDING_STATE_CHANGED);
+        LocalBroadcastManager manager = LocalBroadcastManager.getInstance(ESApplication.getTheAppContext());
+        manager.sendBroadcast(broadcast);
+    }
 
     /**
      * Making the constructor private, in order to make this class a singleton
@@ -178,8 +192,9 @@ public class ESSensorManager implements SensorEventListener {
      * @param timestampStr A string representation of this session's identifying timestamp
      */
     public void startRecordingSensors(String timestampStr) {
-        Log.i(LOG_TAG,"Starting recording for timestamp: " + timestampStr);
+        Log.i(LOG_TAG, "Starting recording for timestamp: " + timestampStr);
         clearRecordingSession();
+        set_recordingRightNow(true);
         // Set the new timestamp:
         _timestampStr = timestampStr;
         /////////////////////////
@@ -222,6 +237,7 @@ public class ESSensorManager implements SensorEventListener {
         // Stop listening:
         _sensorManager.unregisterListener(this);
         clearRecordingSession();
+        set_recordingRightNow(false);
     }
 
 
@@ -276,6 +292,7 @@ public class ESSensorManager implements SensorEventListener {
 
     private void finishSession() {
         Log.i(LOG_TAG,"Finishing recording session.");
+        set_recordingRightNow(false);
         // Construct an object with all the data:
         JSONObject data = new JSONObject();
         for (String key : _highFreqData.keySet()) {

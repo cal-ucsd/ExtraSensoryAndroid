@@ -15,5 +15,6 @@
     <string name="server_api_prefix">http://137.110.112.50:8080/api/</string>
     <string name="api_upload_zip">feedback_upload</string>
     <string name="api_feedback">feedback</string>
+    <string name="REC">REC</string>
 
 </resources>

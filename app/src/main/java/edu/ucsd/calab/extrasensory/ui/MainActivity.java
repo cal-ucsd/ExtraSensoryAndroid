@@ -1,8 +1,12 @@
 package edu.ucsd.calab.extrasensory.ui;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.support.v4.app.FragmentTabHost;
 import android.os.Bundle;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -12,6 +16,7 @@ import android.widget.ToggleButton;
 
 import edu.ucsd.calab.extrasensory.ESApplication;
 import edu.ucsd.calab.extrasensory.R;
+import edu.ucsd.calab.extrasensory.sensors.ESSensorManager;
 
 
 public class MainActivity extends ActionBarActivity {
@@ -23,6 +28,21 @@ public class MainActivity extends ActionBarActivity {
     }
 
     private FragmentTabHost fragmentTabHost;
+    private Menu _optionsMenu = null;
+
+    private BroadcastReceiver _broadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent == null) {
+                Log.e(LOG_TAG,"Broadcast receiver caught null intent");
+                return;
+            }
+            if (ESSensorManager.BROADCAST_RECORDING_STATE_CHANGED.equals(intent.getAction())) {
+                Log.v(LOG_TAG,"Caught recording state broadcast");
+                checkRecordingStateAndSetRedLight();
+            }
+        }
+    };
 
 
     @Override
@@ -44,11 +64,26 @@ public class MainActivity extends ActionBarActivity {
 
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        checkRecordingStateAndSetRedLight();
+        LocalBroadcastManager.getInstance(this).registerReceiver(_broadcastReceiver,new IntentFilter(ESSensorManager.BROADCAST_RECORDING_STATE_CHANGED));
+    }
+
+    @Override
+    protected void onPause() {
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(_broadcastReceiver);
+        super.onPause();
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
+        _optionsMenu = menu;
+
+        checkRecordingStateAndSetRedLight();
         return true;
     }
 
@@ -81,6 +116,23 @@ public class MainActivity extends ActionBarActivity {
         }
         else {
             getESApplication().stopCurrentRecordingAndRecordingSchedule();
+        }
+    }
+
+    private void checkRecordingStateAndSetRedLight() {
+        if (_optionsMenu == null) {
+            // Then there is no place to hide/show the red light:
+            return;
+        }
+
+        MenuItem redLight = _optionsMenu.findItem(R.id.action_red_circle);
+        if (ESSensorManager.getESSensorManager().is_recordingRightNow()) {
+            redLight.setVisible(true);
+            Log.i(LOG_TAG, "Recording now - turning on red light");
+        }
+        else {
+            redLight.setVisible(false);
+            Log.i(LOG_TAG,"Not recording - turning off red light");
         }
     }
 }
