@@ -75,6 +75,14 @@ public class ESTimestamp {
     }
 
     /**
+     * Get the date/time (in accuracy of seconds) that this timestamp represents.
+     * @return The data/time represented by this timestamp
+     */
+    public Date getDateOfTimestamp() {
+        return new Date(this._secondsSinceEpoch * 1000);
+    }
+
+    /**
      * Get the number of seconds since the epoch.
      * @return
      */
@@ -97,4 +105,5 @@ public class ESTimestamp {
 
         return this._secondsSinceEpoch - minusTime._secondsSinceEpoch;
     }
+
 }

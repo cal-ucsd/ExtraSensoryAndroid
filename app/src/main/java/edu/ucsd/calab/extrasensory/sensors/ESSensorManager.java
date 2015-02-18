@@ -521,12 +521,12 @@ public class ESSensorManager
 
     @Override
     public void onConnectionSuspended(int i) {
-
+        Log.i(LOG_TAG,"google api connection suspended. " + i);
     }
 
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
-
+        Log.i(LOG_TAG,"google api connection failed. result: " + connectionResult.toString());
     }
 
     @Override
