@@ -1,14 +1,21 @@
 package edu.ucsd.calab.extrasensory.sensors;
 
-import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+
+import android.location.Location;
+import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
+
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -38,7 +45,10 @@ import edu.ucsd.calab.extrasensory.network.ESNetworkAccessor;
  *
  * Created by Yonatan on 1/15/2015.
  */
-public class ESSensorManager implements SensorEventListener {
+public class ESSensorManager
+        implements SensorEventListener,
+        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,
+        com.google.android.gms.location.LocationListener {
 
     public static final String BROADCAST_RECORDING_STATE_CHANGED = "edu.ucsd.calab.extrasensory.broadcast.recording_state";
 
@@ -48,9 +58,9 @@ public class ESSensorManager implements SensorEventListener {
 
     private static final int SAMPLE_PERIOD_MICROSECONDS = 25000;
     private static final int NUM_SAMPLES_IN_SESSION = 800;
-
     private static final double NANOSECONDS_IN_SECOND = 1e9f;
-
+    private static final long LOCATION_UPDATE_INTERVAL_MILLIS = 500;
+    private static final long LOCATION_FASTEST_UPDATE_INTERVAL_MILLIS = 50;
     private static final String HIGH_FREQ_DATA_FILENAME = "HF_DUR_DATA.txt";
 
     // Raw motion sensors:
@@ -62,11 +72,17 @@ public class ESSensorManager implements SensorEventListener {
     private static final String RAW_MAGNET_X = "raw_magnet_x";
     private static final String RAW_MAGNET_Y = "raw_magnet_y";
     private static final String RAW_MAGNET_Z = "raw_magnet_z";
+    private static final String RAW_MAGNET_BIAS_X = "raw_magnet_bias_x";
+    private static final String RAW_MAGNET_BIAS_Y = "raw_magnet_bias_y";
+    private static final String RAW_MAGNET_BIAS_Z = "raw_magnet_bias_z";
     private static final String RAW_MAGNET_TIME = "raw_magnet_timeref";
 
     private static final String RAW_GYRO_X = "raw_gyro_x";
     private static final String RAW_GYRO_Y = "raw_gyro_y";
     private static final String RAW_GYRO_Z = "raw_gyro_z";
+    private static final String RAW_GYRO_DRIFT_X = "raw_gyro_drift_x";
+    private static final String RAW_GYRO_DRIFT_Y = "raw_gyro_drift_y";
+    private static final String RAW_GYRO_DRIFT_Z = "raw_gyro_drift_z";
     private static final String RAW_GYRO_TIME = "raw_gyro_timeref";
 
     // Processed motion sensors (software "sensors"):
@@ -100,13 +116,14 @@ public class ESSensorManager implements SensorEventListener {
     private static final String LOC_LAT = "location_latitude";
     private static final String LOC_LONG = "location_longitude";
     private static final String LOC_ALT = "location_altitude";
-    private static final String LOC_FLOOR = "location_floor";
     private static final String LOC_SPEED = "location_speed";
-
     private static final String LOC_HOR_ACCURACY = "location_horizontal_accuracy";
-    private static final String LOC_VER_ACCURACY = "location_vertical_accuracy";
-
-    private static final String LOC_TIME = "location_timestamp";
+    private static final String LOC_BEARING = "location_bearing";
+    private static final String LOC_TIME = "location_timeref";
+    private static final double LOC_ACCURACY_UNAVAILABLE = -1;
+    private static final double LOC_ALT_UNAVAILABLE = -1000000;
+    private static final double LOC_BEARING_UNAVAILABLE = -1;
+    private static final double LOC_SPEED_UNAVAILABLE = -1;
 
     /**
      * Get the single instance of this class
@@ -123,11 +140,14 @@ public class ESSensorManager implements SensorEventListener {
 
     // Non static part:
     private SensorManager _sensorManager;
-    private HashMap<String,ArrayList<Float>> _highFreqData;
+    private GoogleApiClient _googleApiClient;
+    private boolean _googleApiClientConnected = false;
+
+    private HashMap<String,ArrayList<Double>> _highFreqData;
     private String _timestampStr;
 
-    private ArrayList<Sensor> _sensors;
-    private ArrayList<String> _sensorFeatureKeys;
+    private ArrayList<Sensor> _hiFreqSensors;
+    private ArrayList<String> _hiFreqSensorFeatureKeys;
 
     private boolean _recordingRightNow = false;
 
@@ -150,10 +170,16 @@ public class ESSensorManager implements SensorEventListener {
      * Making the constructor private, in order to make this class a singleton
      */
     private ESSensorManager() {
+        _googleApiClient = new GoogleApiClient.Builder(ESApplication.getTheAppContext())
+                .addApi(LocationServices.API)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .build();
+
         _sensorManager = (SensorManager) ESApplication.getTheAppContext().getSystemService(Context.SENSOR_SERVICE);
         // Initialize the sensors:
-        _sensors = new ArrayList<>(10);
-        _sensorFeatureKeys = new ArrayList<>(10);
+        _hiFreqSensors = new ArrayList<>(10);
+        _hiFreqSensorFeatureKeys = new ArrayList<>(10);
 
         // Add raw motion sensors:
         if (!tryToAddSensor(Sensor.TYPE_ACCELEROMETER,"raw accelerometer",RAW_ACC_X)) {
@@ -167,6 +193,7 @@ public class ESSensorManager implements SensorEventListener {
         tryToAddSensor(Sensor.TYPE_LINEAR_ACCELERATION,"linear acceleration",PROC_ACC_X);
         tryToAddSensor(Sensor.TYPE_MAGNETIC_FIELD,"calibrated magnetometer",PROC_MAGNET_X);
         tryToAddSensor(Sensor.TYPE_GYROSCOPE,"calibrated gyroscope",PROC_GYRO_X);
+        tryToAddSensor(Sensor.TYPE_ROTATION_VECTOR,"rotation vector",PROC_ROTATION_X);
 
         Log.v(LOG_TAG,"An instance of ESSensorManager was created.");
     }
@@ -179,8 +206,8 @@ public class ESSensorManager implements SensorEventListener {
         }
         else {
             Log.i(LOG_TAG,"Adding sensor: " + nameForLog);
-            _sensors.add(sensor);
-            _sensorFeatureKeys.add(featureKey);
+            _hiFreqSensors.add(sensor);
+            _hiFreqSensorFeatureKeys.add(featureKey);
             return true;
         }
     }
@@ -205,7 +232,11 @@ public class ESSensorManager implements SensorEventListener {
         }
         /////////////////////////
 
-        for (Sensor sensor : _sensors) {
+        // Start recording location:
+        _googleApiClient.connect();
+
+        // Start recording hi-frequency sensors:
+        for (Sensor sensor : _hiFreqSensors) {
             _sensorManager.registerListener(this,sensor,SAMPLE_PERIOD_MICROSECONDS);
         }
     }
@@ -236,6 +267,8 @@ public class ESSensorManager implements SensorEventListener {
         Log.i(LOG_TAG,"Stopping recording.");
         // Stop listening:
         _sensorManager.unregisterListener(this);
+        LocationServices.FusedLocationApi.removeLocationUpdates(_googleApiClient,this);
+
         clearRecordingSession();
         set_recordingRightNow(false);
     }
@@ -248,14 +281,14 @@ public class ESSensorManager implements SensorEventListener {
      * @param measurement The sampled measurement to be added to the vector
      * @return Did this key collect enough samples in this session?
      */
-    private boolean addHighFrequencyMeasurement(String key,float measurement) {
+    private boolean addHighFrequencyMeasurement(String key,double measurement) {
         if (_highFreqData == null) {
             Log.e(LOG_TAG,"Can't add measurement. HF data bundle is null");
         }
 
         // Check if the vector for this key was already initialized:
         if (!_highFreqData.containsKey(key)) {
-            _highFreqData.put(key,new ArrayList<Float>(NUM_SAMPLES_IN_SESSION));
+            _highFreqData.put(key,new ArrayList<Double>(NUM_SAMPLES_IN_SESSION));
         }
 
         _highFreqData.get(key).add(measurement);
@@ -292,7 +325,11 @@ public class ESSensorManager implements SensorEventListener {
 
     private void finishSession() {
         Log.i(LOG_TAG,"Finishing recording session.");
+        //LocationServices.FusedLocationApi.removeLocationUpdates(_googleApiClient,this);
+        _googleApiClient.disconnect();
+
         set_recordingRightNow(false);
+
         // Construct an object with all the data:
         JSONObject data = new JSONObject();
         for (String key : _highFreqData.keySet()) {
@@ -375,7 +412,7 @@ public class ESSensorManager implements SensorEventListener {
         }
 
         // Check expected feature keys:
-        for (String featureKey : _sensorFeatureKeys) {
+        for (String featureKey : _hiFreqSensorFeatureKeys) {
             if (!_highFreqData.containsKey(featureKey) ||
                     _highFreqData.get(featureKey) == null ||
                     _highFreqData.get(featureKey).size() < NUM_SAMPLES_IN_SESSION) {
@@ -386,7 +423,7 @@ public class ESSensorManager implements SensorEventListener {
 
         // All the expected sensors sampled the required amount of data
         Log.d(LOG_TAG,"=== checked and should finish.");
-        for (String featureKey : _sensorFeatureKeys) {
+        for (String featureKey : _hiFreqSensorFeatureKeys) {
             Log.d("===", featureKey + ": " + _highFreqData.get(featureKey).size());
         }
         return true;
@@ -398,7 +435,7 @@ public class ESSensorManager implements SensorEventListener {
     @Override
     public void onSensorChanged(SensorEvent event) {
         boolean sensorCollectedEnough = false;
-        float timestampSeconds = (float) ( ((double)event.timestamp) / NANOSECONDS_IN_SECOND );
+        double timestampSeconds =  ((double)event.timestamp) / NANOSECONDS_IN_SECOND;
         switch (event.sensor.getType()) {
             case Sensor.TYPE_ACCELEROMETER:
                 addHighFrequencyMeasurement(RAW_ACC_X,event.values[0]);
@@ -410,12 +447,18 @@ public class ESSensorManager implements SensorEventListener {
                 addHighFrequencyMeasurement(RAW_MAGNET_X,event.values[0]);
                 addHighFrequencyMeasurement(RAW_MAGNET_Y,event.values[1]);
                 addHighFrequencyMeasurement(RAW_MAGNET_Z,event.values[2]);
+                addHighFrequencyMeasurement(RAW_MAGNET_BIAS_X,event.values[3]);
+                addHighFrequencyMeasurement(RAW_MAGNET_BIAS_Y,event.values[4]);
+                addHighFrequencyMeasurement(RAW_MAGNET_BIAS_Z,event.values[5]);
                 sensorCollectedEnough = addHighFrequencyMeasurement(RAW_MAGNET_TIME,timestampSeconds);
                 break;
             case Sensor.TYPE_GYROSCOPE_UNCALIBRATED:
                 addHighFrequencyMeasurement(RAW_GYRO_X,event.values[0]);
                 addHighFrequencyMeasurement(RAW_GYRO_Y,event.values[1]);
                 addHighFrequencyMeasurement(RAW_GYRO_Z,event.values[2]);
+                addHighFrequencyMeasurement(RAW_GYRO_DRIFT_X,event.values[3]);
+                addHighFrequencyMeasurement(RAW_GYRO_DRIFT_Y,event.values[4]);
+                addHighFrequencyMeasurement(RAW_GYRO_DRIFT_Z,event.values[5]);
                 sensorCollectedEnough = addHighFrequencyMeasurement(RAW_GYRO_TIME,timestampSeconds);
                 break;
             case Sensor.TYPE_GRAVITY:
@@ -442,6 +485,13 @@ public class ESSensorManager implements SensorEventListener {
                 addHighFrequencyMeasurement(PROC_GYRO_Z,event.values[2]);
                 sensorCollectedEnough = addHighFrequencyMeasurement(PROC_GYRO_TIME,timestampSeconds);
                 break;
+            case Sensor.TYPE_ROTATION_VECTOR:
+                addHighFrequencyMeasurement(PROC_ROTATION_X,event.values[0]);
+                addHighFrequencyMeasurement(PROC_ROTATION_Y,event.values[1]);
+                addHighFrequencyMeasurement(PROC_ROTATION_Z,event.values[2]);
+//                addHighFrequencyMeasurement(PROC_ROTATION_COS,event.values[4]);
+//                addHighFrequencyMeasurement(PROC_ROTATION_ACCURACY,event.values[5]);
+                break;
             default:
                 Log.e(LOG_TAG,"Got event from unsupported sensor with type " + event.sensor.getType());
         }
@@ -457,5 +507,40 @@ public class ESSensorManager implements SensorEventListener {
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
+    }
+
+    @Override
+    public void onConnected(Bundle bundle) {
+        Log.v(LOG_TAG,"google api: connected");
+        LocationRequest locationRequest = new LocationRequest();
+        locationRequest.setInterval(LOCATION_UPDATE_INTERVAL_MILLIS);
+        locationRequest.setFastestInterval(LOCATION_FASTEST_UPDATE_INTERVAL_MILLIS);
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        LocationServices.FusedLocationApi.requestLocationUpdates(_googleApiClient, locationRequest, this);
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+
+    }
+
+    @Override
+    public void onConnectionFailed(ConnectionResult connectionResult) {
+
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        double timerefSeconds = ((double)location.getElapsedRealtimeNanos()) / NANOSECONDS_IN_SECOND;
+        Log.d(LOG_TAG,"got location update with time reference: " + timerefSeconds);
+
+        addHighFrequencyMeasurement(LOC_TIME, timerefSeconds);
+        addHighFrequencyMeasurement(LOC_LAT,location.getLatitude());
+        addHighFrequencyMeasurement(LOC_LONG,location.getLongitude());
+
+        addHighFrequencyMeasurement(LOC_HOR_ACCURACY,location.hasAccuracy() ? location.getAccuracy() : LOC_ACCURACY_UNAVAILABLE);
+        addHighFrequencyMeasurement(LOC_ALT,location.hasAltitude() ? location.getAltitude() : LOC_ALT_UNAVAILABLE);
+        addHighFrequencyMeasurement(LOC_SPEED,location.hasSpeed() ? location.getSpeed() : LOC_SPEED_UNAVAILABLE);
+        addHighFrequencyMeasurement(LOC_BEARING,location.hasBearing() ? location.getBearing() : LOC_BEARING_UNAVAILABLE);
     }
 }
