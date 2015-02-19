@@ -1,7 +1,11 @@
 package edu.ucsd.calab.extrasensory.ui;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.support.v4.app.FragmentTabHost;
@@ -13,6 +17,9 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ToggleButton;
+
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesUtil;
 
 import edu.ucsd.calab.extrasensory.ESApplication;
 import edu.ucsd.calab.extrasensory.R;
@@ -67,8 +74,43 @@ public class MainActivity extends ActionBarActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        checkGooglePlay();
         checkRecordingStateAndSetRedLight();
         LocalBroadcastManager.getInstance(this).registerReceiver(_broadcastReceiver,new IntentFilter(ESSensorManager.BROADCAST_RECORDING_STATE_CHANGED));
+    }
+
+    private void checkGooglePlay() {
+        int googleServicesResult = GooglePlayServicesUtil.isGooglePlayServicesAvailable(ESApplication.getTheAppContext());
+        if (googleServicesResult == ConnectionResult.SUCCESS) {
+            Log.i(LOG_TAG, "We have google play services");
+        }
+        else {
+            Log.i(LOG_TAG,"We don't have required google play services");
+            final PendingIntent pendingIntent = GooglePlayServicesUtil.getErrorPendingIntent(googleServicesResult,this,0);
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setMessage(R.string.need_google_play_services_title);
+            builder.setMessage(R.string.need_google_play_services_message);
+            builder.setPositiveButton(R.string.set_google_play_button, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int id) {
+                    Log.v(LOG_TAG,"User clicked to go to Google Play Services to update required services");
+                    try {
+                        pendingIntent.send();
+                    } catch (PendingIntent.CanceledException e) {
+                        Log.e(LOG_TAG,"Failed redirecting user to Google Play");
+                        e.printStackTrace();
+                    }
+                }
+            });
+            builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int id) {
+                    Log.i(LOG_TAG,"User clicked 'cancel' for Google Play");
+                }
+            });
+
+            Dialog dialog = builder.create();
+            dialog.show();
+        }
+
     }
 
     @Override

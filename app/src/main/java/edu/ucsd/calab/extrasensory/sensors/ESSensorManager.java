@@ -13,6 +13,7 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
@@ -141,7 +142,6 @@ public class ESSensorManager
     // Non static part:
     private SensorManager _sensorManager;
     private GoogleApiClient _googleApiClient;
-    private boolean _googleApiClientConnected = false;
 
     private HashMap<String,ArrayList<Double>> _highFreqData;
     private String _timestampStr;
@@ -171,10 +171,10 @@ public class ESSensorManager
      */
     private ESSensorManager() {
         _googleApiClient = new GoogleApiClient.Builder(ESApplication.getTheAppContext())
-                .addApi(LocationServices.API)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .build();
+                    .addApi(LocationServices.API)
+                    .addConnectionCallbacks(this)
+                    .addOnConnectionFailedListener(this)
+                    .build();
 
         _sensorManager = (SensorManager) ESApplication.getTheAppContext().getSystemService(Context.SENSOR_SERVICE);
         // Initialize the sensors:
@@ -233,7 +233,14 @@ public class ESSensorManager
         /////////////////////////
 
         // Start recording location:
-        _googleApiClient.connect();
+        int googleServicesResult = GooglePlayServicesUtil.isGooglePlayServicesAvailable(ESApplication.getTheAppContext());
+        if (googleServicesResult == ConnectionResult.SUCCESS) {
+            Log.i(LOG_TAG, "We have google play services");
+            _googleApiClient.connect();
+        }
+        else {
+            Log.i(LOG_TAG,"We don't have required google play services, so not using location services.");
+        }
 
         // Start recording hi-frequency sensors:
         for (Sensor sensor : _hiFreqSensors) {
