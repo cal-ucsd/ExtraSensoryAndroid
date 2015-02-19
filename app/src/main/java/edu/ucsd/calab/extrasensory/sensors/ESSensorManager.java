@@ -8,6 +8,7 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 
 import android.location.Location;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
@@ -60,6 +61,7 @@ public class ESSensorManager
     private static final int SAMPLE_PERIOD_MICROSECONDS = 25000;
     private static final int NUM_SAMPLES_IN_SESSION = 800;
     private static final double NANOSECONDS_IN_SECOND = 1e9f;
+    private static final double MILLISECONDS_IN_SECOND = 1000;
     private static final long LOCATION_UPDATE_INTERVAL_MILLIS = 500;
     private static final long LOCATION_FASTEST_UPDATE_INTERVAL_MILLIS = 50;
     private static final String HIGH_FREQ_DATA_FILENAME = "HF_DUR_DATA.txt";
@@ -538,7 +540,13 @@ public class ESSensorManager
 
     @Override
     public void onLocationChanged(Location location) {
-        double timerefSeconds = ((double)location.getElapsedRealtimeNanos()) / NANOSECONDS_IN_SECOND;
+        double timerefSeconds;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            timerefSeconds = ((double) location.getElapsedRealtimeNanos()) / NANOSECONDS_IN_SECOND;
+        }
+        else {
+            timerefSeconds = ((double) location.getTime()) / MILLISECONDS_IN_SECOND;
+        }
         Log.d(LOG_TAG,"got location update with time reference: " + timerefSeconds);
 
         addHighFrequencyMeasurement(LOC_TIME, timerefSeconds);
