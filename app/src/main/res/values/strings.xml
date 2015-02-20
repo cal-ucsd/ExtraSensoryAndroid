@@ -4,6 +4,12 @@
     <string name="app_name">ExtraSensory</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
+    <string name="tab_home_tag">home</string>
+    <string name="tab_summary_tag">summary</string>
+    <string name="tab_history_tag">history</string>
+    <string name="tab_home_indicator">Home</string>
+    <string name="tab_summary_indicator">Summary</string>
+    <string name="tab_history_indicator">History</string>
     <string name="data_collection_label">Data collection:</string>
     <string name="data_collection_on">on</string>
     <string name="data_collection_off">off</string>

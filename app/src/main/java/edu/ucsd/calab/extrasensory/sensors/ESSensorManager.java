@@ -276,7 +276,7 @@ public class ESSensorManager
         Log.i(LOG_TAG,"Stopping recording.");
         // Stop listening:
         _sensorManager.unregisterListener(this);
-        LocationServices.FusedLocationApi.removeLocationUpdates(_googleApiClient,this);
+        _googleApiClient.disconnect();
 
         clearRecordingSession();
         set_recordingRightNow(false);

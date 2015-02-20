@@ -5,8 +5,30 @@
     android:background="#ff0000"
     tools:context="edu.ucsd.calab.extrasensory.ui.HomeFragment">
 
-    <!-- TODO: Update blank fragment layout -->
-    <TextView android:layout_width="match_parent" android:layout_height="match_parent"
-        android:text="home fragment" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView android:layout_width="0dp" android:layout_weight="2" android:layout_height="wrap_content"
+            android:text="@string/data_collection_label" />
+        <RadioGroup xmlns:android="http://schemas.android.com/apk/res/android"
+            android:id="@+id/radio_group_data_collection"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <RadioButton android:id="@+id/radio_data_collection_off"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/data_collection_off"/>
+            <RadioButton android:id="@+id/radio_data_collection_on"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/data_collection_on"/>
+        </RadioGroup>
+
+
+    </LinearLayout>
+
 
 </FrameLayout>

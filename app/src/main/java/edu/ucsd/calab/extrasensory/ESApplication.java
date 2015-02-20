@@ -38,6 +38,34 @@ public class ESApplication extends Application {
 
     private ESSensorManager _sensorManager;
     private AlarmManager _alarmManager;
+    private boolean _userSelectedDataCollectionOn = true;
+
+    /**
+     * Is data collection "on" now, according to the user decision (not according to storage limiation)
+     * @return
+     */
+    public boolean is_userSelectedDataCollectionOn() {
+        return _userSelectedDataCollectionOn;
+    }
+
+    /**
+     * Mark the user input for allowing/stopping data collection now.
+     * @param userSelectedDataCollectionOn
+     */
+    public void set_userSelectedDataCollectionOn(boolean userSelectedDataCollectionOn) {
+        if (_userSelectedDataCollectionOn == userSelectedDataCollectionOn) {
+            // Then there is nothing to do:
+            return;
+        }
+
+        _userSelectedDataCollectionOn = userSelectedDataCollectionOn;
+        if (_userSelectedDataCollectionOn) {
+            startRecordingSchedule();
+        }
+        else {
+            stopCurrentRecordingAndRecordingSchedule();
+        }
+    }
 
     public static boolean debugMode() { return false; }
 
@@ -53,18 +81,12 @@ public class ESApplication extends Application {
 
         // Start the scheduling of periodic recordings:
         startRecordingSchedule();
-        /*
-        Log.d(LOG_TAG,"Testing just once calling start recording:");
-        Intent intent = new Intent(getApplicationContext(),ESIntentService.class);
-        intent.setAction(ESIntentService.ACTION_START_RECORDING);
-        startService(intent);
-        */
     }
 
     /**
      * Start a repeating schedule of recording sessions (every 1 minute) from now.
      */
-    public void startRecordingSchedule() {
+    private void startRecordingSchedule() {
         if (_alarmManager == null) {
             Log.e(LOG_TAG,"Alarm manager is null");
             return;
@@ -92,7 +114,7 @@ public class ESApplication extends Application {
      * Stop the current recording session (if one exists),
      * and cancel the periodic schedule of recording sessions.
      */
-    public void stopCurrentRecordingAndRecordingSchedule() {
+    private void stopCurrentRecordingAndRecordingSchedule() {
         stopRecordingSchedule();
         stopCurrentRecording();
     }

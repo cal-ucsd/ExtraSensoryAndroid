@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTabHost;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
@@ -16,7 +17,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ToggleButton;
+import android.widget.TabHost;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
@@ -29,10 +30,6 @@ import edu.ucsd.calab.extrasensory.sensors.ESSensorManager;
 public class MainActivity extends ActionBarActivity {
 
     private static final String LOG_TAG = "[MainActivity]";
-
-    private ESApplication getESApplication() {
-        return (ESApplication)getApplication();
-    }
 
     private FragmentTabHost fragmentTabHost;
     private Menu _optionsMenu = null;
@@ -62,13 +59,25 @@ public class MainActivity extends ActionBarActivity {
         fragmentTabHost.setup(getApplicationContext(),getSupportFragmentManager(),android.R.id.tabcontent);
 
         // Add the tabs:
-        fragmentTabHost.addTab(fragmentTabHost.newTabSpec("home").setIndicator("Home"),
+        fragmentTabHost.addTab(fragmentTabHost.newTabSpec(getString(R.string.tab_home_tag)).setIndicator(getString(R.string.tab_home_indicator)),
                 HomeFragment.class, null);
-        fragmentTabHost.addTab(fragmentTabHost.newTabSpec("history").setIndicator("History"),
+        fragmentTabHost.addTab(fragmentTabHost.newTabSpec(getString(R.string.tab_history_tag)).setIndicator(getString(R.string.tab_history_indicator)),
                 HistoryFragment.class, null);
-        fragmentTabHost.addTab(fragmentTabHost.newTabSpec("summary").setIndicator("Summary"),
+        fragmentTabHost.addTab(fragmentTabHost.newTabSpec(getString(R.string.tab_summary_tag)).setIndicator(getString(R.string.tab_summary_indicator)),
                 SummaryFragment.class,null);
 
+        // Set the tab host to respond to tab presses:
+        fragmentTabHost.setOnTabChangedListener(new TabHost.OnTabChangeListener() {
+            @Override
+            public void onTabChanged(String tabId) {
+
+                if (getString(R.string.tab_home_tag).equals(tabId)) {
+                    Log.i(LOG_TAG,"User switched to Home tab");
+                    HomeFragment homeFragment = (HomeFragment) getSupportFragmentManager().findFragmentByTag(tabId);
+                    homeFragment.onResume();
+                }
+            }
+        });
     }
 
     @Override
@@ -150,16 +159,6 @@ public class MainActivity extends ActionBarActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    public void dataCollectionChanged(View view) {
-        ToggleButton button = (ToggleButton)view;
-        Log.v(LOG_TAG,"data collection toggle button pressed.");
-        if (button.isChecked()) {
-            getESApplication().startRecordingSchedule();
-        }
-        else {
-            getESApplication().stopCurrentRecordingAndRecordingSchedule();
-        }
-    }
 
     private void checkRecordingStateAndSetRedLight() {
         if (_optionsMenu == null) {
