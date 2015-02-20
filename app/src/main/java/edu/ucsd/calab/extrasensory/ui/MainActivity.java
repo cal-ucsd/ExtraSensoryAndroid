@@ -8,7 +8,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTabHost;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
@@ -16,7 +15,6 @@ import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.TabHost;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -31,7 +29,7 @@ public class MainActivity extends ActionBarActivity {
 
     private static final String LOG_TAG = "[MainActivity]";
 
-    private FragmentTabHost fragmentTabHost;
+    private FragmentTabHost _fragmentTabHost;
     private Menu _optionsMenu = null;
 
     private BroadcastReceiver _broadcastReceiver = new BroadcastReceiver() {
@@ -55,24 +53,24 @@ public class MainActivity extends ActionBarActivity {
         Log.i(LOG_TAG,"Creating main activity");
         setContentView(R.layout.activity_main);
 
-        fragmentTabHost = (FragmentTabHost)findViewById(android.R.id.tabhost);
-        fragmentTabHost.setup(getApplicationContext(),getSupportFragmentManager(),android.R.id.tabcontent);
+        _fragmentTabHost = (FragmentTabHost)findViewById(android.R.id.tabhost);
+        _fragmentTabHost.setup(getApplicationContext(), getSupportFragmentManager(), android.R.id.tabcontent);
 
         // Add the tabs:
-        fragmentTabHost.addTab(fragmentTabHost.newTabSpec(getString(R.string.tab_home_tag)).setIndicator(getString(R.string.tab_home_indicator)),
+        _fragmentTabHost.addTab(_fragmentTabHost.newTabSpec(getString(R.string.tab_home_tag)).setIndicator(getString(R.string.tab_home_indicator)),
                 HomeFragment.class, null);
-        fragmentTabHost.addTab(fragmentTabHost.newTabSpec(getString(R.string.tab_history_tag)).setIndicator(getString(R.string.tab_history_indicator)),
+        _fragmentTabHost.addTab(_fragmentTabHost.newTabSpec(getString(R.string.tab_history_tag)).setIndicator(getString(R.string.tab_history_indicator)),
                 HistoryFragment.class, null);
-        fragmentTabHost.addTab(fragmentTabHost.newTabSpec(getString(R.string.tab_summary_tag)).setIndicator(getString(R.string.tab_summary_indicator)),
+        _fragmentTabHost.addTab(_fragmentTabHost.newTabSpec(getString(R.string.tab_summary_tag)).setIndicator(getString(R.string.tab_summary_indicator)),
                 SummaryFragment.class,null);
 
         // Set the tab host to respond to tab presses:
-        fragmentTabHost.setOnTabChangedListener(new TabHost.OnTabChangeListener() {
+        _fragmentTabHost.setOnTabChangedListener(new TabHost.OnTabChangeListener() {
             @Override
             public void onTabChanged(String tabId) {
 
                 if (getString(R.string.tab_home_tag).equals(tabId)) {
-                    Log.i(LOG_TAG,"User switched to Home tab");
+                    Log.i(LOG_TAG, "User switched to Home tab");
                     HomeFragment homeFragment = (HomeFragment) getSupportFragmentManager().findFragmentByTag(tabId);
                     homeFragment.onResume();
                 }
