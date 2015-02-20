@@ -128,6 +128,13 @@ public class ESSensorManager
     private static final double LOC_BEARING_UNAVAILABLE = -1;
     private static final double LOC_SPEED_UNAVAILABLE = -1;
 
+    // Low frequency measurements:
+    private static final String TEMPERATURE_DEVICE = "temperature_device";
+    private static final String TEMPERATURE_AMBIENT = "temperature_ambient";
+    private static final String LIGHT = "light";
+    private static final String PRESURE = "presure";
+    private static final String PROXIMITY = "";
+
     /**
      * Get the single instance of this class
      * @return
@@ -146,6 +153,7 @@ public class ESSensorManager
     private GoogleApiClient _googleApiClient;
 
     private HashMap<String,ArrayList<Double>> _highFreqData;
+    private JSONObject _lowFreqData;
     private String _timestampStr;
 
     private ArrayList<Sensor> _hiFreqSensors;
@@ -248,6 +256,9 @@ public class ESSensorManager
         for (Sensor sensor : _hiFreqSensors) {
             _sensorManager.registerListener(this,sensor,SAMPLE_PERIOD_MICROSECONDS);
         }
+
+        // Get low-frequency measurements:
+        collectLowFrequencyMeasurements();
     }
 
     private void simulateRecordingSession() {
@@ -263,7 +274,8 @@ public class ESSensorManager
 
     private void clearRecordingSession() {
         // Clear the high frequency map:
-        _highFreqData = new HashMap<>(3);
+        _highFreqData = new HashMap<>(20);
+        _lowFreqData = new JSONObject();
         // Clear temporary data files:
         ESApplication.getTheAppContext().deleteFile(currentZipFilename());
     }
@@ -439,6 +451,9 @@ public class ESSensorManager
     }
 
 
+    private void collectLowFrequencyMeasurements() {
+        //TODO............
+    }
 
     // Implementing the SensorEventListener interface:
     @Override
