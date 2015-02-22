@@ -1,12 +1,10 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="#0000ff"
-    tools:context="edu.ucsd.calab.extrasensory.ui.HistoryFragment">
+<ListView xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:id="@+id/listview"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        tools:context="edu.ucsd.calab.extrasensory.ui.HistoryFragment">
 
     <!-- TODO: Update blank fragment layout -->
-    <TextView android:layout_width="match_parent" android:layout_height="match_parent"
-        android:text="history_fragment" />
 
-</FrameLayout>
+</ListView>
