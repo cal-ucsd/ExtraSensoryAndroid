@@ -58,6 +58,7 @@ public class ESSensorManager
     private static ESSensorManager theSingleSensorManager;
     private static final String LOG_TAG = "[ESSensorManager]";
 
+    private static final int LOW_FREQ_SAMPLE_PERIOD_MICROSECONDS = 1000000;
     private static final int SAMPLE_PERIOD_MICROSECONDS = 25000;
     private static final int NUM_SAMPLES_IN_SESSION = 800;
     private static final double NANOSECONDS_IN_SECOND = 1e9f;
@@ -114,6 +115,7 @@ public class ESSensorManager
     private static final String PROC_ROTATION_Z = "processed_rotation_vector_z";
     private static final String PROC_ROTATION_COS = "processed_rotation_vector_cosine";
     private static final String PROC_ROTATION_ACCURACY = "processed_rotation_vector_accuracy";
+    private static final String PROC_ROTATION_TIME = "processed_rotation_vector_timeref";
 
     // Location sensors:
     private static final String LOC_LAT = "location_latitude";
@@ -132,8 +134,17 @@ public class ESSensorManager
     private static final String TEMPERATURE_DEVICE = "temperature_device";
     private static final String TEMPERATURE_AMBIENT = "temperature_ambient";
     private static final String LIGHT = "light";
-    private static final String PRESURE = "presure";
-    private static final String PROXIMITY = "";
+    private static final String PRESSURE = "pressure";
+    private static final String PROXIMITY = "proximity_cm";
+    private static final String HUMIDITY = "relative_humidity";
+
+    private static final String WIFI_STATUS = "wifi_status";
+    private static final String APP_STATE = "app_state";
+    private static final String ON_THE_PHONE = "on_the_phone";
+    private static final String BATTERY_LEVEL = "battery_level";
+    private static final String BATTERY_STATE = "battery_state";
+    private static final String SCREEN_BRIGHT = "screen_brightness";
+
 
     /**
      * Get the single instance of this class
@@ -155,9 +166,10 @@ public class ESSensorManager
     private HashMap<String,ArrayList<Double>> _highFreqData;
     private JSONObject _lowFreqData;
     private String _timestampStr;
-
     private ArrayList<Sensor> _hiFreqSensors;
     private ArrayList<String> _hiFreqSensorFeatureKeys;
+    private ArrayList<Sensor> _lowFreqSensors;
+    private ArrayList<String> _lowFreqSensorFeatureKeys;
 
     private boolean _recordingRightNow = false;
 
@@ -190,34 +202,50 @@ public class ESSensorManager
         // Initialize the sensors:
         _hiFreqSensors = new ArrayList<>(10);
         _hiFreqSensorFeatureKeys = new ArrayList<>(10);
+        _lowFreqSensors = new ArrayList<>(10);
+        _lowFreqSensorFeatureKeys = new ArrayList<>(10);
 
         // Add raw motion sensors:
-        if (!tryToAddSensor(Sensor.TYPE_ACCELEROMETER,"raw accelerometer",RAW_ACC_X)) {
+        if (!tryToAddSensor(Sensor.TYPE_ACCELEROMETER,true,"raw accelerometer",RAW_ACC_X)) {
             Log.e(LOG_TAG,"There is no accelerometer. Canceling recording.");
             return;
         }
-        tryToAddSensor(Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED,"raw magnetometer",RAW_MAGNET_X);
-        tryToAddSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED,"raw gyroscope",RAW_GYRO_X);
+        tryToAddSensor(Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED,true,"raw magnetometer",RAW_MAGNET_X);
+        tryToAddSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED,true,"raw gyroscope",RAW_GYRO_X);
         // Add processed motion sensors:
-        tryToAddSensor(Sensor.TYPE_GRAVITY,"gravity",PROC_GRAV_X);
-        tryToAddSensor(Sensor.TYPE_LINEAR_ACCELERATION,"linear acceleration",PROC_ACC_X);
-        tryToAddSensor(Sensor.TYPE_MAGNETIC_FIELD,"calibrated magnetometer",PROC_MAGNET_X);
-        tryToAddSensor(Sensor.TYPE_GYROSCOPE,"calibrated gyroscope",PROC_GYRO_X);
-        tryToAddSensor(Sensor.TYPE_ROTATION_VECTOR,"rotation vector",PROC_ROTATION_X);
+        tryToAddSensor(Sensor.TYPE_GRAVITY,true,"gravity",PROC_GRAV_X);
+        tryToAddSensor(Sensor.TYPE_LINEAR_ACCELERATION,true,"linear acceleration",PROC_ACC_X);
+        tryToAddSensor(Sensor.TYPE_MAGNETIC_FIELD,true,"calibrated magnetometer",PROC_MAGNET_X);
+        tryToAddSensor(Sensor.TYPE_GYROSCOPE,true,"calibrated gyroscope",PROC_GYRO_X);
+        tryToAddSensor(Sensor.TYPE_ROTATION_VECTOR,true,"rotation vector",PROC_ROTATION_X);
 
-        Log.v(LOG_TAG,"An instance of ESSensorManager was created.");
+        // Add low frequency sensors:
+        tryToAddSensor(Sensor.TYPE_AMBIENT_TEMPERATURE,false,"ambient temperature",TEMPERATURE_AMBIENT);
+        tryToAddSensor(Sensor.TYPE_LIGHT,false,"light",LIGHT);
+        tryToAddSensor(Sensor.TYPE_PRESSURE,false,"pressure",PRESSURE);
+        tryToAddSensor(Sensor.TYPE_PROXIMITY,false,"proximity",PROXIMITY);
+        tryToAddSensor(Sensor.TYPE_RELATIVE_HUMIDITY,false,"relative humidity",HUMIDITY);
+
+        Log.v(LOG_TAG, "An instance of ESSensorManager was created.");
     }
 
-    private boolean tryToAddSensor(int sensorType,String nameForLog,String featureKey) {
+    private boolean tryToAddSensor(int sensorType,boolean isHighFreqSensor, String nameForLog,String featureKey) {
         Sensor sensor = _sensorManager.getDefaultSensor(sensorType);
         if (sensor == null) {
             Log.i(LOG_TAG,"No available sensor: " + nameForLog);
             return false;
         }
         else {
-            Log.i(LOG_TAG,"Adding sensor: " + nameForLog);
-            _hiFreqSensors.add(sensor);
-            _hiFreqSensorFeatureKeys.add(featureKey);
+            if (isHighFreqSensor) {
+                Log.i(LOG_TAG, "Adding hi-freq sensor: " + nameForLog);
+                _hiFreqSensors.add(sensor);
+                _hiFreqSensorFeatureKeys.add(featureKey);
+            }
+            else {
+                Log.i(LOG_TAG, "Adding low-freq sensor: " + nameForLog);
+                _lowFreqSensors.add(sensor);
+                _lowFreqSensorFeatureKeys.add(featureKey);
+            }
             return true;
         }
     }
@@ -257,12 +285,51 @@ public class ESSensorManager
             _sensorManager.registerListener(this,sensor,SAMPLE_PERIOD_MICROSECONDS);
         }
 
+        // Start low-frequency sensors:
+        for (Sensor sensor : _lowFreqSensors) {
+            _sensorManager.registerListener(this,sensor,LOW_FREQ_SAMPLE_PERIOD_MICROSECONDS);
+        }
+
         // Get low-frequency measurements:
         collectLowFrequencyMeasurements();
     }
 
     private void simulateRecordingSession() {
         for (int i = 0; i < NUM_SAMPLES_IN_SESSION; i ++) {
+            addHighFrequencyMeasurement(RAW_MAGNET_X,0);
+            addHighFrequencyMeasurement(RAW_MAGNET_Y,0);
+            addHighFrequencyMeasurement(RAW_MAGNET_Z,0);
+            addHighFrequencyMeasurement(RAW_MAGNET_BIAS_X, 0);
+            addHighFrequencyMeasurement(RAW_MAGNET_BIAS_Y, 0);
+            addHighFrequencyMeasurement(RAW_MAGNET_BIAS_Z, 0);
+
+            addHighFrequencyMeasurement(RAW_GYRO_X, 0);
+            addHighFrequencyMeasurement(RAW_GYRO_Y, 0);
+            addHighFrequencyMeasurement(RAW_GYRO_Z, 0);
+            addHighFrequencyMeasurement(RAW_GYRO_DRIFT_X, 0);
+            addHighFrequencyMeasurement(RAW_GYRO_DRIFT_Y, 0);
+            addHighFrequencyMeasurement(RAW_GYRO_DRIFT_Z, 0);
+
+            addHighFrequencyMeasurement(PROC_GRAV_X, 0);
+            addHighFrequencyMeasurement(PROC_GRAV_Y, 0);
+            addHighFrequencyMeasurement(PROC_GRAV_Z, 0);
+
+            addHighFrequencyMeasurement(PROC_ACC_X, 0);
+            addHighFrequencyMeasurement(PROC_ACC_Y, 0);
+            addHighFrequencyMeasurement(PROC_ACC_Z, 0);
+
+            addHighFrequencyMeasurement(PROC_MAGNET_X, 0);
+            addHighFrequencyMeasurement(PROC_MAGNET_Y, 0);
+            addHighFrequencyMeasurement(PROC_MAGNET_Z, 0);
+
+            addHighFrequencyMeasurement(PROC_GYRO_X, 0);
+            addHighFrequencyMeasurement(PROC_GYRO_Y, 0);
+            addHighFrequencyMeasurement(PROC_GYRO_Z, 0);
+
+            addHighFrequencyMeasurement(PROC_ROTATION_X, 0);
+            addHighFrequencyMeasurement(PROC_ROTATION_Y, 0);
+            addHighFrequencyMeasurement(PROC_ROTATION_Z, 0);
+
             addHighFrequencyMeasurement(RAW_ACC_X,0);
             addHighFrequencyMeasurement(RAW_ACC_Y,1);
             addHighFrequencyMeasurement(RAW_ACC_Z,2);
@@ -320,6 +387,7 @@ public class ESSensorManager
 
         return (_highFreqData.get(key).size() >= NUM_SAMPLES_IN_SESSION);
     }
+
 
     private void logCurrentSampleSize() {
         int accSize = 0;
@@ -460,72 +528,103 @@ public class ESSensorManager
     public void onSensorChanged(SensorEvent event) {
         boolean sensorCollectedEnough = false;
         double timestampSeconds =  ((double)event.timestamp) / NANOSECONDS_IN_SECOND;
-        switch (event.sensor.getType()) {
-            case Sensor.TYPE_ACCELEROMETER:
-                addHighFrequencyMeasurement(RAW_ACC_X,event.values[0]);
-                addHighFrequencyMeasurement(RAW_ACC_Y,event.values[1]);
-                addHighFrequencyMeasurement(RAW_ACC_Z,event.values[2]);
-                sensorCollectedEnough = addHighFrequencyMeasurement(RAW_ACC_TIME,timestampSeconds);
-                break;
-            case Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED:
-                addHighFrequencyMeasurement(RAW_MAGNET_X,event.values[0]);
-                addHighFrequencyMeasurement(RAW_MAGNET_Y,event.values[1]);
-                addHighFrequencyMeasurement(RAW_MAGNET_Z,event.values[2]);
-                addHighFrequencyMeasurement(RAW_MAGNET_BIAS_X,event.values[3]);
-                addHighFrequencyMeasurement(RAW_MAGNET_BIAS_Y,event.values[4]);
-                addHighFrequencyMeasurement(RAW_MAGNET_BIAS_Z,event.values[5]);
-                sensorCollectedEnough = addHighFrequencyMeasurement(RAW_MAGNET_TIME,timestampSeconds);
-                break;
-            case Sensor.TYPE_GYROSCOPE_UNCALIBRATED:
-                addHighFrequencyMeasurement(RAW_GYRO_X,event.values[0]);
-                addHighFrequencyMeasurement(RAW_GYRO_Y,event.values[1]);
-                addHighFrequencyMeasurement(RAW_GYRO_Z,event.values[2]);
-                addHighFrequencyMeasurement(RAW_GYRO_DRIFT_X,event.values[3]);
-                addHighFrequencyMeasurement(RAW_GYRO_DRIFT_Y,event.values[4]);
-                addHighFrequencyMeasurement(RAW_GYRO_DRIFT_Z,event.values[5]);
-                sensorCollectedEnough = addHighFrequencyMeasurement(RAW_GYRO_TIME,timestampSeconds);
-                break;
-            case Sensor.TYPE_GRAVITY:
-                addHighFrequencyMeasurement(PROC_GRAV_X,event.values[0]);
-                addHighFrequencyMeasurement(PROC_GRAV_Y,event.values[1]);
-                addHighFrequencyMeasurement(PROC_GRAV_Z,event.values[2]);
-                sensorCollectedEnough = addHighFrequencyMeasurement(PROC_GRAV_TIME,timestampSeconds);
-                break;
-            case Sensor.TYPE_LINEAR_ACCELERATION:
-                addHighFrequencyMeasurement(PROC_ACC_X,event.values[0]);
-                addHighFrequencyMeasurement(PROC_ACC_Y,event.values[1]);
-                addHighFrequencyMeasurement(PROC_ACC_Z,event.values[2]);
-                sensorCollectedEnough = addHighFrequencyMeasurement(PROC_ACC_TIME,timestampSeconds);
-                break;
-            case Sensor.TYPE_MAGNETIC_FIELD:
-                addHighFrequencyMeasurement(PROC_MAGNET_X,event.values[0]);
-                addHighFrequencyMeasurement(PROC_MAGNET_Y,event.values[1]);
-                addHighFrequencyMeasurement(PROC_MAGNET_Z,event.values[2]);
-                sensorCollectedEnough = addHighFrequencyMeasurement(PROC_MAGNET_TIME,timestampSeconds);
-                break;
-            case Sensor.TYPE_GYROSCOPE:
-                addHighFrequencyMeasurement(PROC_GYRO_X,event.values[0]);
-                addHighFrequencyMeasurement(PROC_GYRO_Y,event.values[1]);
-                addHighFrequencyMeasurement(PROC_GYRO_Z,event.values[2]);
-                sensorCollectedEnough = addHighFrequencyMeasurement(PROC_GYRO_TIME,timestampSeconds);
-                break;
-            case Sensor.TYPE_ROTATION_VECTOR:
-                addHighFrequencyMeasurement(PROC_ROTATION_X,event.values[0]);
-                addHighFrequencyMeasurement(PROC_ROTATION_Y,event.values[1]);
-                addHighFrequencyMeasurement(PROC_ROTATION_Z,event.values[2]);
+
+        try {
+
+            switch (event.sensor.getType()) {
+                case Sensor.TYPE_ACCELEROMETER:
+                    addHighFrequencyMeasurement(RAW_ACC_X, event.values[0]);
+                    addHighFrequencyMeasurement(RAW_ACC_Y, event.values[1]);
+                    addHighFrequencyMeasurement(RAW_ACC_Z, event.values[2]);
+                    sensorCollectedEnough = addHighFrequencyMeasurement(RAW_ACC_TIME, timestampSeconds);
+                    break;
+                case Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED:
+                    addHighFrequencyMeasurement(RAW_MAGNET_X, event.values[0]);
+                    addHighFrequencyMeasurement(RAW_MAGNET_Y, event.values[1]);
+                    addHighFrequencyMeasurement(RAW_MAGNET_Z, event.values[2]);
+                    addHighFrequencyMeasurement(RAW_MAGNET_BIAS_X, event.values[3]);
+                    addHighFrequencyMeasurement(RAW_MAGNET_BIAS_Y, event.values[4]);
+                    addHighFrequencyMeasurement(RAW_MAGNET_BIAS_Z, event.values[5]);
+                    sensorCollectedEnough = addHighFrequencyMeasurement(RAW_MAGNET_TIME, timestampSeconds);
+                    break;
+                case Sensor.TYPE_GYROSCOPE_UNCALIBRATED:
+                    addHighFrequencyMeasurement(RAW_GYRO_X, event.values[0]);
+                    addHighFrequencyMeasurement(RAW_GYRO_Y, event.values[1]);
+                    addHighFrequencyMeasurement(RAW_GYRO_Z, event.values[2]);
+                    addHighFrequencyMeasurement(RAW_GYRO_DRIFT_X, event.values[3]);
+                    addHighFrequencyMeasurement(RAW_GYRO_DRIFT_Y, event.values[4]);
+                    addHighFrequencyMeasurement(RAW_GYRO_DRIFT_Z, event.values[5]);
+                    sensorCollectedEnough = addHighFrequencyMeasurement(RAW_GYRO_TIME, timestampSeconds);
+                    break;
+                case Sensor.TYPE_GRAVITY:
+                    addHighFrequencyMeasurement(PROC_GRAV_X, event.values[0]);
+                    addHighFrequencyMeasurement(PROC_GRAV_Y, event.values[1]);
+                    addHighFrequencyMeasurement(PROC_GRAV_Z, event.values[2]);
+                    sensorCollectedEnough = addHighFrequencyMeasurement(PROC_GRAV_TIME, timestampSeconds);
+                    break;
+                case Sensor.TYPE_LINEAR_ACCELERATION:
+                    addHighFrequencyMeasurement(PROC_ACC_X, event.values[0]);
+                    addHighFrequencyMeasurement(PROC_ACC_Y, event.values[1]);
+                    addHighFrequencyMeasurement(PROC_ACC_Z, event.values[2]);
+                    sensorCollectedEnough = addHighFrequencyMeasurement(PROC_ACC_TIME, timestampSeconds);
+                    break;
+                case Sensor.TYPE_MAGNETIC_FIELD:
+                    addHighFrequencyMeasurement(PROC_MAGNET_X, event.values[0]);
+                    addHighFrequencyMeasurement(PROC_MAGNET_Y, event.values[1]);
+                    addHighFrequencyMeasurement(PROC_MAGNET_Z, event.values[2]);
+                    sensorCollectedEnough = addHighFrequencyMeasurement(PROC_MAGNET_TIME, timestampSeconds);
+                    break;
+                case Sensor.TYPE_GYROSCOPE:
+                    addHighFrequencyMeasurement(PROC_GYRO_X, event.values[0]);
+                    addHighFrequencyMeasurement(PROC_GYRO_Y, event.values[1]);
+                    addHighFrequencyMeasurement(PROC_GYRO_Z, event.values[2]);
+                    sensorCollectedEnough = addHighFrequencyMeasurement(PROC_GYRO_TIME, timestampSeconds);
+                    break;
+                case Sensor.TYPE_ROTATION_VECTOR:
+                    addHighFrequencyMeasurement(PROC_ROTATION_X, event.values[0]);
+                    addHighFrequencyMeasurement(PROC_ROTATION_Y, event.values[1]);
+                    addHighFrequencyMeasurement(PROC_ROTATION_Z, event.values[2]);
 //                addHighFrequencyMeasurement(PROC_ROTATION_COS,event.values[4]);
 //                addHighFrequencyMeasurement(PROC_ROTATION_ACCURACY,event.values[5]);
-                break;
-            default:
-                Log.e(LOG_TAG,"Got event from unsupported sensor with type " + event.sensor.getType());
+                    sensorCollectedEnough = addHighFrequencyMeasurement(PROC_ROTATION_TIME, timestampSeconds);
+                    break;
+                // Low frequency (one-time) sensors:
+                case Sensor.TYPE_AMBIENT_TEMPERATURE:
+                    _lowFreqData.put(TEMPERATURE_AMBIENT, event.values[0]);
+                    sensorCollectedEnough = true;
+                    break;
+                case Sensor.TYPE_LIGHT:
+                    _lowFreqData.put(LIGHT, event.values[0]);
+                    sensorCollectedEnough = true;
+                    break;
+                case Sensor.TYPE_PRESSURE:
+                    _lowFreqData.put(PRESSURE, event.values[0]);
+                    sensorCollectedEnough = true;
+                    break;
+                case Sensor.TYPE_PROXIMITY:
+                    _lowFreqData.put(PROXIMITY, event.values[0]);
+                    sensorCollectedEnough = true;
+                    break;
+                case Sensor.TYPE_RELATIVE_HUMIDITY:
+                    _lowFreqData.put(HUMIDITY, event.values[0]);
+                    sensorCollectedEnough = true;
+                    break;
+                default:
+                    Log.e(LOG_TAG, "Got event from unsupported sensor with type " + event.sensor.getType());
+            }
+
+            if (sensorCollectedEnough) {
+                // Then we've collected enough samples from accelerometer,
+                // and we can stop listening to it.
+                _sensorManager.unregisterListener(this, event.sensor);
+                finishSessionIfReady();
+            }
+
+        } catch (JSONException e) {
+            Log.e(LOG_TAG,"Problem adding sensor measurement to json object. " + event.sensor.toString());
+            e.printStackTrace();
         }
 
-        if (sensorCollectedEnough) {
-            // Then we've collected enough samples from accelerometer,
-            // and we can stop listening to it.
-            _sensorManager.unregisterListener(this,event.sensor);
-            finishSessionIfReady();
-        }
     }
 
     @Override
