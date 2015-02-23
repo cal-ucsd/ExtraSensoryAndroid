@@ -3,6 +3,7 @@ package edu.ucsd.calab.extrasensory.ui;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,6 +22,9 @@ import edu.ucsd.calab.extrasensory.data.ESTimestamp;
  * A simple {@link Fragment} subclass.
  */
 public class HistoryFragment extends Fragment {
+
+    private static final String LOG_TAG = "[ESHistoryFragment]";
+
     public HistoryFragment() {
         // Required empty public constructor
     }
@@ -59,6 +63,10 @@ public class HistoryFragment extends Fragment {
         ESTimestamp endTime = new ESTimestamp(d);
 
         ESContinuousActivity [] activityList = ESDatabaseAccessor.getESDatabaseAccessor().getContinuousActivitiesFromTimeRange(startTime, endTime);
+        Log.d(LOG_TAG,"==== Got " + activityList.length + " cont activities: ");
+        for (int i= 0; i < activityList.length; i++) {
+            Log.d(LOG_TAG, activityList[i].toString());
+        }
 
         HistoryAdapter histAdapter = new HistoryAdapter(getActivity().getBaseContext(), R.layout.rowlayout, activityList);
         // Get the list view and set it using this adapter

@@ -138,7 +138,7 @@ public class ESContinuousActivity {
      *
      * @return The array of moods.
      */
-    public  String[] getMoods() {
+    public String[] getMoods() {
         if (this.isEmpty()) {
             return null;
         }
@@ -146,7 +146,15 @@ public class ESContinuousActivity {
         return _minuteActivities[0].get_moods();
     }
 
-
+    @Override
+    public String toString() {
+        return "<start-timestamp: " + getStartTimestamp() +
+                ", end-timestamp: " + getEndTimestamp() +
+                ", main activity prediction: " + getMainActivityServerPrediction() +
+                ",main activity correction: " + getMainActivityUserCorrection() +
+                ",secondary: {" + getSecondaryActivities() + "}" +
+                ",mood: {" + getMoods() + "}>";
+    }
     // Static interface:
 
 
