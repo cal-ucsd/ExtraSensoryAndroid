@@ -511,10 +511,9 @@ public class ESSensorManager
         }
 
         // All the expected sensors sampled the required amount of data
-        Log.d(LOG_TAG,"=== checked and should finish.");
-        for (String featureKey : _hiFreqSensorFeatureKeys) {
-            Log.d("===", featureKey + ": " + _highFreqData.get(featureKey).size());
-        }
+//        for (String featureKey : _hiFreqSensorFeatureKeys) {
+//            Log.d("===", featureKey + ": " + _highFreqData.get(featureKey).size());
+//        }
         return true;
     }
 
