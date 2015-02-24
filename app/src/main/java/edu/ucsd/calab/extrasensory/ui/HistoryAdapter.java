@@ -60,27 +60,28 @@ public class HistoryAdapter extends ArrayAdapter{
             String timeLabel = "";
             String endTimeLabel = "";
             Date date;
-            for(ESContinuousActivity activity: values){
-                if(activity.getMainActivityUserCorrection() != null){
-                    activityLabel = activity.getMainActivityUserCorrection();
-                }
-                else{
-                    activityLabel = activity.getMainActivityServerPrediction() + "?";
-                }
 
-                //setting time label
-                date = activity.getStartTimestamp().getDateOfTimestamp();
-                timeLabel = new SimpleDateFormat("hh:mm a").format(date);
-                date = activity.getEndTimestamp().getDateOfTimestamp();
-                endTimeLabel = new SimpleDateFormat("hh:mm a").format(date);
-                timeLabel = timeLabel + " - " + endTimeLabel;
+            //get one activity from the array
+            ESContinuousActivity activity = values[position];
 
-               // System.out.println("adapter adding activity: " + activityLabel);
-
-                //setting activity label
-                holder.mainActivity.setText(activityLabel);
-                holder.time.setText(timeLabel);
+            if(activity.getMainActivityUserCorrection() != null){
+                activityLabel = activity.getMainActivityUserCorrection();
             }
+            else{
+                activityLabel = activity.getMainActivityServerPrediction() + "?";
+            }
+                //setting time label
+            date = activity.getStartTimestamp().getDateOfTimestamp();
+            timeLabel = new SimpleDateFormat("hh:mm a").format(date);
+            date = activity.getEndTimestamp().getDateOfTimestamp();
+            endTimeLabel = new SimpleDateFormat("hh:mm a").format(date);
+            timeLabel = timeLabel + " - " + endTimeLabel;
+
+            // System.out.println("adapter adding activity: " + activityLabel);
+
+            //setting activity label
+            holder.mainActivity.setText(activityLabel);
+            holder.time.setText(timeLabel);
         }
         return row;
     }
