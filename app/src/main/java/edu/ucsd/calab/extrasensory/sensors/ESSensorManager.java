@@ -131,7 +131,8 @@ public class ESSensorManager
     private static final double LOC_SPEED_UNAVAILABLE = -1;
 
     // Low frequency measurements:
-    private static final String TEMPERATURE_DEVICE = "temperature_device";
+    private static final String LOW_FREQ = "low_frequency";
+
     private static final String TEMPERATURE_AMBIENT = "temperature_ambient";
     private static final String LIGHT = "light";
     private static final String PRESSURE = "pressure";
@@ -421,6 +422,7 @@ public class ESSensorManager
 
         // Construct an object with all the data:
         JSONObject data = new JSONObject();
+        // Add high-frequency data:
         for (String key : _highFreqData.keySet()) {
             JSONArray samples = new JSONArray(_highFreqData.get(key));
             try {
@@ -429,6 +431,13 @@ public class ESSensorManager
             catch (JSONException e) {
                 Log.e(LOG_TAG,e.getMessage());
             }
+        }
+
+        // Add low-frequency data:
+        try {
+            data.put(LOW_FREQ,_lowFreqData);
+        } catch (JSONException e) {
+            Log.e(LOG_TAG,e.getMessage());
         }
 
         // Save data to file:
@@ -519,7 +528,12 @@ public class ESSensorManager
 
 
     private void collectLowFrequencyMeasurements() {
-        //TODO............
+        try {
+            _lowFreqData.put(WIFI_STATUS,ESNetworkAccessor.getESNetworkAccessor().isThereWiFiConnectivity());
+        } catch (JSONException e) {
+            Log.e(LOG_TAG,e.getMessage());
+        }
+        
     }
 
     // Implementing the SensorEventListener interface:

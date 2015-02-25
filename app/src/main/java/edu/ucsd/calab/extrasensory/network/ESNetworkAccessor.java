@@ -140,7 +140,11 @@ public class ESNetworkAccessor {
         api.execute(params);
     }
 
-    private boolean isThereWiFiConnectivity() {
+    /**
+     * Is the device connected to WiFi?
+     * @return
+     */
+    public boolean isThereWiFiConnectivity() {
         if (ESApplication.debugMode()) {
             Log.v(LOG_TAG,"Debug mode so saying 'wifi available'.");
             return true;
