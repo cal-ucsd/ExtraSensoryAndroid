@@ -533,7 +533,7 @@ public class ESSensorManager
         } catch (JSONException e) {
             Log.e(LOG_TAG,e.getMessage());
         }
-        
+
     }
 
     // Implementing the SensorEventListener interface:
