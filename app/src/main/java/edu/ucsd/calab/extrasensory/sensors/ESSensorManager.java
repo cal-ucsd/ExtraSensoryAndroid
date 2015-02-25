@@ -11,6 +11,7 @@ import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -534,6 +535,13 @@ public class ESSensorManager
             Log.e(LOG_TAG,e.getMessage());
         }
 
+        TelephonyManager telephonyManager = (TelephonyManager) ESApplication.getTheAppContext().getSystemService(Context.TELEPHONY_SERVICE);
+        boolean onThePhone = (telephonyManager.getCallState() != TelephonyManager.CALL_STATE_IDLE);
+        try {
+            _lowFreqData.put(ON_THE_PHONE,onThePhone);
+        } catch (JSONException e) {
+            Log.e(LOG_TAG,e.getMessage());
+        }
     }
 
     // Implementing the SensorEventListener interface:
