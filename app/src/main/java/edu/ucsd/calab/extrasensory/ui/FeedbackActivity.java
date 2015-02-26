@@ -1,17 +1,10 @@
 package edu.ucsd.calab.extrasensory.ui;
 
-import android.content.Intent;
-import android.os.Parcel;
-import android.os.Parcelable;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import java.io.Serializable;
-
-import edu.ucsd.calab.extrasensory.ESApplication;
 import edu.ucsd.calab.extrasensory.R;
 import edu.ucsd.calab.extrasensory.data.ESContinuousActivity;
 
