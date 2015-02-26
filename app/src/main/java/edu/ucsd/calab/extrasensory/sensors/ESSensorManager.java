@@ -2,12 +2,15 @@ package edu.ucsd.calab.extrasensory.sensors;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 
 import android.location.Location;
+import android.media.AudioManager;
+import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
@@ -36,6 +39,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import edu.ucsd.calab.extrasensory.ESApplication;
+import edu.ucsd.calab.extrasensory.data.ESActivity;
 import edu.ucsd.calab.extrasensory.data.ESSettings;
 import edu.ucsd.calab.extrasensory.network.ESNetworkAccessor;
 
@@ -145,8 +149,66 @@ public class ESSensorManager
     private static final String ON_THE_PHONE = "on_the_phone";
     private static final String BATTERY_LEVEL = "battery_level";
     private static final String BATTERY_STATE = "battery_state";
+    private static final String BATTERY_PLUGGED = "battery_plugged";
     private static final String SCREEN_BRIGHT = "screen_brightness";
+    private static final String RINGER_MODE = "ringer_mode";
 
+    // Values of discrete properties:
+    private static final String MISSING_VALUE_STR = "missing";
+
+    private static final String BATTERY_STATUS_CHARGING_STR = "charging";
+    private static final String BATTERY_STATUS_DISCHARGING_STR = "discharging";
+    private static final String BATTERY_STATUS_FULL_STR = "full";
+    private static final String BATTERY_STATUS_NOT_CHARGING_STR = "not_charging";
+    private static final String BATTERY_STATUS_UNKNOWN_STR = "unknown";
+    private static String getStringValueForBatteryStatus(int batteryStatus) {
+        switch (batteryStatus) {
+            case BatteryManager.BATTERY_STATUS_CHARGING:
+                return BATTERY_STATUS_CHARGING_STR;
+            case BatteryManager.BATTERY_STATUS_DISCHARGING:
+                return BATTERY_STATUS_DISCHARGING_STR;
+            case BatteryManager.BATTERY_STATUS_FULL:
+                return BATTERY_STATUS_FULL_STR;
+            case BatteryManager.BATTERY_STATUS_NOT_CHARGING:
+                return BATTERY_STATUS_NOT_CHARGING_STR;
+            case BatteryManager.BATTERY_STATUS_UNKNOWN:
+                return BATTERY_STATUS_UNKNOWN_STR;
+            default:
+                return MISSING_VALUE_STR;
+        }
+    }
+
+    private static final String	BATTERY_PLUGGED_AC_STR = "ac";
+    private static final String	BATTERY_PLUGGED_USB_STR = "usb";
+    private static final String	BATTERY_PLUGGED_WIRELESS_STR = "wireless";
+    private static String getStringValueForBatteryPlugged(int batteryPlugged) {
+        switch (batteryPlugged) {
+            case BatteryManager.BATTERY_PLUGGED_AC:
+                return BATTERY_PLUGGED_AC_STR;
+            case BatteryManager.BATTERY_PLUGGED_USB:
+                return BATTERY_PLUGGED_USB_STR;
+            case BatteryManager.BATTERY_PLUGGED_WIRELESS:
+                return BATTERY_PLUGGED_WIRELESS_STR;
+            default:
+                return MISSING_VALUE_STR;
+        }
+    }
+
+    private static final String RINGER_MODE_NORMAL_STR = "normal";
+    private static final String RINGER_MODE_SILENT_STR = "silent_no_vibrate";
+    private static final String RINGER_MODE_VIBRATE_STR = "silent_with_vibrate";
+    private static String getStringValueForRingerMode(int ringerMode) {
+        switch (ringerMode) {
+            case AudioManager.RINGER_MODE_NORMAL:
+                return RINGER_MODE_NORMAL_STR;
+            case AudioManager.RINGER_MODE_SILENT:
+                return RINGER_MODE_SILENT_STR;
+            case AudioManager.RINGER_MODE_VIBRATE:
+                return RINGER_MODE_VIBRATE_STR;
+            default:
+                return MISSING_VALUE_STR;
+        }
+    }
 
     /**
      * Get the single instance of this class
@@ -529,17 +591,57 @@ public class ESSensorManager
 
 
     private void collectLowFrequencyMeasurements() {
+        // Wifi connectivity:
         try {
             _lowFreqData.put(WIFI_STATUS,ESNetworkAccessor.getESNetworkAccessor().isThereWiFiConnectivity());
         } catch (JSONException e) {
             Log.e(LOG_TAG,e.getMessage());
         }
 
+        // On-the-phone:
         TelephonyManager telephonyManager = (TelephonyManager) ESApplication.getTheAppContext().getSystemService(Context.TELEPHONY_SERVICE);
         boolean onThePhone = (telephonyManager.getCallState() != TelephonyManager.CALL_STATE_IDLE);
         try {
             _lowFreqData.put(ON_THE_PHONE,onThePhone);
         } catch (JSONException e) {
+            Log.e(LOG_TAG,e.getMessage());
+        }
+
+        // Battery:
+        IntentFilter intentFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        Intent batteryStatus = ESApplication.getTheAppContext().registerReceiver(null, intentFilter);
+        int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS,-1);
+        try {
+            _lowFreqData.put(BATTERY_STATE,getStringValueForBatteryStatus(status));
+        } catch (JSONException e) {
+            Log.e(LOG_TAG,e.getMessage());
+        }
+
+        int plugged = batteryStatus.getIntExtra(BatteryManager.EXTRA_PLUGGED,-1);
+        try {
+            _lowFreqData.put(BATTERY_PLUGGED,getStringValueForBatteryPlugged(plugged));
+        } catch (JSONException e) {
+            Log.e(LOG_TAG,e.getMessage());
+        }
+
+        int batteryLevelInt = batteryStatus.getIntExtra(BatteryManager.EXTRA_LEVEL,-1);
+        int batteryScaleInt = batteryStatus.getIntExtra(BatteryManager.EXTRA_SCALE,-1);
+        if (batteryLevelInt != -1 && batteryScaleInt != -1) {
+            double batteryLevel = (double)batteryLevelInt / (double)batteryScaleInt;
+            try {
+                _lowFreqData.put(BATTERY_LEVEL,batteryLevel);
+            }
+            catch (JSONException e) {
+                Log.e(LOG_TAG,e.getMessage());
+            }
+        }
+
+        // Ringer:
+        AudioManager audioManager = (AudioManager) ESApplication.getTheAppContext().getSystemService(Context.AUDIO_SERVICE);
+        try {
+            _lowFreqData.put(RINGER_MODE,getStringValueForRingerMode(audioManager.getRingerMode()));
+        }
+        catch (JSONException e) {
             Log.e(LOG_TAG,e.getMessage());
         }
     }

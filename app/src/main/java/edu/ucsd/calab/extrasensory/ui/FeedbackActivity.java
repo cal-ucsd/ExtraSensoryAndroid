@@ -69,6 +69,13 @@ public class FeedbackActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_feedback);
+        Log.d(LOG_TAG,"activity being created");
+    }
+
+    @Override
+    protected void onDestroy() {
+        Log.d(LOG_TAG,"activity being destroyed");
+        super.onDestroy();
     }
 
 
