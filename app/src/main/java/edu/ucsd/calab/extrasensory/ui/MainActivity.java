@@ -20,8 +20,14 @@ import android.widget.TabHost;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 
+import java.util.Calendar;
+import java.util.Date;
+
 import edu.ucsd.calab.extrasensory.ESApplication;
 import edu.ucsd.calab.extrasensory.R;
+import edu.ucsd.calab.extrasensory.data.ESContinuousActivity;
+import edu.ucsd.calab.extrasensory.data.ESDatabaseAccessor;
+import edu.ucsd.calab.extrasensory.data.ESTimestamp;
 import edu.ucsd.calab.extrasensory.sensors.ESSensorManager;
 
 
@@ -128,6 +134,7 @@ public class MainActivity extends BaseActivity {
                 break;
             case R.id.action_active_feedback:
                 intent = new Intent(getApplicationContext(),FeedbackActivity.class);
+                FeedbackActivity.setFeedbackParametersBeforeStartingFeedback(new FeedbackActivity.FeedbackParameters());
                 startActivity(intent);
                 break;
         }
