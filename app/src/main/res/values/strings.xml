@@ -26,5 +26,7 @@
     <string name="set_google_play_button">Set Google Play</string>
     <string name="cancel">Cancel</string>
     <string name="need_google_play_services_title">Google Play services required</string>
+    <string name="previous_history">Previous</string>
+    <string name="next_history">Next</string>
 
 </resources>

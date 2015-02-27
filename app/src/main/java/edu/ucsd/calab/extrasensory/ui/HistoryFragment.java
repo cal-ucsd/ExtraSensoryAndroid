@@ -10,6 +10,7 @@ import android.view.ViewGroup;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
@@ -77,7 +78,9 @@ public class HistoryFragment extends Fragment {
 
         //Set day title
         TextView headerLabel = (TextView)header.findViewById(R.id.txtHeader);
-        headerLabel.setText("Today- Monday Jan 1");
+
+        SimpleDateFormat today = new SimpleDateFormat("EE MMM dd");
+        headerLabel.setText("Today- " + today.format(d));
 
         listView.addHeaderView(header);
         listView.setAdapter(histAdapter);
