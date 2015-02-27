@@ -42,26 +42,14 @@ public class HistoryFragment extends Fragment {
         super.onActivityCreated(savedInstanceState);
 
         //getting today's activities
-        Calendar cal = Calendar.getInstance();
-        cal.set(Calendar.HOUR_OF_DAY,00);
-        cal.set(Calendar.MINUTE,00);
-        cal.set(Calendar.SECOND,0);
-        cal.set(Calendar.MILLISECOND,0);
-        Date d = cal.getTime();
-
-        ESTimestamp startTime = new ESTimestamp(d);
+        ESTimestamp startTime = ESTimestamp.getStartOfTodayTimestamp();
 
        /* for debug and check timestamp
         DateFormat df = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
         System.out.println("startDATE IS " + df.format(d));
         */
-        cal.set(Calendar.HOUR_OF_DAY,23);
-        cal.set(Calendar.MINUTE,59);
-        cal.set(Calendar.SECOND,59);
-        cal.set(Calendar.MILLISECOND,0);
-        d = cal.getTime();
 
-        ESTimestamp endTime = new ESTimestamp(d);
+        ESTimestamp endTime = new ESTimestamp(startTime,1);
 
         ESContinuousActivity [] activityList = ESDatabaseAccessor.getESDatabaseAccessor().getContinuousActivitiesFromTimeRange(startTime, endTime);
         Log.d(LOG_TAG,"==== Got " + activityList.length + " cont activities: ");

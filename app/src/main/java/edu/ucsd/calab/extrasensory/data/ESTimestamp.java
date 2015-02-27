@@ -2,6 +2,7 @@ package edu.ucsd.calab.extrasensory.data;
 
 import android.util.Log;
 
+import java.util.Calendar;
 import java.util.Date;
 
 /**
@@ -12,6 +13,8 @@ import java.util.Date;
 public class ESTimestamp {
 
     private static final String LOG_TAG = "[ESTimestamp]";
+
+    private static final int SECONDS_IN_24_HOURS = 86400;
 
     private int _secondsSinceEpoch;
 
@@ -31,6 +34,36 @@ public class ESTimestamp {
      */
     public ESTimestamp() {
         this(new Date());
+    }
+
+    /**
+     * Constructor with int value
+     * @param secondsSinceEpoch
+     */
+    public ESTimestamp(int secondsSinceEpoch) {
+        _secondsSinceEpoch = secondsSinceEpoch;
+    }
+
+    /**
+     * Use this constructor to get the timestamp based on the reference timestamp,
+     * plus an integer number of days.
+     * @param reference The reference timestamp to calculate from
+     * @param daysOffset Complete number of days to add.
+     *                   E.g. -1 if you want 24 hours before the reference,
+     *                   +2 if you want 48 hours after the reference.
+     */
+    public ESTimestamp(ESTimestamp reference,int daysOffset) {
+        this(reference.get_secondsSinceEpoch() + daysOffset*SECONDS_IN_24_HOURS);
+    }
+
+    public static ESTimestamp getStartOfTodayTimestamp() {
+        Calendar cal = Calendar.getInstance();
+        cal.set(Calendar.HOUR_OF_DAY,00);
+        cal.set(Calendar.MINUTE,00);
+        cal.set(Calendar.SECOND,0);
+        cal.set(Calendar.MILLISECOND,0);
+        Date date = cal.getTime();
+        return new ESTimestamp(date);
     }
 
     @Override
@@ -67,14 +100,6 @@ public class ESTimestamp {
     }
 
     /**
-     * Constructor with int value
-     * @param secondsSinceEpoch
-     */
-    public ESTimestamp(int secondsSinceEpoch) {
-        _secondsSinceEpoch = secondsSinceEpoch;
-    }
-
-    /**
      * Get the date/time (in accuracy of seconds) that this timestamp represents.
      * @return The data/time represented by this timestamp
      */
@@ -105,5 +130,6 @@ public class ESTimestamp {
 
         return this._secondsSinceEpoch - minusTime._secondsSinceEpoch;
     }
+
 
 }

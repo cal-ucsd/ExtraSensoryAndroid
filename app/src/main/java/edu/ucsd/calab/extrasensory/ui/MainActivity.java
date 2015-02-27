@@ -20,31 +20,22 @@ import android.widget.TabHost;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 
+import java.util.Calendar;
+import java.util.Date;
+
 import edu.ucsd.calab.extrasensory.ESApplication;
 import edu.ucsd.calab.extrasensory.R;
+import edu.ucsd.calab.extrasensory.data.ESContinuousActivity;
+import edu.ucsd.calab.extrasensory.data.ESDatabaseAccessor;
+import edu.ucsd.calab.extrasensory.data.ESTimestamp;
 import edu.ucsd.calab.extrasensory.sensors.ESSensorManager;
 
 
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends BaseActivity {
 
     private static final String LOG_TAG = "[MainActivity]";
 
     private FragmentTabHost _fragmentTabHost;
-    private Menu _optionsMenu = null;
-
-    private BroadcastReceiver _broadcastReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (intent == null) {
-                Log.e(LOG_TAG,"Broadcast receiver caught null intent");
-                return;
-            }
-            if (ESSensorManager.BROADCAST_RECORDING_STATE_CHANGED.equals(intent.getAction())) {
-                Log.v(LOG_TAG,"Caught recording state broadcast");
-                checkRecordingStateAndSetRedLight();
-            }
-        }
-    };
 
 
     @Override
@@ -82,8 +73,6 @@ public class MainActivity extends ActionBarActivity {
     protected void onResume() {
         super.onResume();
         checkGooglePlay();
-        checkRecordingStateAndSetRedLight();
-        LocalBroadcastManager.getInstance(this).registerReceiver(_broadcastReceiver,new IntentFilter(ESSensorManager.BROADCAST_RECORDING_STATE_CHANGED));
     }
 
     private void checkGooglePlay() {
@@ -120,11 +109,6 @@ public class MainActivity extends ActionBarActivity {
 
     }
 
-    @Override
-    protected void onPause() {
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(_broadcastReceiver);
-        super.onPause();
-    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -150,6 +134,7 @@ public class MainActivity extends ActionBarActivity {
                 break;
             case R.id.action_active_feedback:
                 intent = new Intent(getApplicationContext(),FeedbackActivity.class);
+                FeedbackActivity.setFeedbackParametersBeforeStartingFeedback(new FeedbackActivity.FeedbackParameters());
                 startActivity(intent);
                 break;
         }
@@ -158,20 +143,4 @@ public class MainActivity extends ActionBarActivity {
     }
 
 
-    private void checkRecordingStateAndSetRedLight() {
-        if (_optionsMenu == null) {
-            // Then there is no place to hide/show the red light:
-            return;
-        }
-
-        MenuItem redLight = _optionsMenu.findItem(R.id.action_red_circle);
-        if (ESSensorManager.getESSensorManager().is_recordingRightNow()) {
-            redLight.setVisible(true);
-            Log.i(LOG_TAG, "Recording now - turning on red light");
-        }
-        else {
-            redLight.setVisible(false);
-            Log.i(LOG_TAG,"Not recording - turning off red light");
-        }
-    }
 }

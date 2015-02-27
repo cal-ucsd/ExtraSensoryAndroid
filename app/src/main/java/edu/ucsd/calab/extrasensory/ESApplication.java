@@ -67,7 +67,7 @@ public class ESApplication extends Application {
         }
     }
 
-    public static boolean debugMode() { return false; }
+    public static boolean debugMode() { return true; }
 
     @Override
     public void onCreate() {

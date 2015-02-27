@@ -16,8 +16,8 @@
     <string name="database_name">extra_sensory_db</string>
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="action_active_feedback">active feedback</string>
-    <string name="title_activity_setting">SettingActivity</string>
-    <string name="title_activity_feedback">FeedbackActivity</string>
+    <string name="title_activity_setting">Setting</string>
+    <string name="title_activity_feedback">Feedback</string>
     <string name="server_api_prefix">http://137.110.112.50:8080/api/</string>
     <string name="api_upload_zip">feedback_upload</string>
     <string name="api_feedback">feedback</string>
@@ -26,6 +26,7 @@
     <string name="set_google_play_button">Set Google Play</string>
     <string name="cancel">Cancel</string>
     <string name="need_google_play_services_title">Google Play services required</string>
+    <string name="title_activity_selection_from_list">SelectionFromList</string>
     <string name="previous_history">Previous</string>
     <string name="next_history">Next</string>
 

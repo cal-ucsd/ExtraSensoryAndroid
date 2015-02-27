@@ -7,7 +7,7 @@ import android.view.MenuItem;
 
 import edu.ucsd.calab.extrasensory.R;
 
-public class SettingsActivity extends ActionBarActivity {
+public class SettingsActivity extends BaseActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -20,6 +20,9 @@ public class SettingsActivity extends ActionBarActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_setting, menu);
+        _optionsMenu = menu;
+        checkRecordingStateAndSetRedLight();
+
         return true;
     }
 
