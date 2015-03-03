@@ -13,6 +13,7 @@ import android.widget.TextView;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
 
 import edu.ucsd.calab.extrasensory.R;
 import edu.ucsd.calab.extrasensory.data.ESContinuousActivity;
@@ -50,6 +51,9 @@ public class HistoryFragment extends Fragment {
         */
 
         ESTimestamp endTime = new ESTimestamp(startTime,1);
+        SimpleDateFormat dateFormat = new SimpleDateFormat("EE MMM dd", Locale.US);
+
+        Log.d(LOG_TAG,"getting activities from " + startTime.infoString() + " to " + endTime.infoString());
 
         ESContinuousActivity [] activityList = ESDatabaseAccessor.getESDatabaseAccessor().getContinuousActivitiesFromTimeRange(startTime, endTime);
         Log.d(LOG_TAG,"==== Got " + activityList.length + " cont activities: ");
@@ -67,8 +71,7 @@ public class HistoryFragment extends Fragment {
         //Set day title
         TextView headerLabel = (TextView)header.findViewById(R.id.txtHeader);
 
-        SimpleDateFormat today = new SimpleDateFormat("EE MMM dd");
-        headerLabel.setText("Today- " + today.format(d));
+        headerLabel.setText("Today- " + dateFormat.format(startTime.getDateOfTimestamp()));
 
         listView.addHeaderView(header);
         listView.setAdapter(histAdapter);
