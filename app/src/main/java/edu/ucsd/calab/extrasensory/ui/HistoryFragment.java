@@ -49,6 +49,7 @@ public class HistoryFragment extends BaseTabFragment {
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
+        ESDatabaseAccessor.getESDatabaseAccessor().clearOrphanRecords(new ESTimestamp(0));
         calculateAndPresentDaysHistory();
     }
 
