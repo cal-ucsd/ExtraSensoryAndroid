@@ -6,6 +6,7 @@ import android.util.Log;
 
 import edu.ucsd.calab.extrasensory.data.ESActivity;
 import edu.ucsd.calab.extrasensory.data.ESDatabaseAccessor;
+import edu.ucsd.calab.extrasensory.data.ESTimestamp;
 import edu.ucsd.calab.extrasensory.sensors.ESSensorManager;
 
 
@@ -48,9 +49,9 @@ public class ESIntentService extends IntentService {
                 Log.e(LOG_TAG,"Tried to create new activity but got null");
                 return;
             }
-            String timestampStr = newActivity.get_timestamp().toString();
-            Log.v(LOG_TAG,"Created new activity record with timestamp: " + timestampStr);
-            ESSensorManager.getESSensorManager().startRecordingSensors(timestampStr);
+            ESTimestamp timestamp = newActivity.get_timestamp();
+            Log.v(LOG_TAG,"Created new activity record with timestamp: " + timestamp);
+            ESSensorManager.getESSensorManager().startRecordingSensors(timestamp);
         }
         else {
             Log.e(LOG_TAG,"Got intent for unsupported action: " + action);

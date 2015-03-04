@@ -9,11 +9,13 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.UUID;
 
 import edu.ucsd.calab.extrasensory.ESApplication;
 import edu.ucsd.calab.extrasensory.R;
+import edu.ucsd.calab.extrasensory.sensors.ESSensorManager;
 
 
 /**
@@ -439,6 +441,57 @@ public class ESDatabaseAccessor {
 
         return new ESActivity(timestamp,labelSource,serverMain,userMain,secondaryActivities,moods);
     }
+
+    /**
+     * Go over the records from the starting time and later and check for orphan records:
+     * records that have no server prediction, and no zip file related to them,
+     * (and are not related to the "current" recording - so at least 1 minute old).
+     * Then delete these orphan records.
+     * @param fromTimestamp The earliest time in the desired range to check
+     */
+    public void clearOrphanRecords(ESTimestamp fromTimestamp) {
+        SQLiteDatabase db = _dbHelper.getWritableDatabase();
+
+        String[] projection = {
+                ESDatabaseContract.ESActivityEntry.COLUMN_NAME_TIMESTAMP,
+                ESDatabaseContract.ESActivityEntry.COLUMN_NAME_MAIN_ACTIVITY_SERVER_PREDICTION
+        };
+
+        int aMinuteAgoInSecondsSinceEpoch = new ESTimestamp().get_secondsSinceEpoch() - 60;
+        String selection = ESDatabaseContract.ESActivityEntry.COLUMN_NAME_TIMESTAMP + " >= " + fromTimestamp.get_secondsSinceEpoch() +
+                " AND " + ESDatabaseContract.ESActivityEntry.COLUMN_NAME_TIMESTAMP + " <= " + aMinuteAgoInSecondsSinceEpoch +
+                " AND " + ESDatabaseContract.ESActivityEntry.COLUMN_NAME_MAIN_ACTIVITY_SERVER_PREDICTION + " IS NULL";
+
+        String sortOrder = ESDatabaseContract.ESActivityEntry.COLUMN_NAME_TIMESTAMP + " ASC";
+        Cursor cursor = db.query(ESDatabaseContract.ESActivityEntry.TABLE_NAME,
+                projection,selection,null,null,null,sortOrder);
+
+        int count = cursor.getCount();
+        for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
+            int timestampSeconds = cursor.getInt(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESActivityEntry.COLUMN_NAME_TIMESTAMP));
+            String serverMain = cursor.getString(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESActivityEntry.COLUMN_NAME_MAIN_ACTIVITY_SERVER_PREDICTION));
+
+            // Check if this record has a corresponding zip file (if so, then it is still waiting to get server prediction from the server):
+            File possibleZipFile = ESSensorManager.getZipFileForRecord(new ESTimestamp(timestampSeconds));
+            if (possibleZipFile.exists()) {
+                // Then we're still waiting to get server prediction for this record, and we shouldn't delete it.
+                continue;
+            }
+            else {
+                // Then probably this record represents a recording session that never finished,
+                // and we can get rid of it:
+                String whereToDelete = ESDatabaseContract.ESActivityEntry.COLUMN_NAME_TIMESTAMP + " = " + timestampSeconds;
+                db.delete(ESDatabaseContract.ESActivityEntry.TABLE_NAME,whereToDelete,null);
+            }
+
+
+        }
+        cursor.close();
+
+        _dbHelper.close();
+
+    }
+
 
     private String[] parseCSV(String csv) {
         return csv.split(",");

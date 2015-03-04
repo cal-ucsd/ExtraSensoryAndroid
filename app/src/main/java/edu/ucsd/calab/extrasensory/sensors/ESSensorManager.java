@@ -39,8 +39,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import edu.ucsd.calab.extrasensory.ESApplication;
-import edu.ucsd.calab.extrasensory.data.ESActivity;
 import edu.ucsd.calab.extrasensory.data.ESSettings;
+import edu.ucsd.calab.extrasensory.data.ESTimestamp;
 import edu.ucsd.calab.extrasensory.network.ESNetworkAccessor;
 
 /**
@@ -229,7 +229,7 @@ public class ESSensorManager
 
     private HashMap<String,ArrayList<Double>> _highFreqData;
     private JSONObject _lowFreqData;
-    private String _timestampStr;
+    private ESTimestamp _timestamp;
     private ArrayList<Sensor> _hiFreqSensors;
     private ArrayList<String> _hiFreqSensorFeatureKeys;
     private ArrayList<Sensor> _lowFreqSensors;
@@ -268,6 +268,7 @@ public class ESSensorManager
         _hiFreqSensorFeatureKeys = new ArrayList<>(10);
         _lowFreqSensors = new ArrayList<>(10);
         _lowFreqSensorFeatureKeys = new ArrayList<>(10);
+        _timestamp = new ESTimestamp(0);
 
         // Add raw motion sensors:
         if (!tryToAddSensor(Sensor.TYPE_ACCELEROMETER,true,"raw accelerometer",RAW_ACC_X)) {
@@ -318,14 +319,14 @@ public class ESSensorManager
      * Start a recording session from the sensors,
      * and initiate sending the collected measurements to the server.
      *
-     * @param timestampStr A string representation of this session's identifying timestamp
+     * @param timestamp This recording session's identifying timestamp
      */
-    public void startRecordingSensors(String timestampStr) {
-        Log.i(LOG_TAG, "Starting recording for timestamp: " + timestampStr);
+    public void startRecordingSensors(ESTimestamp timestamp) {
+        Log.i(LOG_TAG, "Starting recording for timestamp: " + timestamp.toString());
         clearRecordingSession();
         set_recordingRightNow(true);
         // Set the new timestamp:
-        _timestampStr = timestampStr;
+        _timestamp = timestamp;
         /////////////////////////
         // This is just for debugging. With the simulator (that doesn't produce actual sensor events):
         if (debugSensorSimulationMode()) {
@@ -562,8 +563,21 @@ public class ESSensorManager
         return true;
     }
 
+    /**
+     * Get a File object for the (possibly non-existing) zip file referring to the record with the given timestamp.
+     * @param timestamp The timestamp identifying the record of interest
+     * @return
+     */
+    public static File getZipFileForRecord(ESTimestamp timestamp) {
+        return new File(ESApplication.getZipDir(),getZipFilename(timestamp));
+    }
+
+    private static String getZipFilename(ESTimestamp timestamp) {
+        return timestamp.toString() + "-" + ESSettings.uuid() + ".zip";
+    }
+
     private String currentZipFilename() {
-        return _timestampStr + "-" + ESSettings.uuid() + ".zip";
+        return getZipFilename(_timestamp);
     }
 
     private boolean checkIfShouldFinishSession() {
