@@ -1,8 +1,13 @@
 package edu.ucsd.calab.extrasensory.ui;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,22 +18,26 @@ import android.widget.TextView;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
 
+import edu.ucsd.calab.extrasensory.ESApplication;
 import edu.ucsd.calab.extrasensory.R;
 import edu.ucsd.calab.extrasensory.data.ESContinuousActivity;
 import edu.ucsd.calab.extrasensory.data.ESDatabaseAccessor;
 import edu.ucsd.calab.extrasensory.data.ESTimestamp;
+import edu.ucsd.calab.extrasensory.sensors.ESSensorManager;
 
 /**
- * A simple {@link Fragment} subclass.
+ * Fragment to display the history of activities (one day at a time)
  */
-public class HistoryFragment extends Fragment {
+public class HistoryFragment extends BaseTabFragment {
 
     private static final String LOG_TAG = "[ESHistoryFragment]";
 
     public HistoryFragment() {
         // Required empty public constructor
     }
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -40,7 +49,13 @@ public class HistoryFragment extends Fragment {
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
+        calculateAndPresentDaysHistory();
+    }
 
+    /**
+     * Calculate the history of a single day and present it as a list of continuous activities
+     */
+    private void calculateAndPresentDaysHistory() {
         //getting today's activities
         ESTimestamp startTime = ESTimestamp.getStartOfTodayTimestamp();
 
@@ -50,6 +65,9 @@ public class HistoryFragment extends Fragment {
         */
 
         ESTimestamp endTime = new ESTimestamp(startTime,1);
+        SimpleDateFormat dateFormat = new SimpleDateFormat("EE MMM dd", Locale.US);
+
+        Log.d(LOG_TAG,"getting activities from " + startTime.infoString() + " to " + endTime.infoString());
 
         ESContinuousActivity [] activityList = ESDatabaseAccessor.getESDatabaseAccessor().getContinuousActivitiesFromTimeRange(startTime, endTime);
         Log.d(LOG_TAG,"==== Got " + activityList.length + " cont activities: ");
@@ -67,11 +85,17 @@ public class HistoryFragment extends Fragment {
         //Set day title
         TextView headerLabel = (TextView)header.findViewById(R.id.txtHeader);
 
-        SimpleDateFormat today = new SimpleDateFormat("EE MMM dd");
-        headerLabel.setText("Today- " + today.format(startTime.getDateOfTimestamp()));
+        headerLabel.setText("Today- " + dateFormat.format(startTime.getDateOfTimestamp()));
 
         listView.addHeaderView(header);
         listView.setAdapter(histAdapter);
+    }
+
+    @Override
+    protected void reactToRecordsUpdatedEvent() {
+        super.reactToRecordsUpdatedEvent();
+        Log.d(LOG_TAG,"reacting to records-update");
+        calculateAndPresentDaysHistory();
     }
 
  /*   @Override

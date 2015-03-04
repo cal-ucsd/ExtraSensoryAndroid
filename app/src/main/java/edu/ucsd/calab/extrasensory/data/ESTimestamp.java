@@ -2,8 +2,10 @@ package edu.ucsd.calab.extrasensory.data;
 
 import android.util.Log;
 
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
 
 /**
  * This class represents a timepoint with the relevant resolution for our application
@@ -15,6 +17,7 @@ public class ESTimestamp {
     private static final String LOG_TAG = "[ESTimestamp]";
 
     private static final int SECONDS_IN_24_HOURS = 86400;
+    private static final long MILLISECONDS_IN_SECOND = 1000l;
 
     private int _secondsSinceEpoch;
 
@@ -25,7 +28,7 @@ public class ESTimestamp {
      */
     public ESTimestamp(Date date) {
         long millisSinceEpoch = date.getTime();
-        long seconds = millisSinceEpoch / 1000l;
+        long seconds = millisSinceEpoch / MILLISECONDS_IN_SECOND;
         this._secondsSinceEpoch = (int)seconds;
     }
 
@@ -71,6 +74,11 @@ public class ESTimestamp {
         return "" + _secondsSinceEpoch;
     }
 
+    public String infoString() {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("EE MMM dd H:m", Locale.US);
+        return "" + _secondsSinceEpoch + " (" + dateFormat.format(this.getDateOfTimestamp()) + ")";
+    }
+
     public boolean equals(ESTimestamp other) {
         if (other == null) {
             return false;
@@ -104,7 +112,7 @@ public class ESTimestamp {
      * @return The data/time represented by this timestamp
      */
     public Date getDateOfTimestamp() {
-        return new Date(this._secondsSinceEpoch * 1000);
+        return new Date(this._secondsSinceEpoch * MILLISECONDS_IN_SECOND);
     }
 
     /**
