@@ -1,9 +1,14 @@
 package edu.ucsd.calab.extrasensory.ui;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 
 import edu.ucsd.calab.extrasensory.R;
 import edu.ucsd.calab.extrasensory.data.ESContinuousActivity;
@@ -63,6 +68,15 @@ public class FeedbackActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_feedback);
         Log.d(LOG_TAG,"activity being created");
+
+        String[] values = new String[] { "MainActivity", "Secondary Activities", "Mood", "Valid for" };
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, values);
+        ListView listView = (ListView) findViewById(R.id.listview_activity);
+        listView.setAdapter(adapter);
+
+        View sendButton = getLayoutInflater().inflate(R.layout.activity_feedback_button, null);
+        listView.addFooterView(sendButton);
     }
 
     @Override

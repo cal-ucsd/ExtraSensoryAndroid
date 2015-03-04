@@ -68,7 +68,7 @@ public class HistoryFragment extends Fragment {
         TextView headerLabel = (TextView)header.findViewById(R.id.txtHeader);
 
         SimpleDateFormat today = new SimpleDateFormat("EE MMM dd");
-        headerLabel.setText("Today- " + today.format(d));
+        headerLabel.setText("Today- " + today.format(startTime.getDateOfTimestamp()));
 
         listView.addHeaderView(header);
         listView.setAdapter(histAdapter);

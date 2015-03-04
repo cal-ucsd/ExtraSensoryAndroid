@@ -29,5 +29,6 @@
     <string name="title_activity_selection_from_list">SelectionFromList</string>
     <string name="previous_history">Previous</string>
     <string name="next_history">Next</string>
+    <string name="button_text">Send Feedback</string>
 
 </resources>
