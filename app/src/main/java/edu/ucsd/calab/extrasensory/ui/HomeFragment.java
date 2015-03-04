@@ -18,7 +18,7 @@ import edu.ucsd.calab.extrasensory.R;
 /**
  * A simple {@link Fragment} subclass.
  */
-public class HomeFragment extends Fragment {
+public class HomeFragment extends BaseTabFragment {
 
     private static final String LOG_TAG = "[ES-HomeFragment]";
 
@@ -73,6 +73,13 @@ public class HomeFragment extends Fragment {
         else {
             _dataCollectionRadioGroup.check(R.id.radio_data_collection_off);
         }
+    }
+
+    @Override
+    protected void reactToRecordsUpdatedEvent() {
+        super.reactToRecordsUpdatedEvent();
+        Log.d(LOG_TAG,"reacting to records-update");
+        //TODO: redraw the relevant image to the latest activity
     }
 
 }

@@ -2,9 +2,11 @@ package edu.ucsd.calab.extrasensory.data;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -23,8 +25,10 @@ import edu.ucsd.calab.extrasensory.R;
 public class ESDatabaseAccessor {
 
     private static final String LOG_TAG = "[ESDatabaseAccessor]";
-    private static final int MAX_STORRED_EXAMPLES_DEFAULT = 120;
+    private static final int MAX_STORED_EXAMPLES_DEFAULT = 120;
     private static final int NOTIFICATION_INTERVAL_DEFAULT = 600;
+
+    public static final String BROADCAST_DATABASE_RECORDS_UPDATED = "edu.ucsd.calab.extrasensory.broadcast.database_records_updated";
 
 
     private static ESDatabaseAccessor _theSingleAccessor;
@@ -108,11 +112,11 @@ public class ESDatabaseAccessor {
         String uuid = generateUUID();
         ContentValues values = new ContentValues();
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_UUID,uuid);
-        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_MAX_STORED_EXAMPLES,MAX_STORRED_EXAMPLES_DEFAULT);
+        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_MAX_STORED_EXAMPLES, MAX_STORED_EXAMPLES_DEFAULT);
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_NOTIFICATION_INTERVAL_SECONDS,NOTIFICATION_INTERVAL_DEFAULT);
 
         long rowID = db.insert(ESDatabaseContract.ESSettingsEntry.TABLE_NAME,null,values);
-        ESSettings settings = new ESSettings(uuid,MAX_STORRED_EXAMPLES_DEFAULT,NOTIFICATION_INTERVAL_DEFAULT);
+        ESSettings settings = new ESSettings(uuid, MAX_STORED_EXAMPLES_DEFAULT,NOTIFICATION_INTERVAL_DEFAULT);
 
         _dbHelper.close();
 
@@ -234,6 +238,8 @@ public class ESDatabaseAccessor {
 
         _dbHelper.close();
 
+        sendBroadcastDatabaseUpdate();
+
         return newActivity;
     }
 
@@ -340,6 +346,8 @@ public class ESDatabaseAccessor {
         activity.set_moods(copyStringArray(moods));
 
         _dbHelper.close();
+
+        sendBroadcastDatabaseUpdate();
     }
 
     /**
@@ -446,5 +454,14 @@ public class ESDatabaseAccessor {
         System.arraycopy(source, 0, destination, 0, source.length);
 
         return destination;
+    }
+
+    /**
+     * Announce, to whoever is interested, that there was some update to some ESActivity record in the DB.
+     */
+    private void sendBroadcastDatabaseUpdate() {
+        Intent intent = new Intent(BROADCAST_DATABASE_RECORDS_UPDATED);
+        LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(_context);
+        localBroadcastManager.sendBroadcast(intent);
     }
 }
