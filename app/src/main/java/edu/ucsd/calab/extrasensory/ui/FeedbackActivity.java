@@ -1,6 +1,7 @@
 package edu.ucsd.calab.extrasensory.ui;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -9,6 +10,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.AdapterView;
 
 import edu.ucsd.calab.extrasensory.R;
 import edu.ucsd.calab.extrasensory.data.ESContinuousActivity;
@@ -77,6 +79,23 @@ public class FeedbackActivity extends BaseActivity {
 
         View sendButton = getLayoutInflater().inflate(R.layout.activity_feedback_button, null);
         listView.addFooterView(sendButton);
+
+
+        listView.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            public void onItemSelected(AdapterView parentView, View childView,
+                                       int position, long id)
+            {
+                //setDetail(position);
+                Intent intent = new Intent(getApplicationContext(), SelectionFromListActivity.class);
+                startActivity(intent);
+
+            }
+
+            public void onNothingSelected(AdapterView parentView) {
+
+            }
+        });
+
     }
 
     @Override
