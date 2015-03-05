@@ -7,6 +7,7 @@ import android.content.res.Resources;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import org.json.JSONException;
@@ -16,6 +17,7 @@ import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -50,8 +52,11 @@ import edu.ucsd.calab.extrasensory.data.ESTimestamp;
  */
 public class ESNetworkAccessor {
 
+    public static final String BROADCAST_NETWORK_QUEUE_SIZE_CHANGED = "edu.ucsd.calab.extrasensory.broadcast.network_queue_size_changed";
+
     private static final String LOG_TAG = "[ESNetworkAccessor]";
     private static final long WAIT_TIME_AFTER_UPLOAD_IN_MILLIS = 15000;
+
 
     private static final String KEY_ZIP_FILENAME = "zip_filename";
 
@@ -64,13 +69,13 @@ public class ESNetworkAccessor {
     private static ESNetworkAccessor _theSingleNetworkAccessor;
     private ESNetworkAccessor() {
         _networkQueue = new ArrayList<String>(8);
+        checkZipFilesInDirectory();
     }
 
     /**
      * Get the network accessor
      * @return The network accessor
      */
-
     public static ESNetworkAccessor getESNetworkAccessor() {
         if (_theSingleNetworkAccessor == null) {
             _theSingleNetworkAccessor = new ESNetworkAccessor();
@@ -80,11 +85,30 @@ public class ESNetworkAccessor {
     }
 
     /**
-     * Add a data file (zip) to the queue of examples to upload to the server.
-     *
-     * @param zipFileName The path of the zip file to upload
+     * Get the network queue size - how many zip files are waiting to be handled.
+     * @return The number of stored examples (zip files)
      */
-    public void addToNetworkQueue(String zipFileName) {
+    public int networkQueueSize() {
+        return _networkQueue.size();
+    }
+
+    private void checkZipFilesInDirectory() {
+        File[] zipFiles = ESApplication.getZipDir().listFiles(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String filename) {
+                return filename.endsWith(".zip") || filename.endsWith(".ZIP");
+            }
+        });
+
+        for (File file : zipFiles) {
+            String filename = file.getName();
+            addToNetworkQueueWithoutUploadingYet(filename);
+        }
+
+        uploadWhatYouHave();
+    }
+
+    private void addToNetworkQueueWithoutUploadingYet(String zipFileName) {
         if (_networkQueue.contains(zipFileName)) {
             Log.e(LOG_TAG,"Network queue already contains zip file: " + zipFileName);
             return;
@@ -92,6 +116,21 @@ public class ESNetworkAccessor {
         }
         Log.v(LOG_TAG,"Adding to network queue: " + zipFileName);
         _networkQueue.add(zipFileName);
+
+        // Send notification to other components:
+        Intent intent = new Intent(BROADCAST_NETWORK_QUEUE_SIZE_CHANGED);
+        LocalBroadcastManager.getInstance(ESApplication.getTheAppContext()).sendBroadcast(intent);
+
+    }
+
+    /**
+     *
+     * Add a data file (zip) to the queue of examples to upload to the server.
+     *
+     * @param zipFileName The path of the zip file to upload
+     */
+    public void addToNetworkQueue(String zipFileName) {
+        addToNetworkQueueWithoutUploadingYet(zipFileName);
         uploadWhatYouHave();
     }
 
@@ -100,6 +139,9 @@ public class ESNetworkAccessor {
         File file = new File(ESApplication.getZipDir(),zipFileName);
         file.delete();
         Log.i(LOG_TAG,"Deleted and removed from network queue file: " + zipFileName);
+        // Send notification to other components:
+        Intent intent = new Intent(BROADCAST_NETWORK_QUEUE_SIZE_CHANGED);
+        LocalBroadcastManager.getInstance(ESApplication.getTheAppContext()).sendBroadcast(intent);
     }
 
     public void uploadWhatYouHave() {
@@ -167,15 +209,25 @@ public class ESNetworkAccessor {
         // Since zip uploaded successfully, can remove it from network queue and delete the file:
         deleteZipFileAndRemoveFromNetworkQueue(zipFilename);
         // Update the ESActivity record:
-        ESDatabaseAccessor dba = ESDatabaseAccessor.getESDatabaseAccessor();
-        ESActivity activity = dba.getESActivity(timestamp);
-        predictedMainActivity = adjustPredictedActivity(predictedMainActivity);
-        dba.setESActivityServerPrediction(activity,predictedMainActivity);
-        Log.i(LOG_TAG,"After getting server prediction, activity is now: " + activity);
+        if (timestamp == null) {
+            Log.i(LOG_TAG,"Handling response from upload - for null timestamp");
+        }
+        else {
+            ESDatabaseAccessor dba = ESDatabaseAccessor.getESDatabaseAccessor();
+            ESActivity activity = dba.getESActivity(timestamp);
+            if (activity == null) {
+                Log.e(LOG_TAG,"Response from server refers to non-existing activity record with timestamp: " + timestamp.infoString());
+            }
+            else {
+                predictedMainActivity = adjustPredictedActivity(predictedMainActivity);
+                dba.setESActivityServerPrediction(activity, predictedMainActivity);
+                Log.i(LOG_TAG, "After getting server prediction, activity is now: " + activity);
 
-        // If there is already user labels, send feedback to server:
-        if (activity.hasUserProvidedLabels()) {
-            sendFeedback(activity);
+                // If there is already user labels, send feedback to server:
+                if (activity.hasUserProvidedLabels()) {
+                    sendFeedback(activity);
+                }
+            }
         }
 
         // Mark network is available:
@@ -333,7 +385,7 @@ public class ESNetworkAccessor {
                 return response;
             }
             catch (IOException e) {
-                Log.e(LOG_TAG,"Failed with feedback api");
+                Log.e(LOG_TAG,"Failed with " + api_type + " api");
                 e.printStackTrace();
             }
             catch (JSONException e) {
@@ -426,10 +478,16 @@ public class ESNetworkAccessor {
                 // Send the request:
                 conn.connect();
 
+                // Analyse the response:
+                ESTimestamp timestamp = null;
+                String responseZipFilename = zipFilename;
+                String predictedMainActivity = null;
                 JSONObject response = getServerResponseAndDisconnect(conn,"upload");
-                ESTimestamp timestamp = new ESTimestamp(response.getInt(RESPONSE_FIELD_TIMESTAMP));
-                String responseZipFilename = response.getString(RESPONSE_FIELD_ZIP_FILE);
-                String predictedMainActivity = response.getString(RESPONSE_FIELD_PREDICTED_MAIN_ACTIVITY);
+                if (response != null) {
+                    timestamp = new ESTimestamp(response.getInt(RESPONSE_FIELD_TIMESTAMP));
+                    responseZipFilename = response.getString(RESPONSE_FIELD_ZIP_FILE);
+                    predictedMainActivity = response.getString(RESPONSE_FIELD_PREDICTED_MAIN_ACTIVITY);
+                }
 
                 conn.disconnect();
                 params._requester.handleUploadedZip(timestamp, responseZipFilename, predictedMainActivity);

@@ -12,6 +12,7 @@ import android.view.MenuItem;
 
 import edu.ucsd.calab.extrasensory.R;
 import edu.ucsd.calab.extrasensory.data.ESDatabaseAccessor;
+import edu.ucsd.calab.extrasensory.network.ESNetworkAccessor;
 import edu.ucsd.calab.extrasensory.sensors.ESSensorManager;
 
 /**
@@ -33,6 +34,7 @@ public class BaseActivity extends ActionBarActivity {
             if (ESSensorManager.BROADCAST_RECORDING_STATE_CHANGED.equals(intent.getAction())) {
                 Log.v(LOG_TAG, "Caught recording state broadcast");
                 checkRecordingStateAndSetRedLight();
+                return;
             }
         }
     };

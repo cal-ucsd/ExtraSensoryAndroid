@@ -2,33 +2,57 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#ff0000"
     tools:context="edu.ucsd.calab.extrasensory.ui.HomeFragment">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-        <TextView android:layout_width="0dp" android:layout_weight="2" android:layout_height="wrap_content"
-            android:text="@string/data_collection_label" />
-        <RadioGroup xmlns:android="http://schemas.android.com/apk/res/android"
-            android:id="@+id/radio_group_data_collection"
-            android:layout_width="0dp"
-            android:layout_weight="1"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal">
-            <RadioButton android:id="@+id/radio_data_collection_off"
-                android:layout_width="wrap_content"
+
+            <TextView android:layout_width="0dp" android:layout_weight="2" android:layout_height="wrap_content"
+                android:text="@string/data_collection_label" />
+            <RadioGroup xmlns:android="http://schemas.android.com/apk/res/android"
+                android:id="@+id/radio_group_data_collection"
+                android:layout_width="0dp"
+                android:layout_weight="1"
                 android:layout_height="wrap_content"
-                android:text="@string/data_collection_off"/>
-            <RadioButton android:id="@+id/radio_data_collection_on"
-                android:layout_width="wrap_content"
+                android:orientation="horizontal">
+                <RadioButton android:id="@+id/radio_data_collection_off"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/data_collection_off"/>
+                <RadioButton android:id="@+id/radio_data_collection_on"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/data_collection_on"/>
+            </RadioGroup>
+
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_weight="2"
                 android:layout_height="wrap_content"
-                android:text="@string/data_collection_on"/>
-        </RadioGroup>
+                android:text="@string/currently_storing_text"/>
+            <TextView
+                android:id="@+id/text_zip_file_count"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="0"/>
+        </LinearLayout>
 
 
     </LinearLayout>
-
 
 </FrameLayout>

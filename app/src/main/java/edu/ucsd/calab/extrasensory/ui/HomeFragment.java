@@ -11,9 +11,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.TextView;
 
 import edu.ucsd.calab.extrasensory.ESApplication;
 import edu.ucsd.calab.extrasensory.R;
+import edu.ucsd.calab.extrasensory.network.ESNetworkAccessor;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -32,6 +34,7 @@ public class HomeFragment extends BaseTabFragment {
     }
 
     private RadioGroup _dataCollectionRadioGroup = null;
+    private TextView _storedExamplesCount = null;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -57,7 +60,16 @@ public class HomeFragment extends BaseTabFragment {
                 }
             }
         });
+
+        _storedExamplesCount = (TextView)homeView.findViewById(R.id.text_zip_file_count);
+        presentNumStoredExamples();
+
         return homeView;
+    }
+
+    private void presentNumStoredExamples() {
+        int num = ESNetworkAccessor.getESNetworkAccessor().networkQueueSize();
+        _storedExamplesCount.setText("" + num);
     }
 
     @Override
@@ -82,4 +94,9 @@ public class HomeFragment extends BaseTabFragment {
         //TODO: redraw the relevant image to the latest activity
     }
 
+    @Override
+    protected void reactToNetworkQueueSizeChangedEvent() {
+        super.reactToNetworkQueueSizeChangedEvent();
+        presentNumStoredExamples();
+    }
 }
