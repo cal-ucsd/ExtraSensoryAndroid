@@ -1,11 +1,14 @@
 package edu.ucsd.calab.extrasensory.network;
 
 import android.app.IntentService;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.res.Resources;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
@@ -62,6 +65,26 @@ public class ESNetworkAccessor {
 
     private ArrayList<String> _networkQueue;
     private long _busyUntilTimeInMillis = 0;
+    private BroadcastReceiver _broadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent == null) {
+                Log.e(LOG_TAG,"received broadcast with null intent");
+                return;
+            }
+            if (WifiManager.NETWORK_STATE_CHANGED_ACTION.equals(intent.getAction())) {
+                Log.i(LOG_TAG,"received broadcast of WiFi connectivity change");
+                if (isThereWiFiConnectivity()) {
+                    Log.i(LOG_TAG,"We now have WiFi. Call upload");
+                    uploadWhatYouHave();
+                }
+                else {
+                    Log.i(LOG_TAG,"We now don't have WiFi.");
+                }
+                return;
+            }
+        }
+    };
 
     /**
      * Singleton implementation:
@@ -69,6 +92,7 @@ public class ESNetworkAccessor {
     private static ESNetworkAccessor _theSingleNetworkAccessor;
     private ESNetworkAccessor() {
         _networkQueue = new ArrayList<String>(8);
+        ESApplication.getTheAppContext().registerReceiver(_broadcastReceiver,new IntentFilter(WifiManager.NETWORK_STATE_CHANGED_ACTION));
         checkZipFilesInDirectory();
     }
 
