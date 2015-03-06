@@ -3,6 +3,7 @@ package edu.ucsd.calab.extrasensory.ui;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -10,6 +11,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
@@ -42,13 +44,6 @@ public class SelectionFromListActivity extends BaseActivity {
 
     private static final String LOG_TAG = "[SelectionFromListActivity]";
 
-//    private ArrayList<String> _sectionsHeaders;
-//    private ArrayList<ArrayList<String>> _sectionsLists;
-    private String[] _labelChoices;
-    private HashSet<String> _selectedLabels;
-    private boolean _allowMultiSelection = false;
-
-
     public static final String LIST_TYPE_KEY = "edu.ucsd.calab.extrasensory.key.list_type";
     public static final String PRESELECTED_LABELS_KEY = "edu.ucsd.calab.extrasensory.key.preselected_labels";
     public static final String FREQUENTLY_USED_LABELS_KEY = "edu.ucsd.calab.extrasensory.key.frequently_used_labels";
@@ -60,6 +55,12 @@ public class SelectionFromListActivity extends BaseActivity {
     public static final int LIST_TYPE_SECONDARY_ACTIVITIES = 2;
     public static final int LIST_TYPE_MOODS = 3;
 
+
+    //    private ArrayList<String> _sectionsHeaders;
+//    private ArrayList<ArrayList<String>> _sectionsLists;
+    private String[] _labelChoices;
+    private HashSet<String> _selectedLabels;
+    private boolean _allowMultiSelection = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,14 +106,16 @@ public class SelectionFromListActivity extends BaseActivity {
             _selectedLabels = new HashSet<>(10);
         }
 
+
         refreshListContent();
     }
 
     private void refreshListContent() {
         ListView choicesListView = (ListView)findViewById(R.id.listview_selection_choices_list);
-        ChoiceItem[] items = new ChoiceItem[_labelChoices.length];
+        ChoiceItem[] items = new ChoiceItem[_labelChoices.length+1];
+        items[0] = new ChoiceItem("header text",true);
         for (int i=0; i<_labelChoices.length; i++ ) {
-            items[i] = new ChoiceItem(_labelChoices[i]);
+            items[i+1] = new ChoiceItem(_labelChoices[i]);
         }
         ChoicesListAdapter choicesListAdapter = new ChoicesListAdapter(items,this);
         choicesListView.setAdapter(choicesListAdapter);
@@ -187,7 +190,18 @@ public class SelectionFromListActivity extends BaseActivity {
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-            return super.getView(position,convertView,parent);
+            View rowView =  super.getView(position,convertView,parent);
+            ChoiceItem item = getItem(position);
+            if (item._isSectionHeader) {
+                rowView.setBackgroundColor(Color.BLUE);
+                return rowView;
+            }
+
+            if (_handler._selectedLabels.contains(item._label)) {
+
+            }
+
+            return rowView;
         }
     }
 }
