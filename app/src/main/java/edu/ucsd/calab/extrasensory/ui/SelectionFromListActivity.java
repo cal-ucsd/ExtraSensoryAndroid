@@ -13,6 +13,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
 
 import java.util.ArrayList;
@@ -192,13 +193,19 @@ public class SelectionFromListActivity extends BaseActivity {
         public View getView(int position, View convertView, ViewGroup parent) {
             View rowView =  super.getView(position,convertView,parent);
             ChoiceItem item = getItem(position);
+            ImageView imageView = (ImageView)rowView.findViewById(R.id.image_mark_for_selection_choice);
             if (item._isSectionHeader) {
                 rowView.setBackgroundColor(Color.BLUE);
+                imageView.setImageBitmap(null);
                 return rowView;
             }
 
+            rowView.setBackgroundColor(Color.WHITE);
             if (_handler._selectedLabels.contains(item._label)) {
-
+                imageView.setImageResource(R.drawable.checkmark_in_circle);
+            }
+            else {
+                imageView.setImageBitmap(null);
             }
 
             return rowView;
