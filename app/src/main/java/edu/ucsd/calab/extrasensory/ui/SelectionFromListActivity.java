@@ -139,6 +139,12 @@ public class SelectionFromListActivity extends BaseActivity {
             _selectedLabels = new HashSet<>(10);
         }
 
+        if (!_useIndex) {
+            ListView choicesListView = (ListView)findViewById(R.id.listview_selection_choices_list);
+            ViewGroup.LayoutParams params = choicesListView.getLayoutParams();
+            params.width = ViewGroup.LayoutParams.MATCH_PARENT;
+            choicesListView.setLayoutParams(params);
+        }
 
 
         refreshListContent();
@@ -146,11 +152,6 @@ public class SelectionFromListActivity extends BaseActivity {
 
     private void refreshListContent() {
         ListView choicesListView = (ListView)findViewById(R.id.listview_selection_choices_list);
-        if (!_useIndex) {
-            ViewGroup.LayoutParams params = choicesListView.getLayoutParams();
-            params.width = ViewGroup.LayoutParams.MATCH_PARENT;
-            choicesListView.setLayoutParams(params);
-        }
 
         ChoiceItem[] items = new ChoiceItem[_labelChoices.length+1];
         items[0] = new ChoiceItem("header text",true);
