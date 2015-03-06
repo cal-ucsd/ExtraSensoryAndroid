@@ -109,7 +109,7 @@ public class HistoryFragment extends BaseTabFragment {
      * Created by Jennifer on 2/18/2015.
      */
 
-    public static class HistoryAdapter extends ArrayAdapter {
+    private static class HistoryAdapter extends ArrayAdapter {
 
         // This variable gives context as to what is calling the inflater and where it needs
         // to inflate the view

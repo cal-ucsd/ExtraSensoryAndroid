@@ -1,16 +1,22 @@
 package edu.ucsd.calab.extrasensory.ui;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 
+import edu.ucsd.calab.extrasensory.ESApplication;
 import edu.ucsd.calab.extrasensory.R;
 import edu.ucsd.calab.extrasensory.data.ESLabelStrings;
 
@@ -98,9 +104,18 @@ public class SelectionFromListActivity extends BaseActivity {
         else {
             _selectedLabels = new HashSet<>(10);
         }
+
+        refreshListContent();
     }
 
     private void refreshListContent() {
+        ListView choicesListView = (ListView)findViewById(R.id.listview_selection_choices_list);
+        ChoiceItem[] items = new ChoiceItem[_labelChoices.length];
+        for (int i=0; i<_labelChoices.length; i++ ) {
+            items[i] = new ChoiceItem(_labelChoices[i]);
+        }
+        ChoicesListAdapter choicesListAdapter = new ChoicesListAdapter(items,this);
+        choicesListView.setAdapter(choicesListAdapter);
         //TODO: present the list of choices, where the items that are in _selectedLabels appear with some mark (e.g. checkmark)
         //TODO: later add here also the sections of labels and index
     }
@@ -140,5 +155,39 @@ public class SelectionFromListActivity extends BaseActivity {
 
         setResult(Activity.RESULT_OK,selectedLabelsIntent);
         finish();
+    }
+
+
+
+    private static class ChoiceItem {
+        public String _label;
+        public boolean _isSectionHeader;
+        public ChoiceItem(String label,boolean isSectionHeader) {
+            _label = label;
+            _isSectionHeader = isSectionHeader;
+        }
+        public ChoiceItem(String label) {
+            this(label,false);
+        }
+
+        @Override
+        public String toString() {
+            return _label;
+        }
+    }
+
+    private static class ChoicesListAdapter extends ArrayAdapter<ChoiceItem> {
+
+        private SelectionFromListActivity _handler;
+
+        public ChoicesListAdapter(ChoiceItem[] objects,SelectionFromListActivity handler) {
+            super(ESApplication.getTheAppContext(), R.layout.row_in_selection_from_list, R.id.text_label_name_in_selection_choice, objects);
+            _handler = handler;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            return super.getView(position,convertView,parent);
+        }
     }
 }

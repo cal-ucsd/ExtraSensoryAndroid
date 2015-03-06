@@ -2,6 +2,7 @@ package edu.ucsd.calab.extrasensory.ui;
 
 
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.app.Fragment;
@@ -9,6 +10,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
@@ -64,6 +66,29 @@ public class HomeFragment extends BaseTabFragment {
         _storedExamplesCount = (TextView)homeView.findViewById(R.id.text_zip_file_count);
         presentNumStoredExamples();
 
+
+        Button selectMainButton = (Button) homeView.findViewById(R.id.select_main_button);
+        selectMainButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d(LOG_TAG,"clicked select main");
+                Intent intent = new Intent(ESApplication.getTheAppContext(),SelectionFromListActivity.class);
+                intent.putExtra(SelectionFromListActivity.LIST_TYPE_KEY,SelectionFromListActivity.LIST_TYPE_MAIN_ACTIVITY);
+                startActivity(intent);
+            }
+        });
+        Button selectSecondaryButton = (Button) homeView.findViewById(R.id.select_secondary_button);
+        selectSecondaryButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d(LOG_TAG,"clicked select secondary");
+                Intent intent = new Intent(ESApplication.getTheAppContext(),SelectionFromListActivity.class);
+                intent.putExtra(SelectionFromListActivity.LIST_TYPE_KEY,SelectionFromListActivity.LIST_TYPE_SECONDARY_ACTIVITIES);
+                intent.putExtra(SelectionFromListActivity.PRESELECTED_LABELS_KEY,new String[]{"At home"});
+                startActivity(intent);
+            }
+        });
+
         return homeView;
     }
 
@@ -99,4 +124,8 @@ public class HomeFragment extends BaseTabFragment {
         super.reactToNetworkQueueSizeChangedEvent();
         presentNumStoredExamples();
     }
+
+
+
+
 }

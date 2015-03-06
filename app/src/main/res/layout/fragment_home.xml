@@ -52,6 +52,17 @@
                 android:text="0"/>
         </LinearLayout>
 
+        <Button
+            android:id="@+id/select_main_button"
+            android:text="select main"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+        <Button
+            android:id="@+id/select_secondary_button"
+            android:text="select secondary"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
 
     </LinearLayout>
 
