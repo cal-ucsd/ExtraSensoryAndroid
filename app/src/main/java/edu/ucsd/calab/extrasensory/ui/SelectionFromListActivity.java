@@ -88,29 +88,6 @@ public class SelectionFromListActivity extends BaseActivity {
         }
     };
 
-    private AdapterView.OnItemClickListener _onItemClickListener = new AdapterView.OnItemClickListener() {
-        @Override
-        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            TextView textView = (TextView)view.findViewById(R.id.text_label_name_in_selection_choice);
-            String clickedLabel = textView.getText().toString();
-            if (_selectedLabels.contains(clickedLabel)) {
-                // Then this click was to de-select this label:
-                _selectedLabels.remove(clickedLabel);
-            }
-            else {
-                // Then this click was to select this label:
-                if (!_allowMultiSelection) {
-                    // First empty other selected labels:
-                    _selectedLabels.clear();
-                }
-                // Add the selected label:
-                _selectedLabels.add(clickedLabel);
-            }
-
-            // After re-arranging the selected labels, refresh the list:
-            refreshListContent();
-        }
-    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -162,6 +139,7 @@ public class SelectionFromListActivity extends BaseActivity {
 
     private void refreshListContent() {
         ListView choicesListView = (ListView)findViewById(R.id.listview_selection_choices_list);
+
         ChoiceItem[] items = new ChoiceItem[_labelChoices.length+1];
         items[0] = new ChoiceItem("header text",true);
         for (int i=0; i<_labelChoices.length; i++ ) {
@@ -169,9 +147,7 @@ public class SelectionFromListActivity extends BaseActivity {
         }
         ChoicesListAdapter choicesListAdapter = new ChoicesListAdapter(items,this);
         choicesListView.setAdapter(choicesListAdapter);
-//        choicesListView.setOnClickListener(_onClickListener);
-        choicesListView.setOnItemClickListener(_onItemClickListener);
-        
+
         //TODO: later add here also the sections of labels and index
     }
 
@@ -180,6 +156,8 @@ public class SelectionFromListActivity extends BaseActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_selection_from_list, menu);
+        _optionsMenu = menu;
+        checkRecordingStateAndSetRedLight();
         return true;
     }
 
@@ -189,10 +167,11 @@ public class SelectionFromListActivity extends BaseActivity {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+        switch (id) {
+            case R.id.action_done_selecting_from_list:
+                returnSelectedLabels();
+                break;
+            default://do nothing
         }
 
         return super.onOptionsItemSelected(item);
@@ -249,12 +228,14 @@ public class SelectionFromListActivity extends BaseActivity {
                 rowView.setBackgroundColor(Color.BLUE);
                 imageView.setImageBitmap(null);
                 rowView.setEnabled(false);
-//                rowView.setOnClickListener(null);
+                rowView.setOnClickListener(null);
                 return rowView;
             }
 
             rowView.setBackgroundColor(Color.WHITE);
             rowView.setEnabled(true);
+            rowView.setOnClickListener(_handler._onClickListener);
+
             if (_handler._selectedLabels.contains(item._label)) {
                 imageView.setImageResource(R.drawable.checkmark_in_circle);
             }

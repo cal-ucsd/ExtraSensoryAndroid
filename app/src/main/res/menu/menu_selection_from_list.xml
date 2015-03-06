@@ -2,6 +2,6 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="edu.ucsd.calab.extrasensory.ui.SelectionFromListActivity">
-    <item android:id="@+id/action_settings" android:title="@string/action_settings"
-        android:orderInCategory="100" app:showAsAction="never" />
+    <item android:id="@+id/action_red_circle" android:title="@string/REC" android:icon="@drawable/red_circle" app:showAsAction="always" />
+    <item android:id="@+id/action_done_selecting_from_list" android:title="@string/done_selecting_from_list" app:showAsAction="always" />
 </menu>
