@@ -12,13 +12,14 @@
         android:layout_weight="3"
         android:layout_height="wrap_content">
     </ListView>
-    <ListView
-        android:id="@+id/listview_selection_side_index"
+    <LinearLayout
+        android:id="@+id/linearlayout_selection_side_index"
         android:layout_width="0dp"
         android:layout_weight="1"
         android:layout_height="wrap_content"
-        android:background="#cccccc">
-    </ListView>
+        android:background="#cccccc"
+        android:orientation="vertical">
+    </LinearLayout>
 
 
 </LinearLayout>

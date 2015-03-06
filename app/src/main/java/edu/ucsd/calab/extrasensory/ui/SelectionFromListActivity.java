@@ -1,5 +1,6 @@
 package edu.ucsd.calab.extrasensory.ui;
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -15,6 +16,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -64,6 +66,7 @@ public class SelectionFromListActivity extends BaseActivity {
     private String[] _labelChoices;
     private HashSet<String> _selectedLabels;
     private boolean _allowMultiSelection = false;
+    private boolean _useIndex = false;
     private View.OnClickListener _onClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
@@ -107,14 +110,17 @@ public class SelectionFromListActivity extends BaseActivity {
             case LIST_TYPE_MAIN_ACTIVITY:
                 _labelChoices = ESLabelStrings.getMainActivities();
                 _allowMultiSelection = false;
+                _useIndex = false;
                 break;
             case LIST_TYPE_SECONDARY_ACTIVITIES:
                 _labelChoices = ESLabelStrings.getSecondaryActivities();
                 _allowMultiSelection = true;
+                _useIndex = true;
                 break;
             case LIST_TYPE_MOODS:
                 _labelChoices = ESLabelStrings.getMoods();
                 _allowMultiSelection = true;
+                _useIndex = true;
                 break;
             default:
                 Log.e(LOG_TAG,"Unsupported list type received: " + listType);
@@ -134,11 +140,17 @@ public class SelectionFromListActivity extends BaseActivity {
         }
 
 
+
         refreshListContent();
     }
 
     private void refreshListContent() {
         ListView choicesListView = (ListView)findViewById(R.id.listview_selection_choices_list);
+        if (!_useIndex) {
+            ViewGroup.LayoutParams params = choicesListView.getLayoutParams();
+            params.width = ViewGroup.LayoutParams.MATCH_PARENT;
+            choicesListView.setLayoutParams(params);
+        }
 
         ChoiceItem[] items = new ChoiceItem[_labelChoices.length+1];
         items[0] = new ChoiceItem("header text",true);
