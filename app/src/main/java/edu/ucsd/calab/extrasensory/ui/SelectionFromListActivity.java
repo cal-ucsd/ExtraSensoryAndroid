@@ -2,6 +2,7 @@ package edu.ucsd.calab.extrasensory.ui;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.support.v7.app.ActionBarActivity;
@@ -15,6 +16,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -62,6 +64,53 @@ public class SelectionFromListActivity extends BaseActivity {
     private String[] _labelChoices;
     private HashSet<String> _selectedLabels;
     private boolean _allowMultiSelection = false;
+    private View.OnClickListener _onClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            TextView textView = (TextView)view.findViewById(R.id.text_label_name_in_selection_choice);
+            String clickedLabel = textView.getText().toString();
+            if (_selectedLabels.contains(clickedLabel)) {
+                // Then this click was to de-select this label:
+                _selectedLabels.remove(clickedLabel);
+            }
+            else {
+                // Then this click was to select this label:
+                if (!_allowMultiSelection) {
+                    // First empty other selected labels:
+                    _selectedLabels.clear();
+                }
+                // Add the selected label:
+                _selectedLabels.add(clickedLabel);
+            }
+
+            // After re-arranging the selected labels, refresh the list:
+            refreshListContent();
+        }
+    };
+
+    private AdapterView.OnItemClickListener _onItemClickListener = new AdapterView.OnItemClickListener() {
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            TextView textView = (TextView)view.findViewById(R.id.text_label_name_in_selection_choice);
+            String clickedLabel = textView.getText().toString();
+            if (_selectedLabels.contains(clickedLabel)) {
+                // Then this click was to de-select this label:
+                _selectedLabels.remove(clickedLabel);
+            }
+            else {
+                // Then this click was to select this label:
+                if (!_allowMultiSelection) {
+                    // First empty other selected labels:
+                    _selectedLabels.clear();
+                }
+                // Add the selected label:
+                _selectedLabels.add(clickedLabel);
+            }
+
+            // After re-arranging the selected labels, refresh the list:
+            refreshListContent();
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -120,7 +169,9 @@ public class SelectionFromListActivity extends BaseActivity {
         }
         ChoicesListAdapter choicesListAdapter = new ChoicesListAdapter(items,this);
         choicesListView.setAdapter(choicesListAdapter);
-        //TODO: present the list of choices, where the items that are in _selectedLabels appear with some mark (e.g. checkmark)
+//        choicesListView.setOnClickListener(_onClickListener);
+        choicesListView.setOnItemClickListener(_onItemClickListener);
+        
         //TODO: later add here also the sections of labels and index
     }
 
@@ -197,10 +248,13 @@ public class SelectionFromListActivity extends BaseActivity {
             if (item._isSectionHeader) {
                 rowView.setBackgroundColor(Color.BLUE);
                 imageView.setImageBitmap(null);
+                rowView.setEnabled(false);
+//                rowView.setOnClickListener(null);
                 return rowView;
             }
 
             rowView.setBackgroundColor(Color.WHITE);
+            rowView.setEnabled(true);
             if (_handler._selectedLabels.contains(item._label)) {
                 imageView.setImageResource(R.drawable.checkmark_in_circle);
             }
