@@ -1,16 +1,29 @@
 package edu.ucsd.calab.extrasensory.ui;
 
+import android.app.ActionBar;
 import android.app.Activity;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Color;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ListView;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 
+import edu.ucsd.calab.extrasensory.ESApplication;
 import edu.ucsd.calab.extrasensory.R;
 import edu.ucsd.calab.extrasensory.data.ESLabelStrings;
 
@@ -36,13 +49,6 @@ public class SelectionFromListActivity extends BaseActivity {
 
     private static final String LOG_TAG = "[SelectionFromListActivity]";
 
-//    private ArrayList<String> _sectionsHeaders;
-//    private ArrayList<ArrayList<String>> _sectionsLists;
-    private String[] _labelChoices;
-    private HashSet<String> _selectedLabels;
-    private boolean _allowMultiSelection = false;
-
-
     public static final String LIST_TYPE_KEY = "edu.ucsd.calab.extrasensory.key.list_type";
     public static final String PRESELECTED_LABELS_KEY = "edu.ucsd.calab.extrasensory.key.preselected_labels";
     public static final String FREQUENTLY_USED_LABELS_KEY = "edu.ucsd.calab.extrasensory.key.frequently_used_labels";
@@ -53,6 +59,37 @@ public class SelectionFromListActivity extends BaseActivity {
     public static final int LIST_TYPE_MAIN_ACTIVITY = 1;
     public static final int LIST_TYPE_SECONDARY_ACTIVITIES = 2;
     public static final int LIST_TYPE_MOODS = 3;
+
+
+    //    private ArrayList<String> _sectionsHeaders;
+//    private ArrayList<ArrayList<String>> _sectionsLists;
+    private String[] _labelChoices;
+    private HashSet<String> _selectedLabels;
+    private boolean _allowMultiSelection = false;
+    private boolean _useIndex = false;
+    private View.OnClickListener _onClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View view) {
+            TextView textView = (TextView)view.findViewById(R.id.text_label_name_in_selection_choice);
+            String clickedLabel = textView.getText().toString();
+            if (_selectedLabels.contains(clickedLabel)) {
+                // Then this click was to de-select this label:
+                _selectedLabels.remove(clickedLabel);
+            }
+            else {
+                // Then this click was to select this label:
+                if (!_allowMultiSelection) {
+                    // First empty other selected labels:
+                    _selectedLabels.clear();
+                }
+                // Add the selected label:
+                _selectedLabels.add(clickedLabel);
+            }
+
+            // After re-arranging the selected labels, refresh the list:
+            refreshListContent();
+        }
+    };
 
 
     @Override
@@ -73,14 +110,17 @@ public class SelectionFromListActivity extends BaseActivity {
             case LIST_TYPE_MAIN_ACTIVITY:
                 _labelChoices = ESLabelStrings.getMainActivities();
                 _allowMultiSelection = false;
+                _useIndex = false;
                 break;
             case LIST_TYPE_SECONDARY_ACTIVITIES:
                 _labelChoices = ESLabelStrings.getSecondaryActivities();
                 _allowMultiSelection = true;
+                _useIndex = true;
                 break;
             case LIST_TYPE_MOODS:
                 _labelChoices = ESLabelStrings.getMoods();
                 _allowMultiSelection = true;
+                _useIndex = true;
                 break;
             default:
                 Log.e(LOG_TAG,"Unsupported list type received: " + listType);
@@ -98,10 +138,29 @@ public class SelectionFromListActivity extends BaseActivity {
         else {
             _selectedLabels = new HashSet<>(10);
         }
+
+        if (!_useIndex) {
+            ListView choicesListView = (ListView)findViewById(R.id.listview_selection_choices_list);
+            ViewGroup.LayoutParams params = choicesListView.getLayoutParams();
+            params.width = ViewGroup.LayoutParams.MATCH_PARENT;
+            choicesListView.setLayoutParams(params);
+        }
+
+
+        refreshListContent();
     }
 
     private void refreshListContent() {
-        //TODO: present the list of choices, where the items that are in _selectedLabels appear with some mark (e.g. checkmark)
+        ListView choicesListView = (ListView)findViewById(R.id.listview_selection_choices_list);
+
+        ChoiceItem[] items = new ChoiceItem[_labelChoices.length+1];
+        items[0] = new ChoiceItem("header text",true);
+        for (int i=0; i<_labelChoices.length; i++ ) {
+            items[i+1] = new ChoiceItem(_labelChoices[i]);
+        }
+        ChoicesListAdapter choicesListAdapter = new ChoicesListAdapter(items,this);
+        choicesListView.setAdapter(choicesListAdapter);
+
         //TODO: later add here also the sections of labels and index
     }
 
@@ -110,6 +169,8 @@ public class SelectionFromListActivity extends BaseActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_selection_from_list, menu);
+        _optionsMenu = menu;
+        checkRecordingStateAndSetRedLight();
         return true;
     }
 
@@ -119,10 +180,11 @@ public class SelectionFromListActivity extends BaseActivity {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+        switch (id) {
+            case R.id.action_done_selecting_from_list:
+                returnSelectedLabels();
+                break;
+            default://do nothing
         }
 
         return super.onOptionsItemSelected(item);
@@ -140,5 +202,61 @@ public class SelectionFromListActivity extends BaseActivity {
 
         setResult(Activity.RESULT_OK,selectedLabelsIntent);
         finish();
+    }
+
+
+
+    private static class ChoiceItem {
+        public String _label;
+        public boolean _isSectionHeader;
+        public ChoiceItem(String label,boolean isSectionHeader) {
+            _label = label;
+            _isSectionHeader = isSectionHeader;
+        }
+        public ChoiceItem(String label) {
+            this(label,false);
+        }
+
+        @Override
+        public String toString() {
+            return _label;
+        }
+    }
+
+    private static class ChoicesListAdapter extends ArrayAdapter<ChoiceItem> {
+
+        private SelectionFromListActivity _handler;
+
+        public ChoicesListAdapter(ChoiceItem[] objects,SelectionFromListActivity handler) {
+            super(ESApplication.getTheAppContext(), R.layout.row_in_selection_from_list, R.id.text_label_name_in_selection_choice, objects);
+            _handler = handler;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            View rowView =  super.getView(position,convertView,parent);
+            ChoiceItem item = getItem(position);
+            ImageView imageView = (ImageView)rowView.findViewById(R.id.image_mark_for_selection_choice);
+            if (item._isSectionHeader) {
+                rowView.setBackgroundColor(Color.BLUE);
+                imageView.setImageBitmap(null);
+                rowView.setEnabled(false);
+                rowView.setOnClickListener(null);
+                return rowView;
+            }
+
+            rowView.setBackgroundColor(Color.WHITE);
+            rowView.setEnabled(true);
+            rowView.setOnClickListener(_handler._onClickListener);
+
+            if (_handler._selectedLabels.contains(item._label)) {
+                imageView.setImageResource(R.drawable.checkmark_in_circle);
+            }
+            else {
+                imageView.setImageBitmap(null);
+            }
+
+            return rowView;
+        }
     }
 }

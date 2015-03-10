@@ -30,5 +30,7 @@
     <string name="previous_history">Previous</string>
     <string name="next_history">Next</string>
     <string name="button_text">Send Feedback</string>
+    <string name="currently_storing_text">Currently stored examples:</string>
+    <string name="done_selecting_from_list">Done</string>
 
 </resources>
