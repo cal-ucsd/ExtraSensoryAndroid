@@ -23,7 +23,7 @@ public class FeedbackAdapter extends ArrayAdapter<String>{
      * @param values The String[] with the values we want to display
      */
     public FeedbackAdapter(Context context, String[] values) {
-        super(context, R.layout.activity_rowlayout, values);
+        super(context, R.layout.activity_feedback_rowlayout, values);
         this.context = context;
         this.values = values;
     }
@@ -32,7 +32,7 @@ public class FeedbackAdapter extends ArrayAdapter<String>{
     public View getView(int position, View convertView, ViewGroup parent) {
         LayoutInflater inflater = (LayoutInflater) context
                 .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        View rowView = inflater.inflate(R.layout.activity_rowlayout, parent, false);
+        View rowView = inflater.inflate(R.layout.activity_feedback_rowlayout, parent, false);
         TextView textView = (TextView) rowView.findViewById(R.id.firstLine);
         textView.setText(values[position]);
 

@@ -9,8 +9,17 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.AdapterView;
+import android.widget.SimpleAdapter;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import edu.ucsd.calab.extrasensory.R;
 import edu.ucsd.calab.extrasensory.data.ESContinuousActivity;
@@ -27,6 +36,7 @@ public class FeedbackActivity extends BaseActivity {
     public static final int FEEDBACK_TYPE_ACTIVE = 1;
     public static final int FEEDBACK_TYPE_HISTORY_CONTINUOUS_ACTIVITY = 2;
 
+    Button button;
     /**
      * This parameter type is to be used to transfer parameters to the feedback view,
      * that indicate what kind of feedback to perform and pass relevant data.
@@ -71,31 +81,50 @@ public class FeedbackActivity extends BaseActivity {
         setContentView(R.layout.activity_feedback);
         Log.d(LOG_TAG,"activity being created");
 
-        String[] values = new String[] { "MainActivity", "Secondary Activities", "Mood", "Valid for" };
+        final String[] values = new String[] { "MainActivity", "Secondary Activities", "Mood", "Valid for" };
 
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, values);
         ListView listView = (ListView) findViewById(R.id.listview_activity);
         listView.setAdapter(adapter);
 
+       /* List<Map<String, String>> data = new ArrayList<Map<String, String>>();
+        for (String act:values) {
+            Map<String, String> datum = new HashMap<String, String>(2);
+            datum.put("row header", act);
+            datum.put("row detail", "item chosen by user");
+            data.add(datum);
+        }
+        SimpleAdapter adapter = new SimpleAdapter(this, data,
+                android.R.layout.simple_list_item_2,
+                new String[] {"title", "date"},
+                new int[] {android.R.id.text1,
+                        android.R.id.text2});
+        listView.setAdapter(adapter);
+*/
         View sendButton = getLayoutInflater().inflate(R.layout.activity_feedback_button, null);
         listView.addFooterView(sendButton);
 
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
-        listView.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            public void onItemSelected(AdapterView parentView, View childView,
-                                       int position, long id)
-            {
-                //setDetail(position);
-                Intent intent = new Intent(getApplicationContext(), SelectionFromListActivity.class);
-                startActivity(intent);
-
+            public void onItemClick(AdapterView<?> arg0, View arg1, int arg2,
+                                    long arg3) {
+                // For Long Duration Toast
+                Toast.makeText(getApplicationContext(), values[arg2], Toast.LENGTH_LONG).show();
             }
+          /*  public void onItemClick(AdapterView<?> parent, View view,
+                int position, long id) {
+                // selected item
+                String product = ((TextView) view).getText().toString();
 
-            public void onNothingSelected(AdapterView parentView) {
-
-            }
+                // Launching new Activity on selecting single List Item
+                Intent i = new Intent(getApplicationContext(), SelectionFromListActivity.class);
+                // sending data to new activity
+                i.putExtra("product", product);
+                startActivity(i);
+            }*/
         });
 
+        addListenerOnButton();
     }
 
     @Override
@@ -165,4 +194,33 @@ public class FeedbackActivity extends BaseActivity {
                 //TODO: how to handle such a case? leave blank/default page? present active feedback? present error message? close activity and go back to previous?
         }
     }
+
+    public void addListenerOnButton() {
+        final Context context = this;
+        button = (Button) findViewById(R.id.sendfeedback);
+        button.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View arg0) {
+                Intent intent = new Intent(context, MainActivity.class);
+                startActivity(intent);
+            }
+        });
+
+    }
+ /*   public void onItemClick(int mPosition)
+    {
+        ListModel tempValues = ( ListModel ) CustomListViewValuesArr.get(mPosition);
+
+        // SHOW ALERT
+
+        Toast.makeText(CustomListView,
+                ""+tempValues.getCompanyName()
+                        +"
+                Image:"+tempValues.getImage()
+            +"
+        Url:"+tempValues.getUrl(),
+        Toast.LENGTH_LONG)
+        .show();
+    }*/
 }
