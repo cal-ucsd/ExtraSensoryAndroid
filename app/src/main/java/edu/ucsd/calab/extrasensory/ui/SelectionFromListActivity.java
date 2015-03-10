@@ -21,6 +21,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 
 import edu.ucsd.calab.extrasensory.ESApplication;
@@ -60,9 +61,12 @@ public class SelectionFromListActivity extends BaseActivity {
     public static final int LIST_TYPE_SECONDARY_ACTIVITIES = 2;
     public static final int LIST_TYPE_MOODS = 3;
 
+    private static final int TAG_INDEX_ITEM_TO_ROW = 1;
 
-    //    private ArrayList<String> _sectionsHeaders;
-//    private ArrayList<ArrayList<String>> _sectionsLists;
+    private ArrayList<String> _sectionHeaders;
+    private ArrayList<String> _sectionIndexTitles;
+    private HashMap<String,String[]> _sections;
+
     private String[] _labelChoices;
     private HashSet<String> _selectedLabels;
     private boolean _allowMultiSelection = false;

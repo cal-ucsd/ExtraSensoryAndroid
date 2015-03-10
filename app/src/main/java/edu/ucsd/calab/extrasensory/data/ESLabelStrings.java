@@ -2,6 +2,7 @@ package edu.ucsd.calab.extrasensory.data;
 
 import android.content.Context;
 
+import java.lang.reflect.Array;
 import java.util.*;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -23,11 +24,12 @@ public class ESLabelStrings {
     private static String[] _secondaryActivities = null;
     private static String[] _moods = null;
     private static String[] _homeSensingLabels = null;
+    private static HashMap<String,String[]> _secondaryActivitiesPerSubject = null;
 
 
     public static String[] getMainActivities() {
         if (_mainActivities == null) {
-            _mainActivities = readLabelsFromFile(R.raw.main_activities_list);
+            _mainActivities = readLabelsFromFile(R.raw.main_activities_list,null);
         }
 
         return _mainActivities;
@@ -35,15 +37,23 @@ public class ESLabelStrings {
 
     public static String[] getSecondaryActivities() {
         if (_secondaryActivities == null) {
-            _secondaryActivities = readLabelsFromFile(R.raw.secondary_activities_list);
+            _secondaryActivitiesPerSubject = new HashMap<>(10);
+            _secondaryActivities = readLabelsFromFile(R.raw.secondary_activities_list,_secondaryActivitiesPerSubject);
         }
 
         return _secondaryActivities;
     }
 
+    public static Map<String,String[]> getSecondaryActivitiesPerSubject() {
+        // First, make sure the secondary activities (and subjects) are read for the first time:
+        getSecondaryActivities();
+
+        return _secondaryActivitiesPerSubject;
+    }
+
     public static String[] getMoods() {
         if (_moods == null) {
-            _moods = readLabelsFromFile(R.raw.moods_list);
+            _moods = readLabelsFromFile(R.raw.moods_list,null);
         }
 
         return _moods;
@@ -51,7 +61,7 @@ public class ESLabelStrings {
 
     public static String[] getHomeSensingLabels() {
         if (_homeSensingLabels == null) {
-            _homeSensingLabels = readLabelsFromFile(R.raw.home_sensing_labels_list);
+            _homeSensingLabels = readLabelsFromFile(R.raw.home_sensing_labels_list,null);
         }
 
         return _homeSensingLabels;
@@ -83,21 +93,36 @@ public class ESLabelStrings {
      * The labels to extract here are just what's before the pipe (if it exists in the line).
      *
      * @param textFileResourceID ID of the raw resource text file
+     * @param labelsPerSubject A map object into which to insert the relevant labels for each subject,
+     *                         according to the content of the text file (if it has text after pipe).
+     *                         If this given argument is null, disregard the text after pipe.
      * @return The array of labels read from the file
      */
-    private static String[] readLabelsFromFile(int textFileResourceID) {
+    private static String[] readLabelsFromFile(int textFileResourceID,Map<String,String[]> labelsPerSubject) {
         Context context = ESApplication.getTheAppContext();
         ArrayList<String> parsedLabels = new ArrayList<String>();
+        HashMap<String,ArrayList<String>> tempLabelsPerSubject = new HashMap<>(10);
 
         try {
             InputStream inputStream = context.getResources().openRawResource(textFileResourceID);
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
 
-            String[] splitLabel;
+            String[] splitLine;
             String line = "";
             while ((line = bufferedReader.readLine()) != null) {
-                splitLabel = line.split("\\|");
-                parsedLabels.add(splitLabel[0]);
+                splitLine = line.split("\\|");
+                String label = splitLine[0];
+                parsedLabels.add(label);
+                if (labelsPerSubject != null && splitLine.length > 1) {
+                    // Then lets read the subjects after the pipe:
+                    String[] subjectsForLabel = splitLine[1].split(",");
+                    for (String subject : subjectsForLabel) {
+                        if (!tempLabelsPerSubject.containsKey(subject)) {
+                            tempLabelsPerSubject.put(subject,new ArrayList<String>(10));
+                        }
+                        ((ArrayList<String>)tempLabelsPerSubject.get(subject)).add(label);
+                    }
+                }
             }
             bufferedReader.close();
 
@@ -109,6 +134,16 @@ public class ESLabelStrings {
         for(int i=0; i < parsedLabels.size(); i++ ){
             labels[i] = parsedLabels.get(i);
         }
+
+        if (labelsPerSubject != null) {
+            // Then lets update the given map with the subject associations we read:
+            for (String subject : tempLabelsPerSubject.keySet()) {
+                ArrayList<String> subjectsLabels = (ArrayList<String>)tempLabelsPerSubject.get(subject);
+                labelsPerSubject.put(subject,new String[subjectsLabels.size()]);
+                subjectsLabels.toArray(labelsPerSubject.get(subject));
+            }
+        }
+
         return labels;
     }
 
