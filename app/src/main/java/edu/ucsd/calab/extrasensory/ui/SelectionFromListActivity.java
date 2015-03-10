@@ -23,6 +23,7 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 
 import edu.ucsd.calab.extrasensory.ESApplication;
 import edu.ucsd.calab.extrasensory.R;
@@ -63,9 +64,9 @@ public class SelectionFromListActivity extends BaseActivity {
 
     private static final int TAG_INDEX_ITEM_TO_ROW = 1;
 
-    private ArrayList<String> _sectionHeaders;
-    private ArrayList<String> _sectionIndexTitles;
-    private HashMap<String,String[]> _sections;
+//    private ArrayList<String> _sectionHeaders;
+//    private ArrayList<String> _sectionIndexTitles;
+    private Map<String,String[]> _labelsPerSubject;
 
     private String[] _labelChoices;
     private HashSet<String> _selectedLabels;
@@ -118,6 +119,7 @@ public class SelectionFromListActivity extends BaseActivity {
                 break;
             case LIST_TYPE_SECONDARY_ACTIVITIES:
                 _labelChoices = ESLabelStrings.getSecondaryActivities();
+                _labelsPerSubject = ESLabelStrings.getSecondaryActivitiesPerSubject();
                 _allowMultiSelection = true;
                 _useIndex = true;
                 break;
@@ -157,11 +159,27 @@ public class SelectionFromListActivity extends BaseActivity {
     private void refreshListContent() {
         ListView choicesListView = (ListView)findViewById(R.id.listview_selection_choices_list);
 
-        ChoiceItem[] items = new ChoiceItem[_labelChoices.length+1];
-        items[0] = new ChoiceItem("header text",true);
-        for (int i=0; i<_labelChoices.length; i++ ) {
-            items[i+1] = new ChoiceItem(_labelChoices[i]);
+        ArrayList<ChoiceItem> itemsList = new ArrayList<>(10);
+        if (_labelsPerSubject != null) {
+            for (String subject : _labelsPerSubject.keySet()) {
+                int nextRowInd = itemsList.size();
+                // Add subject header:
+                itemsList.add(new ChoiceItem(subject,true));
+                //TODO: add "button" to the side index (in case using index)
+                // Add the subject's labels:
+                for (String label : (String[])_labelsPerSubject.get(subject)) {
+                    itemsList.add(new ChoiceItem(label));
+                }
+            }
         }
+        else {
+            for (int i=0; i < _labelChoices.length; i ++) {
+                itemsList.add(new ChoiceItem(_labelChoices[i]));
+            }
+        }
+
+        ChoiceItem[] items = new ChoiceItem[itemsList.size()];
+        items = itemsList.toArray(items);
         ChoicesListAdapter choicesListAdapter = new ChoicesListAdapter(items,this);
         choicesListView.setAdapter(choicesListAdapter);
 

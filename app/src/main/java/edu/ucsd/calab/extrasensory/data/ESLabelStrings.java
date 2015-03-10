@@ -24,7 +24,7 @@ public class ESLabelStrings {
     private static String[] _secondaryActivities = null;
     private static String[] _moods = null;
     private static String[] _homeSensingLabels = null;
-    private static HashMap<String,String[]> _secondaryActivitiesPerSubject = null;
+    private static TreeMap<String,String[]> _secondaryActivitiesPerSubject = null;
 
 
     public static String[] getMainActivities() {
@@ -37,7 +37,7 @@ public class ESLabelStrings {
 
     public static String[] getSecondaryActivities() {
         if (_secondaryActivities == null) {
-            _secondaryActivitiesPerSubject = new HashMap<>(10);
+            _secondaryActivitiesPerSubject = new TreeMap<>();
             _secondaryActivities = readLabelsFromFile(R.raw.secondary_activities_list,_secondaryActivitiesPerSubject);
         }
 
