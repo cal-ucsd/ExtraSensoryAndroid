@@ -1,27 +1,22 @@
 package edu.ucsd.calab.extrasensory.ui;
 
-import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.location.LocationManager;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
-import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
-import edu.ucsd.calab.extrasensory.ESApplication;
 import edu.ucsd.calab.extrasensory.R;
 import edu.ucsd.calab.extrasensory.data.ESContinuousActivity;
 import edu.ucsd.calab.extrasensory.data.ESDatabaseAccessor;
@@ -34,6 +29,7 @@ import edu.ucsd.calab.extrasensory.sensors.ESSensorManager;
 public class HistoryFragment extends BaseTabFragment {
 
     private static final String LOG_TAG = "[ESHistoryFragment]";
+    private static boolean headerFlag = false;
 
     public HistoryFragment() {
         // Required empty public constructor
@@ -43,6 +39,7 @@ public class HistoryFragment extends BaseTabFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        headerFlag = false;
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_history, container, false);
     }
@@ -77,21 +74,45 @@ public class HistoryFragment extends BaseTabFragment {
             Log.d(LOG_TAG, activityList[i].toString());
         }
 
-        HistoryAdapter histAdapter = new HistoryAdapter(getActivity().getBaseContext(), R.layout.rowlayout, activityList);
+        HistoryAdapter histAdapter = new HistoryAdapter(getActivity().getBaseContext(), R.layout.history_rowlayout, activityList);
         // Get the list view and set it using this adapter
         ListView listView = (ListView) getView().findViewById(R.id.listview);
 
         LayoutInflater inflater = (LayoutInflater) getView().getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        View header = inflater.inflate(R.layout.header_rowlayout, null);
+        View header = inflater.inflate(R.layout.history_header_rowlayout, null);
 
         //Set day title
         TextView headerLabel = (TextView)header.findViewById(R.id.txtHeader);
 
         headerLabel.setText("Today- " + dateFormat.format(startTime.getDateOfTimestamp()));
 
-        listView.addHeaderView(header);
+        if(headerFlag == false){
+            listView.addHeaderView(header);
+            headerFlag = true;
+        }
+
         listView.setAdapter(histAdapter);
+
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override public void onItemClick(AdapterView<?> parent, View view,
+                                    int position, long id) {
+                // Launching new Activity on selecting single List Item
+               /* Intent i = new Intent(getActivity(), FeedbackActivity.class);
+                startActivity(i);*/
+                Toast.makeText(getActivity(), "Stop Clicking me", Toast.LENGTH_SHORT).show();
+
+            }
+        });
+
     }
+
+ /*   @Override
+    public void onListItemClick(ListView l, View v, int position, long id) {
+        // Launching new Activity on selecting single List Item
+        Intent i = new Intent(getActivity(), FeedbackActivity.class);
+        startActivity(i);
+
+    }*/
 
     @Override
     protected void reactToRecordsUpdatedEvent() {
@@ -99,11 +120,6 @@ public class HistoryFragment extends BaseTabFragment {
         Log.d(LOG_TAG,"reacting to records-update");
         calculateAndPresentDaysHistory();
     }
-
- /*   @Override
-    public void onListItemClick(ListView l, View v, int position, long id) {
-        // do something with the data
-    }*/
 
     /**
      * Created by Jennifer on 2/18/2015.
@@ -125,7 +141,7 @@ public class HistoryFragment extends BaseTabFragment {
          * @param values The ESContinuousActivity[] with the values we want to display
          */
         public HistoryAdapter(Context context, int layoutResourceId, ESContinuousActivity[] values) {
-            super(context, R.layout.rowlayout, values);
+            super(context, R.layout.history_rowlayout, values);
             this.layoutResourceId = layoutResourceId;
             this.context = context;
             this.values = values;
