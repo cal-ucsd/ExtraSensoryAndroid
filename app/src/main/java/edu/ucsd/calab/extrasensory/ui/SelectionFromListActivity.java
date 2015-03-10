@@ -1,19 +1,14 @@
 package edu.ucsd.calab.extrasensory.ui;
 
-import android.app.ActionBar;
 import android.app.Activity;
-import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -23,6 +18,7 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 
 import edu.ucsd.calab.extrasensory.ESApplication;
@@ -64,12 +60,12 @@ public class SelectionFromListActivity extends BaseActivity {
 
     private static final int TAG_INDEX_ITEM_TO_ROW = 1;
 
-//    private ArrayList<String> _sectionHeaders;
-//    private ArrayList<String> _sectionIndexTitles;
-    private Map<String,String[]> _labelsPerSubject;
 
+    private ListView _choicesListView;
+    private LinearLayout _sideIndex;
     private String[] _labelChoices;
     private HashSet<String> _selectedLabels;
+    private Map<String,String[]> _labelsPerSubject;
     private boolean _allowMultiSelection = false;
     private boolean _useIndex = false;
     private View.OnClickListener _onClickListener = new View.OnClickListener() {
@@ -145,11 +141,13 @@ public class SelectionFromListActivity extends BaseActivity {
             _selectedLabels = new HashSet<>(10);
         }
 
+        _choicesListView = (ListView)findViewById(R.id.listview_selection_choices_list);
+        _sideIndex = (LinearLayout)findViewById(R.id.linearlayout_selection_side_index);
+
         if (!_useIndex) {
-            ListView choicesListView = (ListView)findViewById(R.id.listview_selection_choices_list);
-            ViewGroup.LayoutParams params = choicesListView.getLayoutParams();
+            ViewGroup.LayoutParams params = _choicesListView.getLayoutParams();
             params.width = ViewGroup.LayoutParams.MATCH_PARENT;
-            choicesListView.setLayoutParams(params);
+            _choicesListView.setLayoutParams(params);
         }
 
 
@@ -157,15 +155,28 @@ public class SelectionFromListActivity extends BaseActivity {
     }
 
     private void refreshListContent() {
-        ListView choicesListView = (ListView)findViewById(R.id.listview_selection_choices_list);
+
+        _sideIndex.removeAllViews();
 
         ArrayList<ChoiceItem> itemsList = new ArrayList<>(10);
         if (_labelsPerSubject != null) {
             for (String subject : _labelsPerSubject.keySet()) {
-                int nextRowInd = itemsList.size();
+                final int nextRowInd = itemsList.size();
                 // Add subject header:
-                itemsList.add(new ChoiceItem(subject,true));
-                //TODO: add "button" to the side index (in case using index)
+                itemsList.add(new ChoiceItem(subject, true));
+                if (_useIndex) {
+                    TextView indexItem = new TextView(this);
+                    indexItem.setText(subject);
+                    indexItem.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            jumpToRow(nextRowInd);
+                        }
+                    });
+                    indexItem.setPadding(0,10,0,10);
+                    _sideIndex.addView(indexItem);
+                }
+
                 // Add the subject's labels:
                 for (String label : (String[])_labelsPerSubject.get(subject)) {
                     itemsList.add(new ChoiceItem(label));
@@ -178,14 +189,16 @@ public class SelectionFromListActivity extends BaseActivity {
             }
         }
 
-        ChoiceItem[] items = new ChoiceItem[itemsList.size()];
-        items = itemsList.toArray(items);
-        ChoicesListAdapter choicesListAdapter = new ChoicesListAdapter(items,this);
-        choicesListView.setAdapter(choicesListAdapter);
+        setAdapterChoices(itemsList);
+
 
         //TODO: later add here also the sections of labels and index
     }
 
+    private void jumpToRow(int row) {
+        ListView choicesListView = (ListView)findViewById(R.id.listview_selection_choices_list);
+        choicesListView.setSelection(row);
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -245,13 +258,34 @@ public class SelectionFromListActivity extends BaseActivity {
         }
     }
 
+    private void setAdapterChoices(ArrayList<ChoiceItem> itemsList) {
+        ChoicesListAdapter adapter = (ChoicesListAdapter)_choicesListView.getAdapter();
+        if (adapter == null) {
+            // Then initialize the list's adapter:
+            adapter = new ChoicesListAdapter(itemsList,this);
+            _choicesListView.setAdapter(adapter);
+        }
+        else {
+            // Simply update the existing adapter's values:
+            adapter.resetChoiceItems(itemsList);
+        }
+    }
+
     private static class ChoicesListAdapter extends ArrayAdapter<ChoiceItem> {
 
         private SelectionFromListActivity _handler;
+        private List<ChoiceItem> _items;
 
-        public ChoicesListAdapter(ChoiceItem[] objects,SelectionFromListActivity handler) {
-            super(ESApplication.getTheAppContext(), R.layout.row_in_selection_from_list, R.id.text_label_name_in_selection_choice, objects);
+        public ChoicesListAdapter(List<ChoiceItem> items,SelectionFromListActivity handler) {
+            super(ESApplication.getTheAppContext(), R.layout.row_in_selection_from_list, R.id.text_label_name_in_selection_choice, items);
             _handler = handler;
+            _items = items;
+        }
+
+        public void resetChoiceItems(List<ChoiceItem> items) {
+            _items.clear();
+            _items.addAll(items);
+            notifyDataSetChanged();
         }
 
         @Override
