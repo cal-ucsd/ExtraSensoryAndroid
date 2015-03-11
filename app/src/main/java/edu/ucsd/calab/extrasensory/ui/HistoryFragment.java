@@ -1,6 +1,7 @@
 package edu.ucsd.calab.extrasensory.ui;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -10,7 +11,6 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -97,10 +97,9 @@ public class HistoryFragment extends BaseTabFragment {
             @Override public void onItemClick(AdapterView<?> parent, View view,
                                     int position, long id) {
                 // Launching new Activity on selecting single List Item
-               /* Intent i = new Intent(getActivity(), FeedbackActivity.class);
-                startActivity(i);*/
-                Toast.makeText(getActivity(), "Stop Clicking me", Toast.LENGTH_SHORT).show();
-
+                Intent i = new Intent(getActivity(), FeedbackActivity.class);
+                FeedbackActivity.setFeedbackParametersBeforeStartingFeedback(new FeedbackActivity.FeedbackParameters());
+                startActivity(i);
             }
         });
 
