@@ -51,10 +51,10 @@
         <activity
             android:name=".ui.SelectionFromListActivity"
             android:label="@string/title_activity_selection_from_list"
-            android:parentActivityName=".ui.BaseActivity" >
+            android:parentActivityName=".ui.MainActivity" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="edu.ucsd.calab.extrasensory.ui.BaseActivity" />
+                android:value="edu.ucsd.calab.extrasensory.ui.MainActivity" />
         </activity>
     </application>
 
