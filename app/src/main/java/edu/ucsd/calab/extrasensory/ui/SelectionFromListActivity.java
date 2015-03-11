@@ -66,6 +66,7 @@ public class SelectionFromListActivity extends BaseActivity {
     private String[] _labelChoices;
     private HashSet<String> _selectedLabels;
     private Map<String,String[]> _labelsPerSubject;
+    private List<String> _frequentlyUsedLabels;
     private boolean _allowMultiSelection = false;
     private boolean _useIndex = false;
     private View.OnClickListener _onClickListener = new View.OnClickListener() {
@@ -159,6 +160,14 @@ public class SelectionFromListActivity extends BaseActivity {
         _sideIndex.removeAllViews();
 
         ArrayList<ChoiceItem> itemsList = new ArrayList<>(10);
+        //TODO: if needed add selected section and frequently used section (make sure it's precalculated)
+        if (_useIndex && !_selectedLabels.isEmpty()) {
+            //TODO: add section (with header) of selected plus index item
+        }
+        if (_useIndex && _frequentlyUsedLabels != null && !_frequentlyUsedLabels.isEmpty()) {
+            //TODO: add frequent section + index
+        }
+
         if (_labelsPerSubject != null) {
             for (String subject : _labelsPerSubject.keySet()) {
                 final int nextRowInd = itemsList.size();
@@ -190,9 +199,6 @@ public class SelectionFromListActivity extends BaseActivity {
         }
 
         setAdapterChoices(itemsList);
-
-
-        //TODO: later add here also the sections of labels and index
     }
 
     private void jumpToRow(int row) {
