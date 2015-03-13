@@ -58,8 +58,6 @@ public class SelectionFromListActivity extends BaseActivity {
     public static final int LIST_TYPE_SECONDARY_ACTIVITIES = 2;
     public static final int LIST_TYPE_MOODS = 3;
 
-    private static final int TAG_INDEX_ITEM_TO_ROW = 1;
-
 
     private ListView _choicesListView;
     private LinearLayout _sideIndex;
@@ -105,6 +103,8 @@ public class SelectionFromListActivity extends BaseActivity {
             finish();
             return;
         }
+
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         // Set the view according to the parameters:
         int listType = inputParameters.getIntExtra(LIST_TYPE_KEY,LIST_TYPE_MISSING);
