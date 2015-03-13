@@ -53,6 +53,9 @@ public class SelectionFromListActivity extends BaseActivity {
 
     public static final String SELECTED_LABELS_OUTPUT_KEY = "edu.ucsd.calab.extrasensory.key.selected_labels";
 
+    private static final String SELECTED_LABELS_HEADER = "Selected labels";
+    private static final String SELECTED_LABELS_INDEX_TITLE = "Selected";
+
     private static final int LIST_TYPE_MISSING = -1;
     public static final int LIST_TYPE_MAIN_ACTIVITY = 1;
     public static final int LIST_TYPE_SECONDARY_ACTIVITIES = 2;
@@ -162,6 +165,7 @@ public class SelectionFromListActivity extends BaseActivity {
         ArrayList<ChoiceItem> itemsList = new ArrayList<>(10);
         //TODO: if needed add selected section and frequently used section (make sure it's precalculated)
         if (_useIndex && !_selectedLabels.isEmpty()) {
+            final int nextRowInd = itemsList.size();
             //TODO: add section (with header) of selected plus index item
         }
         if (_useIndex && _frequentlyUsedLabels != null && !_frequentlyUsedLabels.isEmpty()) {
@@ -170,35 +174,40 @@ public class SelectionFromListActivity extends BaseActivity {
 
         if (_labelsPerSubject != null) {
             for (String subject : _labelsPerSubject.keySet()) {
-                final int nextRowInd = itemsList.size();
-                // Add subject header:
-                itemsList.add(new ChoiceItem(subject, true));
-                if (_useIndex) {
-                    TextView indexItem = new TextView(this);
-                    indexItem.setText(subject);
-                    indexItem.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            jumpToRow(nextRowInd);
-                        }
-                    });
-                    indexItem.setPadding(0,10,0,10);
-                    _sideIndex.addView(indexItem);
-                }
+                String[] labels = (String[])_labelsPerSubject.get(subject);
+                addLabelsSection(itemsList,labels,subject,subject);
+            }
+        }
 
-                // Add the subject's labels:
-                for (String label : (String[])_labelsPerSubject.get(subject)) {
-                    itemsList.add(new ChoiceItem(label));
-                }
-            }
+        for (int i=0; i < _labelChoices.length; i ++) {
+            itemsList.add(new ChoiceItem(_labelChoices[i]));
         }
-        else {
-            for (int i=0; i < _labelChoices.length; i ++) {
-                itemsList.add(new ChoiceItem(_labelChoices[i]));
-            }
-        }
+
 
         setAdapterChoices(itemsList);
+    }
+
+    private void addLabelsSection(ArrayList<ChoiceItem> itemsList,String[] labels,String sectionHeader,String indexTitle) {
+        final int nextRowInd = itemsList.size();
+        // Add subject header:
+        itemsList.add(new ChoiceItem(sectionHeader, true));
+        if (_useIndex) {
+            TextView indexItem = new TextView(this);
+            indexItem.setText(indexTitle);
+            indexItem.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    jumpToRow(nextRowInd);
+                }
+            });
+            indexItem.setPadding(0,10,0,10);
+            _sideIndex.addView(indexItem);
+        }
+
+        // Add the subject's labels:
+        for (String label : labels) {
+            itemsList.add(new ChoiceItem(label));
+        }
     }
 
     private void jumpToRow(int row) {
