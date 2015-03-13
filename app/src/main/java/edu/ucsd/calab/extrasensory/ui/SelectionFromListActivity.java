@@ -156,7 +156,6 @@ public class SelectionFromListActivity extends BaseActivity {
     }
 
     private void refreshListContent() {
-
         _sideIndex.removeAllViews();
 
         ArrayList<ChoiceItem> itemsList = new ArrayList<>(10);
@@ -176,6 +175,7 @@ public class SelectionFromListActivity extends BaseActivity {
                 if (_useIndex) {
                     TextView indexItem = new TextView(this);
                     indexItem.setText(subject);
+
                     indexItem.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {

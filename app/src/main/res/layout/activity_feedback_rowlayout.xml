@@ -17,15 +17,14 @@
         android:textSize="16sp" />
 
     <TextView
-        android:id="@+id/page_date"
+        android:id="@+id/detailLine"
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="fill_parent"
+        android:layout_alignParentBottom="true"
+        android:layout_alignWithParentIfMissing="true"
+        android:layout_marginRight="6dip"
         android:layout_below="@id/firstLine"
-        android:ellipsize="marquee"
-        android:lines="3"
-        android:marqueeRepeatLimit="marquee_forever"
-        android:textColor="#D8000000"
-        android:textSize="12sp"
-        android:text="details to field"/>
-
+        android:gravity="center_vertical"
+        android:text="Details"
+        android:textSize="16sp" />
 </RelativeLayout>

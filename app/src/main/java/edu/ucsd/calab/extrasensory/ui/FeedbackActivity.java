@@ -82,6 +82,7 @@ public class FeedbackActivity extends BaseActivity {
         setContentView(R.layout.activity_feedback);
         Log.d(LOG_TAG,"activity being created");
 
+        //CHANGE TO GLOBAL/FINAL VALUES/RESOURCES STRINGS
         final String[] values = new String[] { "Main Activity", "Secondary Activities", "Mood", "Valid for" };
 
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, values);
@@ -136,7 +137,7 @@ public class FeedbackActivity extends BaseActivity {
                     case 2:
                         intent = new Intent(ESApplication.getTheAppContext(), SelectionFromListActivity.class);
                         intent.putExtra(SelectionFromListActivity.LIST_TYPE_KEY, SelectionFromListActivity.LIST_TYPE_MOODS);
-                        startActivityForResult(intent, 3);
+                        startActivityForResult(intent, 4);
                         break;
                     case 3:
                         Toast.makeText(getApplicationContext(), "Hello", Toast.LENGTH_LONG).show();
