@@ -15,6 +15,7 @@ import java.util.UUID;
 
 import edu.ucsd.calab.extrasensory.ESApplication;
 import edu.ucsd.calab.extrasensory.R;
+import edu.ucsd.calab.extrasensory.network.ESNetworkAccessor;
 import edu.ucsd.calab.extrasensory.sensors.ESSensorManager;
 
 
@@ -306,6 +307,7 @@ public class ESDatabaseAccessor {
      * Make changes to the values of the properties of an activity instance.
      * These changes will be reflected both in the given ESActivity object
      * and in the corresponding record in the DB.
+     * After setting the new values, this will trigger an API call to send the labesl to the server.
      *
      * @param activity The activity instance to set
      * @param labelSource The label source value to assign to the activity
@@ -350,6 +352,9 @@ public class ESDatabaseAccessor {
         _dbHelper.close();
 
         sendBroadcastDatabaseUpdate();
+
+        // Since the labels of the activity were changed, send feedback API to the server:
+        ESNetworkAccessor.getESNetworkAccessor().sendFeedback(activity);
     }
 
     /**

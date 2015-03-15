@@ -55,6 +55,10 @@ public class SelectionFromListActivity extends BaseActivity {
 
     private static final String SELECTED_LABELS_HEADER = "Selected labels";
     private static final String SELECTED_LABELS_INDEX_TITLE = "Selected";
+    private static final String MAIN_ACTIVITY_HEADER = "Main activity";
+    private static final String SECONDARY_ACTIVITIES_HEADER = "Secondary activities";
+    private static final String MOODS_HEADER = "Mood";
+    private static final String ALL_LABELS = "All labels";
 
     private static final int LIST_TYPE_MISSING = -1;
     public static final int LIST_TYPE_MAIN_ACTIVITY = 1;

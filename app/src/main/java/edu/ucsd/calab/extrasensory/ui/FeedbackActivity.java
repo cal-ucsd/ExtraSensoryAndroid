@@ -82,6 +82,65 @@ public class FeedbackActivity extends BaseActivity {
         setContentView(R.layout.activity_feedback);
         Log.d(LOG_TAG,"activity being created");
 
+        // Check if anyone set the transient input parameters:
+        if (_transientInputParameters == null) {
+            // Then behave as active feedback:
+            _parameters = new FeedbackParameters();
+        }
+
+        // Quickly, copy the given input parameters and save them to the current Feedback object:
+        _parameters = _transientInputParameters;
+        _transientInputParameters = null;
+
+        presentFeedbackView();
+
+    }
+
+    @Override
+    protected void onDestroy() {
+        Log.d(LOG_TAG,"activity being destroyed");
+        super.onDestroy();
+    }
+
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_feedback, menu);
+        _optionsMenu = menu;
+        checkRecordingStateAndSetRedLight();
+
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void presentFeedbackView() {
+        switch (_parameters._feedbackType) {
+            case FEEDBACK_TYPE_ACTIVE:
+                Log.i(LOG_TAG,"Opening active feedback view");
+                //TODO: present active feedback fields
+                break;
+            case FEEDBACK_TYPE_HISTORY_CONTINUOUS_ACTIVITY:
+                Log.i(LOG_TAG,"Opening feedback view for continuous activity from history");
+                Log.d(LOG_TAG,"Got continuous activity: " + _parameters._continuousActivityToEdit);
+                //TODO: read the expected parameters of the given continuous activity
+                //TODO: present pre-existing labels and the required form fields
+                break;
+            default:
+                Log.e(LOG_TAG,"Got unsupported feedback type: " + _parameters._feedbackType);
+                //TODO: how to handle such a case? leave blank/default page? present active feedback? present error message? close activity and go back to previous?
+        }
+
         //CHANGE TO GLOBAL/FINAL VALUES/RESOURCES STRINGS
         final String[] values = new String[] { "Main Activity", "Secondary Activities", "Mood", "Valid for" };
 
@@ -145,74 +204,7 @@ public class FeedbackActivity extends BaseActivity {
                 }
             }
         });
-    }
 
-    @Override
-    protected void onDestroy() {
-        Log.d(LOG_TAG,"activity being destroyed");
-        super.onDestroy();
-    }
-
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_feedback, menu);
-        _optionsMenu = menu;
-        checkRecordingStateAndSetRedLight();
-
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-
-        // Check if anyone set the transient input parameters:
-        if (_transientInputParameters == null) {
-            // Then behave as active feedback:
-            _parameters = new FeedbackParameters();
-        }
-
-        // Quickly, copy the given input parameters and save them to the current Feedback object:
-        _parameters = _transientInputParameters;
-        _transientInputParameters = null;
-
-        presentFeedbackView();
-    }
-
-    private void presentFeedbackView() {
-
-        switch (_parameters._feedbackType) {
-            case FEEDBACK_TYPE_ACTIVE:
-                Log.i(LOG_TAG,"Opening active feedback view");
-                //TODO: present active feedback fields
-                break;
-            case FEEDBACK_TYPE_HISTORY_CONTINUOUS_ACTIVITY:
-                Log.i(LOG_TAG,"Opening feedback view for continuous activity from history");
-                Log.d(LOG_TAG,"Got continuous activity: " + _parameters._continuousActivityToEdit);
-                //TODO: read the expected parameters of the given continuous activity
-                //TODO: present pre-existing labels and the required form fields
-                break;
-            default:
-                Log.e(LOG_TAG,"Got unsupported feedback type: " + _parameters._feedbackType);
-                //TODO: how to handle such a case? leave blank/default page? present active feedback? present error message? close activity and go back to previous?
-        }
     }
 
     public void addListenerOnButton() {
@@ -222,8 +214,12 @@ public class FeedbackActivity extends BaseActivity {
 
             @Override
             public void onClick(View arg0) {
-                Intent intent = new Intent(context, MainActivity.class);
-                startActivity(intent);
+                //TODO: if this is active feedback, start the scheduling (need to receive the timestamp of the newly created activity)
+                // and update the activity's labels through the DBAccessor.
+                //TODO: if this is feedback for continuous activity: go over the minute-activities and for each activity
+                // update the activity's labels through the DBAccessor
+                //TODO: (need to change code of DBAccessor - that function should itself call the NetworkAccessor to send the feedback API)
+                finish();
             }
         });
 
