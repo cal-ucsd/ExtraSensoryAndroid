@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import edu.ucsd.calab.extrasensory.ESApplication;
 import edu.ucsd.calab.extrasensory.R;
 import edu.ucsd.calab.extrasensory.data.ESContinuousActivity;
 
@@ -81,7 +82,8 @@ public class FeedbackActivity extends BaseActivity {
         setContentView(R.layout.activity_feedback);
         Log.d(LOG_TAG,"activity being created");
 
-        final String[] values = new String[] { "MainActivity", "Secondary Activities", "Mood", "Valid for" };
+        //CHANGE TO GLOBAL/FINAL VALUES/RESOURCES STRINGS
+        final String[] values = new String[] { "Main Activity", "Secondary Activities", "Mood", "Valid for" };
 
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, values);
         ListView listView = (ListView) findViewById(R.id.listview_activity);
@@ -103,28 +105,46 @@ public class FeedbackActivity extends BaseActivity {
 */
         View sendButton = getLayoutInflater().inflate(R.layout.activity_feedback_button, null);
         listView.addFooterView(sendButton);
+        addListenerOnButton();
 
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+       /* listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
             public void onItemClick(AdapterView<?> arg0, View arg1, int arg2,
                                     long arg3) {
                 // For Long Duration Toast
-                Toast.makeText(getApplicationContext(), values[arg2], Toast.LENGTH_LONG).show();
+                //Toast.makeText(getApplicationContext(), values[arg2], Toast.LENGTH_LONG).show();
             }
-          /*  public void onItemClick(AdapterView<?> parent, View view,
-                int position, long id) {
-                // selected item
-                String product = ((TextView) view).getText().toString();
+        });  */
 
-                // Launching new Activity on selecting single List Item
-                Intent i = new Intent(getApplicationContext(), SelectionFromListActivity.class);
-                // sending data to new activity
-                i.putExtra("product", product);
-                startActivity(i);
-            }*/
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view,
+                                    int position, long id) {
+                // "position" is the position/row of the item that you have clicked
+                Intent intent = null;
+                switch (position) {
+                    case 0:
+                        intent = new Intent(ESApplication.getTheAppContext(), SelectionFromListActivity.class);
+                        intent.putExtra(SelectionFromListActivity.LIST_TYPE_KEY, SelectionFromListActivity.LIST_TYPE_MAIN_ACTIVITY);
+                        startActivityForResult(intent, 2);
+                        break;
+                    case 1:
+                        intent = new Intent(ESApplication.getTheAppContext(), SelectionFromListActivity.class);
+                        intent.putExtra(SelectionFromListActivity.LIST_TYPE_KEY, SelectionFromListActivity.LIST_TYPE_SECONDARY_ACTIVITIES);
+                        intent.putExtra(SelectionFromListActivity.PRESELECTED_LABELS_KEY, new String[]{"At home"});
+                        startActivityForResult(intent, 3);
+                        break;
+                    case 2:
+                        intent = new Intent(ESApplication.getTheAppContext(), SelectionFromListActivity.class);
+                        intent.putExtra(SelectionFromListActivity.LIST_TYPE_KEY, SelectionFromListActivity.LIST_TYPE_MOODS);
+                        startActivityForResult(intent, 4);
+                        break;
+                    case 3:
+                        Toast.makeText(getApplicationContext(), "Hello", Toast.LENGTH_LONG).show();
+                        break;
+                }
+            }
         });
-
-        addListenerOnButton();
     }
 
     @Override
