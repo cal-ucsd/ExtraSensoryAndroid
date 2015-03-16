@@ -55,6 +55,8 @@ public class SelectionFromListActivity extends BaseActivity {
 
     private static final String SELECTED_LABELS_HEADER = "Selected labels";
     private static final String SELECTED_LABELS_INDEX_TITLE = "Selected";
+    private static final String FREQUENT_LABELS_HEADER = "Frequently used";
+    private static final String FREQUENT_LABELS_INDEX_TITLE = "Frequent";
     private static final String MAIN_ACTIVITY_HEADER = "Main activity";
     private static final String SECONDARY_ACTIVITIES_HEADER = "Secondary activities";
     private static final String MOODS_HEADER = "Mood";
@@ -72,6 +74,7 @@ public class SelectionFromListActivity extends BaseActivity {
     private HashSet<String> _selectedLabels;
     private Map<String,String[]> _labelsPerSubject;
     private List<String> _frequentlyUsedLabels;
+    private String _allLabelsSectionHeader = ALL_LABELS;
     private boolean _allowMultiSelection = false;
     private boolean _useIndex = false;
     private View.OnClickListener _onClickListener = new View.OnClickListener() {
@@ -120,6 +123,7 @@ public class SelectionFromListActivity extends BaseActivity {
                 _labelChoices = ESLabelStrings.getMainActivities();
                 _allowMultiSelection = false;
                 _useIndex = false;
+                _allLabelsSectionHeader = MAIN_ACTIVITY_HEADER;
                 break;
             case LIST_TYPE_SECONDARY_ACTIVITIES:
                 _labelChoices = ESLabelStrings.getSecondaryActivities();
@@ -167,13 +171,11 @@ public class SelectionFromListActivity extends BaseActivity {
         _sideIndex.removeAllViews();
 
         ArrayList<ChoiceItem> itemsList = new ArrayList<>(10);
-        //TODO: if needed add selected section and frequently used section (make sure it's precalculated)
         if (_useIndex && !_selectedLabels.isEmpty()) {
-            final int nextRowInd = itemsList.size();
-            //TODO: add section (with header) of selected plus index item
+            addLabelsSection(itemsList,_selectedLabels.toArray(new String[_selectedLabels.size()]),SELECTED_LABELS_HEADER,SELECTED_LABELS_INDEX_TITLE);
         }
         if (_useIndex && _frequentlyUsedLabels != null && !_frequentlyUsedLabels.isEmpty()) {
-            //TODO: add frequent section + index
+            addLabelsSection(itemsList,_frequentlyUsedLabels.toArray(new String[_frequentlyUsedLabels.size()]),FREQUENT_LABELS_HEADER,FREQUENT_LABELS_INDEX_TITLE);
         }
 
         if (_labelsPerSubject != null) {
@@ -183,9 +185,12 @@ public class SelectionFromListActivity extends BaseActivity {
             }
         }
 
+        addLabelsSection(itemsList,_labelChoices,_allLabelsSectionHeader,ALL_LABELS);
+/*
         for (int i=0; i < _labelChoices.length; i ++) {
             itemsList.add(new ChoiceItem(_labelChoices[i]));
         }
+*/
 
 
         setAdapterChoices(itemsList);
@@ -194,8 +199,11 @@ public class SelectionFromListActivity extends BaseActivity {
     private void addLabelsSection(ArrayList<ChoiceItem> itemsList,String[] labels,String sectionHeader,String indexTitle) {
         final int nextRowInd = itemsList.size();
         // Add subject header:
-        itemsList.add(new ChoiceItem(sectionHeader, true));
-        if (_useIndex) {
+        if (sectionHeader != null) {
+            itemsList.add(new ChoiceItem(sectionHeader, true));
+        }
+        // Add index item:
+        if (_useIndex && indexTitle != null) {
             TextView indexItem = new TextView(this);
             indexItem.setText(indexTitle);
             indexItem.setOnClickListener(new View.OnClickListener() {
@@ -235,6 +243,8 @@ public class SelectionFromListActivity extends BaseActivity {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         switch (id) {
+            case android.R.id.home:
+                break;
             case R.id.action_done_selecting_from_list:
                 returnSelectedLabels();
                 break;
