@@ -295,12 +295,12 @@ public class ESDatabaseAccessor {
      * @param mainActivityServerPrediction The server prediction to assign to the activity
      */
     public void setESActivityServerPrediction(ESActivity activity,String mainActivityServerPrediction) {
-        setESActivityValues(activity,
+        setESActivityValuesAndPossiblySendFeedback(activity,
                 activity.get_labelSource(),
                 mainActivityServerPrediction,
                 activity.get_mainActivityUserCorrection(),
                 activity.get_secondaryActivities(),
-                activity.get_moods());
+                activity.get_moods(),false);
     }
 
     /**
@@ -319,6 +319,28 @@ public class ESDatabaseAccessor {
     public void setESActivityValues(ESActivity activity,ESActivity.ESLabelSource labelSource,
                                     String mainActivityServerPrediction,String mainActivityUserCorrection,
                                     String[] secondaryActivities,String[] moods) {
+        setESActivityValuesAndPossiblySendFeedback(activity,labelSource,mainActivityServerPrediction,mainActivityUserCorrection,
+                secondaryActivities,moods,true);
+    }
+
+    /**
+     * Make changes to the values of the properties of an activity instance.
+     * These changes will be reflected both in the given ESActivity object
+     * and in the corresponding record in the DB.
+     * IFF sendFeedback: after setting the new values, this will trigger an API call to send the labels to the server.
+     *
+     * @param activity The activity instance to set
+     * @param labelSource The label source value to assign to the activity
+     * @param mainActivityServerPrediction The server prediction to assign to the activity
+     * @param mainActivityUserCorrection The user correction to assign to the activity
+     * @param secondaryActivities The array of secondary activities to assign to the activity
+     * @param moods The array of moods to assign to the activity
+     * @param sendFeedback Should we send feedback update with this activity's labels?
+     */
+    public void setESActivityValuesAndPossiblySendFeedback(ESActivity activity,ESActivity.ESLabelSource labelSource,
+                                                           String mainActivityServerPrediction,String mainActivityUserCorrection,
+                                                           String[] secondaryActivities,String[] moods,
+                                                           boolean sendFeedback) {
 
         SQLiteDatabase db = _dbHelper.getWritableDatabase();
 
@@ -353,8 +375,10 @@ public class ESDatabaseAccessor {
 
         sendBroadcastDatabaseUpdate();
 
-        // Since the labels of the activity were changed, send feedback API to the server:
-        ESNetworkAccessor.getESNetworkAccessor().sendFeedback(activity);
+        if (sendFeedback) {
+            // Since the labels of the activity were changed, send feedback API to the server:
+            ESNetworkAccessor.getESNetworkAccessor().sendFeedback(activity);
+        }
     }
 
     /**
