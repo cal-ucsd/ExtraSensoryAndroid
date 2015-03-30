@@ -16,6 +16,7 @@ import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -28,11 +29,23 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
+import java.security.KeyManagementException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManagerFactory;
 
 import edu.ucsd.calab.extrasensory.ESApplication;
 import edu.ucsd.calab.extrasensory.R;
@@ -63,6 +76,12 @@ public class ESNetworkAccessor {
 
     private static final String KEY_ZIP_FILENAME = "zip_filename";
 
+    private boolean _useHttps = false;
+    private SSLContext _sslContext = null;
+    private boolean shouldSendWithHttps() {
+        return _useHttps && (_sslContext != null);
+    }
+
     private ArrayList<String> _networkQueue;
     private long _busyUntilTimeInMillis = 0;
     private BroadcastReceiver _broadcastReceiver = new BroadcastReceiver() {
@@ -91,9 +110,88 @@ public class ESNetworkAccessor {
      */
     private static ESNetworkAccessor _theSingleNetworkAccessor;
     private ESNetworkAccessor() {
+        if (_useHttps) {
+            prepareTLSContext();
+        }
+        Log.i(LOG_TAG,"Initializing network accessor. Prepared TLS context: " + _sslContext);
+
         _networkQueue = new ArrayList<String>(8);
         ESApplication.getTheAppContext().registerReceiver(_broadcastReceiver,new IntentFilter(WifiManager.NETWORK_STATE_CHANGED_ACTION));
         checkZipFilesInDirectory();
+    }
+
+    private void prepareTLSContext() {
+        // Load CAs from an InputStream
+        CertificateFactory cf = null;
+        try {
+            cf = CertificateFactory.getInstance("X.509");
+        } catch (CertificateException e) {
+            e.printStackTrace();
+        }
+        InputStream inputStream = ESApplication.getTheAppContext().getResources().openRawResource(R.raw.calab_macserver_ucsd_edu_der);
+        InputStream caInput = new BufferedInputStream(inputStream);
+        Certificate ca = null;
+        try {
+            ca = cf.generateCertificate(caInput);
+            System.out.println("ca=" + ((X509Certificate) ca).getSubjectDN());
+            caInput.close();
+        } catch (CertificateException e) {
+            e.printStackTrace();
+            return;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
+
+        // Create a KeyStore containing our trusted CAs
+        KeyStore keyStore = null;
+        try {
+            String keyStoreType = KeyStore.getDefaultType();
+            keyStore = KeyStore.getInstance(keyStoreType);
+            keyStore.load(null, null);
+            keyStore.setCertificateEntry("ca", ca);
+        }
+        catch (CertificateException e) {
+            e.printStackTrace();
+            return;
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            return;
+        } catch (KeyStoreException e) {
+            e.printStackTrace();
+            return;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
+
+    // Create a TrustManager that trusts the CAs in our KeyStore
+        String tmfAlgorithm = TrustManagerFactory.getDefaultAlgorithm();
+        TrustManagerFactory tmf = null;
+        try {
+            tmf = TrustManagerFactory.getInstance(tmfAlgorithm);
+            tmf.init(keyStore);
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            return;
+        } catch (KeyStoreException e) {
+            e.printStackTrace();
+            return;
+        }
+
+
+        // Create an SSLContext that uses our TrustManager
+        try {
+            _sslContext = SSLContext.getInstance("TLS");
+            _sslContext.init(null, tmf.getTrustManagers(), null);
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            return;
+        } catch (KeyManagementException e) {
+            e.printStackTrace();
+            return;
+        }
+
     }
 
     /**
@@ -349,18 +447,24 @@ public class ESNetworkAccessor {
             Resources resources = ESApplication.getTheAppContext().getResources();
             String apiSuffix = resources.getString(R.string.api_feedback) + "?" + prepareFeedbackApiParameters(params._activityForFeedback);
             Log.i(LOG_TAG,"Feedback api call: " + apiSuffix);
-            String apiUrl = resources.getString(R.string.server_api_prefix) + apiSuffix;
+
+            String apiUrl = resources.getString(params._requester.shouldSendWithHttps() ? R.string.server_https_api_prefix : R.string.server_api_prefix)
+                    + apiSuffix;
             Log.i(LOG_TAG,"Feedback api url: " + apiUrl);
 
             try {
                 URL url = new URL(apiUrl);
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                if (params._requester.shouldSendWithHttps()) {
+                    HttpsURLConnection httpsURLConnection = (HttpsURLConnection)conn;
+                    httpsURLConnection.setSSLSocketFactory(params._requester._sslContext.getSocketFactory());
+                }
                 conn.setConnectTimeout(CONNECT_TIMEOUT_MILLIS);
                 conn.setReadTimeout(READ_TIMEOUT_MILLIS);
                 conn.setDoOutput(true);
                 conn.setDoInput(true); // Allow Inputs
                 conn.setUseCaches(false); // Don't use a Cached Copy
-                conn.setRequestMethod("POST");
+                //conn.setRequestMethod("POST");
                 conn.setRequestProperty("Connection", "Keep-Alive");
 
                 conn.connect();
@@ -455,8 +559,14 @@ public class ESNetworkAccessor {
                     return;
                 }
 
-                URL url = new URL(resources.getString(R.string.server_api_prefix) + resources.getString(R.string.api_upload_zip));
+                URL url = new URL(resources.getString(params._requester.shouldSendWithHttps() ? R.string.server_https_api_prefix : R.string.server_api_prefix)
+                        + resources.getString(R.string.api_upload_zip));
+                Log.i(LOG_TAG,"Api url: " + url);
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                if (params._requester.shouldSendWithHttps()) {
+                    HttpsURLConnection httpsURLConnection = (HttpsURLConnection)conn;
+                    httpsURLConnection.setSSLSocketFactory(params._requester._sslContext.getSocketFactory());
+                }
                 conn.setConnectTimeout(CONNECT_TIMEOUT_MILLIS);
                 conn.setReadTimeout(READ_TIMEOUT_MILLIS);
                 conn.setDoOutput(true);
