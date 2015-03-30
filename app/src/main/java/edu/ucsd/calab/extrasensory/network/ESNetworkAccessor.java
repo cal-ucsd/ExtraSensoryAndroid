@@ -1,6 +1,5 @@
 package edu.ucsd.calab.extrasensory.network;
 
-import android.app.IntentService;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -39,9 +38,6 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
@@ -82,7 +78,8 @@ public class ESNetworkAccessor {
         return _useHttps && (_sslContext != null);
     }
 
-    private ArrayList<String> _networkQueue;
+    private ArrayList<String> _uploadQueue;
+    private ArrayList<ESActivity> _feedbackQueue;
     private long _busyUntilTimeInMillis = 0;
     private BroadcastReceiver _broadcastReceiver = new BroadcastReceiver() {
         @Override
@@ -115,7 +112,7 @@ public class ESNetworkAccessor {
         }
         Log.i(LOG_TAG,"Initializing network accessor. Prepared TLS context: " + _sslContext);
 
-        _networkQueue = new ArrayList<String>(8);
+        _uploadQueue = new ArrayList<String>(8);
         ESApplication.getTheAppContext().registerReceiver(_broadcastReceiver,new IntentFilter(WifiManager.NETWORK_STATE_CHANGED_ACTION));
         checkZipFilesInDirectory();
     }
@@ -211,7 +208,7 @@ public class ESNetworkAccessor {
      * @return The number of stored examples (zip files)
      */
     public int networkQueueSize() {
-        return _networkQueue.size();
+        return _uploadQueue.size();
     }
 
     private void checkZipFilesInDirectory() {
@@ -231,13 +228,13 @@ public class ESNetworkAccessor {
     }
 
     private void addToNetworkQueueWithoutUploadingYet(String zipFileName) {
-        if (_networkQueue.contains(zipFileName)) {
+        if (_uploadQueue.contains(zipFileName)) {
             Log.e(LOG_TAG,"Network queue already contains zip file: " + zipFileName);
             return;
 
         }
-        Log.v(LOG_TAG,"Adding to network queue: " + zipFileName);
-        _networkQueue.add(zipFileName);
+        Log.v(LOG_TAG, "Adding to network queue: " + zipFileName);
+        _uploadQueue.add(zipFileName);
 
         // Send notification to other components:
         Intent intent = new Intent(BROADCAST_NETWORK_QUEUE_SIZE_CHANGED);
@@ -257,7 +254,7 @@ public class ESNetworkAccessor {
     }
 
     private void deleteZipFileAndRemoveFromNetworkQueue(String zipFileName) {
-        _networkQueue.remove(zipFileName);
+        _uploadQueue.remove(zipFileName);
         File file = new File(ESApplication.getZipDir(),zipFileName);
         file.delete();
         Log.i(LOG_TAG,"Deleted and removed from network queue file: " + zipFileName);
@@ -268,7 +265,7 @@ public class ESNetworkAccessor {
 
     public void uploadWhatYouHave() {
         Log.v(LOG_TAG,"uploadWhatYouHave() was called.");
-        if (_networkQueue.size() <= 0) {
+        if (_uploadQueue.size() <= 0) {
             Log.v(LOG_TAG, "Nothing to upload (queue is empty).");
             return;
         }
@@ -288,13 +285,13 @@ public class ESNetworkAccessor {
         _busyUntilTimeInMillis = nowInMillis + WAIT_TIME_AFTER_UPLOAD_IN_MILLIS;
 
         // Get the next zip to handle:
-        String nextZip = _networkQueue.remove(0);
+        String nextZip = _uploadQueue.remove(0);
 
         // Keep it at the end of the queue (until getting response):
-        _networkQueue.add(nextZip);
+        _uploadQueue.add(nextZip);
 
         Log.v(LOG_TAG,"Popped zip from queue: " + nextZip);
-        Log.v(LOG_TAG,"Now queue has: " + _networkQueue);
+        Log.v(LOG_TAG,"Now queue has: " + _uploadQueue);
 
         // Send the next zip:
         ESApiHandler.ESApiParams params = new ESApiHandler.ESApiParams(
