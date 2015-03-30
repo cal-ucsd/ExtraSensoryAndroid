@@ -4,17 +4,36 @@ import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.TextView;
 
 import edu.ucsd.calab.extrasensory.R;
+import edu.ucsd.calab.extrasensory.data.ESSettings;
 
 public class SettingsActivity extends BaseActivity {
+
+    private static float EXAMPLE_SIZE_IN_MEGABYTES = 0.24f;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_setting);
+
+        setDisplayedContent();
     }
 
+    private void setDisplayedContent() {
+        // Set the max storage value:
+        int maxStorage = ESSettings.maxStoredExamples();
+        TextView maxStorageValue = (TextView)findViewById(R.id.max_storage_value);
+        float hours = ((float)maxStorage) / 60f;
+        float megaBytes = ((float)maxStorage) * EXAMPLE_SIZE_IN_MEGABYTES;
+        String storageString = String.format("%d (~%.2f hr, ~%.2f MB)",maxStorage,hours,megaBytes);
+        maxStorageValue.setText(storageString);
+
+        // Set the UUID:
+        TextView uuid_text = (TextView)findViewById(R.id.uuid_content);
+        uuid_text.setText(ESSettings.uuid());
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
