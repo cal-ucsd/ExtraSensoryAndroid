@@ -30,6 +30,8 @@ public class ESDatabaseAccessor {
     private static final String LOG_TAG = "[ESDatabaseAccessor]";
     private static final int MAX_STORED_EXAMPLES_DEFAULT = 120;
     private static final int NOTIFICATION_INTERVAL_DEFAULT = 600;
+    private static final double LOCATION_BUBBLE_CENTER_LONG_DEFAULT = -1.;
+    private static final double LOCATION_BUBBLE_CENTER_LAT_DEFAULT = -1.;
 
     public static final String BROADCAST_DATABASE_RECORDS_UPDATED = "edu.ucsd.calab.extrasensory.broadcast.database_records_updated";
 
@@ -77,7 +79,9 @@ public class ESDatabaseAccessor {
                         " (" +
                         ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_UUID + " TEXT PRIMARY KEY," +
                         ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_MAX_STORED_EXAMPLES + " INTEGER," +
-                        ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_NOTIFICATION_INTERVAL_SECONDS + " INTEGER" +
+                        ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_NOTIFICATION_INTERVAL_SECONDS + " INTEGER," +
+                        ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_CENTER_LAT + " DOUBLE PRECISION," +
+                        ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_CENTER_LONG + " DOUBLE PRECISION" +
                         ")";
         private static final String SQL_DELETE_ES_SETTINGS_TABLE =
                 "DROP TABLE IF EXISTS " + ESDatabaseContract.ESSettingsEntry.TABLE_NAME;
@@ -117,9 +121,12 @@ public class ESDatabaseAccessor {
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_UUID,uuid);
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_MAX_STORED_EXAMPLES, MAX_STORED_EXAMPLES_DEFAULT);
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_NOTIFICATION_INTERVAL_SECONDS,NOTIFICATION_INTERVAL_DEFAULT);
+        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_CENTER_LAT,LOCATION_BUBBLE_CENTER_LAT_DEFAULT);
+        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_CENTER_LONG,LOCATION_BUBBLE_CENTER_LONG_DEFAULT);
 
         long rowID = db.insert(ESDatabaseContract.ESSettingsEntry.TABLE_NAME,null,values);
-        ESSettings settings = new ESSettings(uuid, MAX_STORED_EXAMPLES_DEFAULT,NOTIFICATION_INTERVAL_DEFAULT);
+        ESSettings settings = new ESSettings(uuid, MAX_STORED_EXAMPLES_DEFAULT,NOTIFICATION_INTERVAL_DEFAULT,
+                LOCATION_BUBBLE_CENTER_LAT_DEFAULT,LOCATION_BUBBLE_CENTER_LONG_DEFAULT);
 
         _dbHelper.close();
 
@@ -138,7 +145,9 @@ public class ESDatabaseAccessor {
         String[] projection = {
                 ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_UUID,
                 ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_MAX_STORED_EXAMPLES,
-                ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_NOTIFICATION_INTERVAL_SECONDS
+                ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_NOTIFICATION_INTERVAL_SECONDS,
+                ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_CENTER_LAT,
+                ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_CENTER_LONG
         };
 
         Cursor cursor = db.query(ESDatabaseContract.ESSettingsEntry.TABLE_NAME,
@@ -184,6 +193,26 @@ public class ESDatabaseAccessor {
         return getTheSettings();
     }
 
+    ESSettings setSettings(double locationBubbleCenterLat,double locationBubbleCenterLong) {
+        SQLiteDatabase db = _dbHelper.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_CENTER_LAT,locationBubbleCenterLat);
+        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_CENTER_LONG,locationBubbleCenterLong);
+
+        int affectedCount = db.update(ESDatabaseContract.ESSettingsEntry.TABLE_NAME,values,null,null);
+        if (affectedCount <= 0) {
+            Log.e(LOG_TAG,"Settings update affected no records in the DB");
+        }
+        if (affectedCount > 1) {
+            Log.e(LOG_TAG,"Settings update affected more than one record in the DB");
+        }
+
+        _dbHelper.close();
+
+        return getTheSettings();
+    }
+
     private String generateUUID() {
         return UUID.randomUUID().toString().toUpperCase();
     }
@@ -203,8 +232,10 @@ public class ESDatabaseAccessor {
         String uuid = cursor.getString(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_UUID));
         int maxStored = cursor.getInt(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_MAX_STORED_EXAMPLES));
         int notificationInterval = cursor.getInt(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_NOTIFICATION_INTERVAL_SECONDS));
+        double locationBubbleCenterLat = cursor.getDouble(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_CENTER_LAT));
+        double locationBubbleCenterLong = cursor.getDouble(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_CENTER_LONG));
 
-        return new ESSettings(uuid,maxStored,notificationInterval);
+        return new ESSettings(uuid,maxStored,notificationInterval,locationBubbleCenterLat,locationBubbleCenterLong);
     }
 
     /**

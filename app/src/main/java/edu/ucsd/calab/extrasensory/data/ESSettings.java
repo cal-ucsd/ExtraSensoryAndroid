@@ -12,14 +12,31 @@ import edu.ucsd.calab.extrasensory.ESApplication;
  */
 public class ESSettings {
 
+    public static class ESBubbleCenter {
+        private double _locationBubbleCenterLat = -1.;
+        private double _locationBubbleCenterLong = -1.;
+        private ESBubbleCenter(double locationBubbleCenterLat,double locationBubbleCenterLong) {
+            _locationBubbleCenterLat = locationBubbleCenterLat;
+            _locationBubbleCenterLong = locationBubbleCenterLong;
+        }
+        public double get_locationBubbleCenterLat() {
+            return _locationBubbleCenterLat;
+        }
+        public double get_locationBubbleCenterLong() {
+            return _locationBubbleCenterLong;
+        }
+    }
     private String _uuid;
     private int _maxStoredExamples;
     private int _notificationIntervalInSeconds;
+    private ESBubbleCenter _locationBubbleCenter;
 
-    ESSettings(String uuid,int maxStoredExamples,int notificationIntervalInSeconds) {
+    ESSettings(String uuid,int maxStoredExamples,int notificationIntervalInSeconds,
+               double locationBubbleCenterLat,double locationBubbleCenterLong) {
         _uuid = uuid;
         _maxStoredExamples = maxStoredExamples;
         _notificationIntervalInSeconds = notificationIntervalInSeconds;
+        _locationBubbleCenter = new ESBubbleCenter(locationBubbleCenterLat, locationBubbleCenterLong);
     }
 
     private static ESSettings _settings = null;
@@ -60,6 +77,20 @@ public class ESSettings {
     }
 
     /**
+     * Get the location bubble center - representing the home of the user,
+     * a location that within a ball around it we shouldn't expose actual latitude/longitute values through the network.
+     *
+     * @return The location of the bubble center, or null if there is no bubble requirement.
+     */
+    public static ESBubbleCenter locationBubbleCenter() {
+        ESBubbleCenter bubbleCenter = getTheSettings()._locationBubbleCenter;
+        if (bubbleCenter._locationBubbleCenterLat < 0. || bubbleCenter._locationBubbleCenterLong < 0.) {
+            return null;
+        }
+        return getTheSettings()._locationBubbleCenter;
+    }
+
+    /**
      * Set the maximum allowed number of stored examples.
      *
      * @param maxStoredExamples The maximum allowed number of stored examples.
@@ -76,6 +107,15 @@ public class ESSettings {
      */
     public static void setNotificationIntervalInSeconds(int notificationIntervalInSeconds) {
         _settings = getTheDBAccessor().setSettings(maxStoredExamples(),notificationIntervalInSeconds);
+    }
+
+    /**
+     * Set the location Bubble center (latitude and longitude)
+     * @param locationBubbleCenterLat
+     * @param locationBubbleCenterLong
+     */
+    public static void setLocationBubbleCenter(double locationBubbleCenterLat,double locationBubbleCenterLong) {
+        _settings = getTheDBAccessor().setSettings(locationBubbleCenterLat,locationBubbleCenterLong);
     }
 
     private static ESDatabaseAccessor getTheDBAccessor() {
