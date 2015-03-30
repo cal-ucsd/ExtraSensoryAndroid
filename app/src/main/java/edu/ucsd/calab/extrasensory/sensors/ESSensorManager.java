@@ -514,7 +514,7 @@ public class ESSensorManager
 
         // Add this zip file to the network queue:
         if (zipFilename != null) {
-            ESNetworkAccessor.getESNetworkAccessor().addToNetworkQueue(zipFilename);
+            ESNetworkAccessor.getESNetworkAccessor().addToUploadQueue(zipFilename);
         }
     }
 

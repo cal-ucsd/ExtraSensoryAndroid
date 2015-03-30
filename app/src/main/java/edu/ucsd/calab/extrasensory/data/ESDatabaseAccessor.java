@@ -377,7 +377,7 @@ public class ESDatabaseAccessor {
 
         if (sendFeedback) {
             // Since the labels of the activity were changed, send feedback API to the server:
-            ESNetworkAccessor.getESNetworkAccessor().sendFeedback(activity);
+            ESNetworkAccessor.getESNetworkAccessor().addToFeedbackQueue(activity);
         }
     }
 

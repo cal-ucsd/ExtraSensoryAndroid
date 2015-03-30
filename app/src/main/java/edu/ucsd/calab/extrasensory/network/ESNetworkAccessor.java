@@ -38,6 +38,9 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.TreeMap;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
@@ -78,8 +81,45 @@ public class ESNetworkAccessor {
         return _useHttps && (_sslContext != null);
     }
 
+    private static class ESFeedbackQueue {
+        private ArrayList<ESTimestamp> _timestampsQueue;
+        private HashMap<ESTimestamp,ESActivity> _activitiesToSend;
+
+        public ESFeedbackQueue() {
+            _timestampsQueue = new ArrayList<>(4);
+            _activitiesToSend = new HashMap<>(4);
+        }
+
+        public void addActivityForFeedback(ESActivity activity) {
+            ESTimestamp timestamp = activity.get_timestamp();
+            if (!_activitiesToSend.containsKey(timestamp)) {
+                _timestampsQueue.add(timestamp);
+            }
+            _activitiesToSend.put(timestamp,activity);
+        }
+
+        public int size() {
+            return _timestampsQueue.size();
+        }
+
+        public ESActivity getNextInQueue() {
+            if (_timestampsQueue.isEmpty()) {
+                return null;
+            }
+            ESTimestamp timestamp = _timestampsQueue.remove(0);
+            _timestampsQueue.add(timestamp);
+            return _activitiesToSend.get(timestamp);
+        }
+
+        public void removeFromQueue(ESTimestamp timestamp) {
+            _timestampsQueue.remove(timestamp);
+            _activitiesToSend.remove(timestamp);
+        }
+    }
+
+
     private ArrayList<String> _uploadQueue;
-    private ArrayList<ESActivity> _feedbackQueue;
+    private ESFeedbackQueue _feedbackQueue;
     private long _busyUntilTimeInMillis = 0;
     private BroadcastReceiver _broadcastReceiver = new BroadcastReceiver() {
         @Override
@@ -113,6 +153,7 @@ public class ESNetworkAccessor {
         Log.i(LOG_TAG,"Initializing network accessor. Prepared TLS context: " + _sslContext);
 
         _uploadQueue = new ArrayList<String>(8);
+        _feedbackQueue = new ESFeedbackQueue();
         ESApplication.getTheAppContext().registerReceiver(_broadcastReceiver,new IntentFilter(WifiManager.NETWORK_STATE_CHANGED_ACTION));
         checkZipFilesInDirectory();
     }
@@ -204,11 +245,19 @@ public class ESNetworkAccessor {
     }
 
     /**
-     * Get the network queue size - how many zip files are waiting to be handled.
+     * Get the upload queue size - how many zip files are waiting to be handled.
      * @return The number of stored examples (zip files)
      */
-    public int networkQueueSize() {
+    public int uploadQueueSize() {
         return _uploadQueue.size();
+    }
+
+    /**
+     * Get the feedback queue size - how many minute-activities are waiting for their labels to be sent as feedback to the server.
+     * @return The number of activities who's labels need to be sent.
+     */
+    public int feedbackQueueSize() {
+        return _feedbackQueue.size();
     }
 
     private void checkZipFilesInDirectory() {
@@ -221,13 +270,13 @@ public class ESNetworkAccessor {
 
         for (File file : zipFiles) {
             String filename = file.getName();
-            addToNetworkQueueWithoutUploadingYet(filename);
+            addToUploadQueueWithoutUploadingYet(filename);
         }
 
         uploadWhatYouHave();
     }
 
-    private void addToNetworkQueueWithoutUploadingYet(String zipFileName) {
+    private void addToUploadQueueWithoutUploadingYet(String zipFileName) {
         if (_uploadQueue.contains(zipFileName)) {
             Log.e(LOG_TAG,"Network queue already contains zip file: " + zipFileName);
             return;
@@ -239,7 +288,6 @@ public class ESNetworkAccessor {
         // Send notification to other components:
         Intent intent = new Intent(BROADCAST_NETWORK_QUEUE_SIZE_CHANGED);
         LocalBroadcastManager.getInstance(ESApplication.getTheAppContext()).sendBroadcast(intent);
-
     }
 
     /**
@@ -248,12 +296,12 @@ public class ESNetworkAccessor {
      *
      * @param zipFileName The path of the zip file to upload
      */
-    public void addToNetworkQueue(String zipFileName) {
-        addToNetworkQueueWithoutUploadingYet(zipFileName);
+    public void addToUploadQueue(String zipFileName) {
+        addToUploadQueueWithoutUploadingYet(zipFileName);
         uploadWhatYouHave();
     }
 
-    private void deleteZipFileAndRemoveFromNetworkQueue(String zipFileName) {
+    private void deleteZipFileAndRemoveFromUploadQueue(String zipFileName) {
         _uploadQueue.remove(zipFileName);
         File file = new File(ESApplication.getZipDir(),zipFileName);
         file.delete();
@@ -316,7 +364,31 @@ public class ESNetworkAccessor {
         return networkInfo.isConnected();
     }
 
-    public void sendFeedback(ESActivity activity) {
+    /**
+     * Add the activity to the queue of sending feedback to the server.
+     * @param activity The activity whose labels we wish to send
+     */
+    public void addToFeedbackQueue(ESActivity activity) {
+        _feedbackQueue.addActivityForFeedback(activity);
+        sendFeedbackFromQueue();
+    }
+
+    private void sendFeedbackFromQueue() {
+        Log.v(LOG_TAG,"sendFeedbackFromQueue() was called.");
+        if (_feedbackQueue.size() <= 0) {
+            Log.v(LOG_TAG, "No labels feedback to send (queue is empty).");
+            return;
+        }
+        // Check if there is WiFi connectivity:
+        if (!isThereWiFiConnectivity()) {
+            Log.i(LOG_TAG,"There is no WiFi right now. Not sending.");
+            return;
+        }
+
+        // Extract the first item in the queue (and push it to the end, to keep until getting response):
+        ESActivity activity = _feedbackQueue.getNextInQueue();
+        Log.i(LOG_TAG,"Popped from feedback queue activity: " + activity);
+
         ESApiHandler.ESApiParams params = new ESApiHandler.ESApiParams(ESApiHandler.API_TYPE.API_TYPE_FEEDBACK,null,activity,this);
         Log.d(LOG_TAG,"Created api params: " + params);
         ESApiHandler api = new ESApiHandler();
@@ -326,7 +398,7 @@ public class ESNetworkAccessor {
 
     private void handleUploadedZip(ESTimestamp timestamp,String zipFilename,String predictedMainActivity) {
         // Since zip uploaded successfully, can remove it from network queue and delete the file:
-        deleteZipFileAndRemoveFromNetworkQueue(zipFilename);
+        deleteZipFileAndRemoveFromUploadQueue(zipFilename);
         // Update the ESActivity record:
         if (timestamp == null) {
             Log.i(LOG_TAG,"Handling response from upload - for null timestamp");
@@ -344,7 +416,7 @@ public class ESNetworkAccessor {
 
                 // If there is already user labels, send feedback to server:
                 if (activity.hasUserProvidedLabels()) {
-                    sendFeedback(activity);
+                    addToFeedbackQueue(activity);
                 }
             }
         }
@@ -466,7 +538,11 @@ public class ESNetworkAccessor {
 
                 conn.connect();
 
-                getServerResponseAndDisconnect(conn,"feedback");
+                JSONObject response = getServerResponseAndDisconnect(conn,"feedback");
+                // If we've reached this far, lets remove this activity from the feedback queue:
+                params._requester._feedbackQueue.removeFromQueue(params._activityForFeedback.get_timestamp());
+                // Now lets call to send more feedbacks if the queue isn't empty:
+                params._requester.sendFeedbackFromQueue();
 
             } catch (MalformedURLException e) {
                 Log.e(LOG_TAG,"Problem with api URL");
