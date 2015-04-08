@@ -35,6 +35,28 @@
         android:layout_height="1dp"
         android:background="@android:color/darker_gray"/>
 
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <TextView
+            android:text="@string/notification_interval"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"/>
+        <TextView
+            android:id="@+id/notification_interval_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"/>
+    </LinearLayout>
+    <SeekBar
+        android:id="@+id/notification_interval_seek_bar"
+        android:layout_margin="10dp"
+        android:progress="10"
+        android:max="45"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
 
 
 

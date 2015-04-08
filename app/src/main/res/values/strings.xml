@@ -35,5 +35,6 @@
     <string name="done_selecting_from_list">Done</string>
     <string name="uuid_label">UUID:</string>
     <string name="max_storage_label">Max stored examples:</string>
+    <string name="notification_interval">Notification interval:</string>
 
 </resources>

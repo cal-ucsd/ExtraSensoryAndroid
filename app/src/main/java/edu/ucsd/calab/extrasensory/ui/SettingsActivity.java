@@ -44,6 +44,28 @@ public class SettingsActivity extends BaseActivity {
             }
         });
 
+        SeekBar notificationIntervalSeekBar = (SeekBar)findViewById(R.id.notification_interval_seek_bar);
+        notificationIntervalSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                int newIntervalValueMinutes = Math.max(2,progress);
+                int newIntervalValueSeconds = 60 * newIntervalValueMinutes;
+                ESSettings.setNotificationIntervalInSeconds(newIntervalValueSeconds);
+                Log.d(LOG_TAG,"Notification interval changed to " + newIntervalValueSeconds);
+                displayNotificationIntervalValue(newIntervalValueMinutes);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+
 
         setDisplayedContent();
     }
@@ -55,9 +77,22 @@ public class SettingsActivity extends BaseActivity {
         SeekBar maxStorageSeekBar = (SeekBar)findViewById(R.id.max_storage_seek_bar);
         maxStorageSeekBar.setProgress(maxStorage);
 
+        // Set the notification interval value:
+        int notificationIntervalInSeconds = ESSettings.notificationIntervalInSeconds();
+        int intervalMinutes = notificationIntervalInSeconds / 60;
+        displayNotificationIntervalValue(intervalMinutes);
+        SeekBar intervalSeekBar = (SeekBar)findViewById(R.id.notification_interval_seek_bar);
+        intervalSeekBar.setProgress(intervalMinutes);
+
         // Set the UUID:
         TextView uuid_text = (TextView)findViewById(R.id.uuid_content);
         uuid_text.setText(ESSettings.uuid());
+    }
+
+    private void displayNotificationIntervalValue(int intervalMinutes) {
+        TextView intervalValueView = (TextView)findViewById(R.id.notification_interval_value);
+        String intervalString = String.format("%d min",intervalMinutes);
+        intervalValueView.setText(intervalString);
     }
 
     private void displayMaxStorageValue(int maxStorage) {
