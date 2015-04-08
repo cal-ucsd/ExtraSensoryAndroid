@@ -17,9 +17,11 @@ import org.json.JSONObject;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -74,6 +76,7 @@ public class ESNetworkAccessor {
 
 
     private static final String KEY_ZIP_FILENAME = "zip_filename";
+    private static final String FEEDBACK_FILE_EXTENSION = ".feedback";
 
     private boolean _useHttps = false;
     private SSLContext _sslContext = null;
@@ -115,6 +118,19 @@ public class ESNetworkAccessor {
             _timestampsQueue.remove(timestamp);
             _activitiesToSend.remove(timestamp);
         }
+
+        public String toString() {
+            String str = "{";
+            if (!_timestampsQueue.isEmpty()) {
+                str += _timestampsQueue.get(0);
+            }
+            for (int i=1;i < _timestampsQueue.size(); i ++) {
+                str += _timestampsQueue.get(i);
+            }
+            str += "}";
+
+            return str;
+        }
     }
 
 
@@ -131,8 +147,9 @@ public class ESNetworkAccessor {
             if (WifiManager.NETWORK_STATE_CHANGED_ACTION.equals(intent.getAction())) {
                 Log.i(LOG_TAG,"received broadcast of WiFi connectivity change");
                 if (isThereWiFiConnectivity()) {
-                    Log.i(LOG_TAG,"We now have WiFi. Call upload");
+                    Log.i(LOG_TAG,"We now have WiFi. Call upload and send from feedback queue");
                     uploadWhatYouHave();
+                    sendFeedbackFromQueue();
                 }
                 else {
                     Log.i(LOG_TAG,"We now don't have WiFi.");
@@ -156,6 +173,7 @@ public class ESNetworkAccessor {
         _feedbackQueue = new ESFeedbackQueue();
         ESApplication.getTheAppContext().registerReceiver(_broadcastReceiver,new IntentFilter(WifiManager.NETWORK_STATE_CHANGED_ACTION));
         checkZipFilesInDirectory();
+        checkFeedbackFilesInDirectory();
     }
 
     private void prepareTLSContext() {
@@ -258,6 +276,35 @@ public class ESNetworkAccessor {
      */
     public int feedbackQueueSize() {
         return _feedbackQueue.size();
+    }
+
+    private void checkFeedbackFilesInDirectory() {
+        File[] feedbackFiles = ESApplication.getFeedbackDir().listFiles(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String filename) {
+                return filename.endsWith(FEEDBACK_FILE_EXTENSION);
+            }
+        });
+
+        for (File file : feedbackFiles) {
+            String timestampStr = file.getName().replace(FEEDBACK_FILE_EXTENSION,"");
+            ESTimestamp timestamp = new ESTimestamp(timestampStr);
+            ESActivity activity = ESDatabaseAccessor.getESDatabaseAccessor().getESActivity(timestamp);
+            if (activity == null) {
+                // Then there is no activity record for this timestamp, and the feedback file should be deleted:
+                try {
+                    file.delete();
+                }
+                catch (SecurityException ex) {
+                    Log.e(LOG_TAG,"Trouble deleting feedback file: " + file.getName());
+                }
+                continue;
+            }
+
+            // Add the relevant activity to the feedback queue:
+            _feedbackQueue.addActivityForFeedback(activity);
+        }
+        Log.d(LOG_TAG,"Feedback Queue: " + _feedbackQueue);
     }
 
     private void checkZipFilesInDirectory() {
@@ -364,12 +411,25 @@ public class ESNetworkAccessor {
         return networkInfo.isConnected();
     }
 
+    private void createFeedbackFile(ESTimestamp timestamp) {
+        try {
+            File file = new File(timestamp.toString() + FEEDBACK_FILE_EXTENSION);
+            BufferedWriter output = new BufferedWriter(new FileWriter(file));
+            output.write(" ");
+            output.close();
+        } catch ( IOException e ) {
+            e.printStackTrace();
+        }
+    }
+
     /**
      * Add the activity to the queue of sending feedback to the server.
      * @param activity The activity whose labels we wish to send
      */
     public void addToFeedbackQueue(ESActivity activity) {
         _feedbackQueue.addActivityForFeedback(activity);
+        createFeedbackFile(activity.get_timestamp());
+        Log.i(LOG_TAG,"Added activity " + activity.get_timestamp() + " to feedback queue, which is now: " + _feedbackQueue);
         sendFeedbackFromQueue();
     }
 
@@ -388,6 +448,7 @@ public class ESNetworkAccessor {
         // Extract the first item in the queue (and push it to the end, to keep until getting response):
         ESActivity activity = _feedbackQueue.getNextInQueue();
         Log.i(LOG_TAG,"Popped from feedback queue activity: " + activity);
+        Log.i(LOG_TAG,"Feedback queue now: " + _feedbackQueue);
 
         ESApiHandler.ESApiParams params = new ESApiHandler.ESApiParams(ESApiHandler.API_TYPE.API_TYPE_FEEDBACK,null,activity,this);
         Log.d(LOG_TAG,"Created api params: " + params);
@@ -541,6 +602,8 @@ public class ESNetworkAccessor {
                 JSONObject response = getServerResponseAndDisconnect(conn,"feedback");
                 // If we've reached this far, lets remove this activity from the feedback queue:
                 params._requester._feedbackQueue.removeFromQueue(params._activityForFeedback.get_timestamp());
+                Log.i(LOG_TAG,"Removed " + params._activityForFeedback.get_timestamp() + " from feedback queue. Now: " + params._requester._feedbackQueue);
+                
                 // Now lets call to send more feedbacks if the queue isn't empty:
                 params._requester.sendFeedbackFromQueue();
 

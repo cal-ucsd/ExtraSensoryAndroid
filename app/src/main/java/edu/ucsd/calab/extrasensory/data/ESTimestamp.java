@@ -59,6 +59,14 @@ public class ESTimestamp {
         this(reference.get_secondsSinceEpoch() + daysOffset*SECONDS_IN_24_HOURS);
     }
 
+    /**
+     * Initialize a timestamp using a string representation (of the seconds since epoch)
+     * @param secondsSinceEpochStr
+     */
+    public ESTimestamp(String secondsSinceEpochStr) {
+        this(Integer.parseInt(secondsSinceEpochStr));
+    }
+
     public static ESTimestamp getStartOfTodayTimestamp() {
         Calendar cal = Calendar.getInstance();
         cal.set(Calendar.HOUR_OF_DAY,00);

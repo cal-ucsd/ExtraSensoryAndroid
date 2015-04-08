@@ -25,6 +25,8 @@ public class ESApplication extends Application {
     private static final long WAIT_BEFORE_START_FIRST_RECORDING_MILLIS = 500;
     private static final long RECORDING_SESSIONS_INTERVAL_MILLIS = 1000*60;
     private static final String ZIP_DIR_NAME = "zip";
+    private static final String DATA_DIR_NAME = "data";
+    private static final String FEEDBACK_DIR_NAME = "feedback";
 
     private static Context _appContext;
 
@@ -34,6 +36,14 @@ public class ESApplication extends Application {
 
     public static File getZipDir() {
         return getTheAppContext().getDir(ZIP_DIR_NAME, Context.MODE_PRIVATE);
+    }
+
+    public static File getDataDir() {
+        return getTheAppContext().getDir(DATA_DIR_NAME, Context.MODE_PRIVATE);
+    }
+
+    public static File getFeedbackDir() {
+        return getTheAppContext().getDir(FEEDBACK_DIR_NAME, Context.MODE_PRIVATE);
     }
 
     private ESSensorManager _sensorManager;
