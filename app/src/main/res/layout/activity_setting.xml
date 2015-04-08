@@ -22,6 +22,13 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"/>
     </LinearLayout>
+    <SeekBar
+        android:id="@+id/max_storage_seek_bar"
+        android:layout_margin="10dp"
+        android:progress="20"
+        android:max="1000"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
 
     <View
         android:layout_width="fill_parent"
