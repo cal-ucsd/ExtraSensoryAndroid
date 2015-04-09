@@ -603,7 +603,7 @@ public class ESNetworkAccessor {
                 // If we've reached this far, lets remove this activity from the feedback queue:
                 params._requester._feedbackQueue.removeFromQueue(params._activityForFeedback.get_timestamp());
                 Log.i(LOG_TAG,"Removed " + params._activityForFeedback.get_timestamp() + " from feedback queue. Now: " + params._requester._feedbackQueue);
-                
+
                 // Now lets call to send more feedbacks if the queue isn't empty:
                 params._requester.sendFeedbackFromQueue();
 

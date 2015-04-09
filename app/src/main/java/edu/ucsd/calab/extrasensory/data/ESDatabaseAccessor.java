@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.location.Location;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
@@ -30,8 +31,8 @@ public class ESDatabaseAccessor {
     private static final String LOG_TAG = "[ESDatabaseAccessor]";
     private static final int MAX_STORED_EXAMPLES_DEFAULT = 120;
     private static final int NOTIFICATION_INTERVAL_DEFAULT = 600;
-    private static final double LOCATION_BUBBLE_CENTER_LONG_DEFAULT = -1.;
-    private static final double LOCATION_BUBBLE_CENTER_LAT_DEFAULT = -1.;
+    private static final double LOCATION_BUBBLE_CENTER_LONG_DEFAULT = -361.;
+    private static final double LOCATION_BUBBLE_CENTER_LAT_DEFAULT = -361.;
 
     public static final String BROADCAST_DATABASE_RECORDS_UPDATED = "edu.ucsd.calab.extrasensory.broadcast.database_records_updated";
 
@@ -125,8 +126,7 @@ public class ESDatabaseAccessor {
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_CENTER_LONG,LOCATION_BUBBLE_CENTER_LONG_DEFAULT);
 
         long rowID = db.insert(ESDatabaseContract.ESSettingsEntry.TABLE_NAME,null,values);
-        ESSettings settings = new ESSettings(uuid, MAX_STORED_EXAMPLES_DEFAULT,NOTIFICATION_INTERVAL_DEFAULT,
-                LOCATION_BUBBLE_CENTER_LAT_DEFAULT,LOCATION_BUBBLE_CENTER_LONG_DEFAULT);
+        ESSettings settings = new ESSettings(uuid, MAX_STORED_EXAMPLES_DEFAULT,NOTIFICATION_INTERVAL_DEFAULT,null);
 
         _dbHelper.close();
 
@@ -193,9 +193,11 @@ public class ESDatabaseAccessor {
         return getTheSettings();
     }
 
-    ESSettings setSettings(double locationBubbleCenterLat,double locationBubbleCenterLong) {
+    ESSettings setSettings(Location locationBubbleCenter) {
         SQLiteDatabase db = _dbHelper.getWritableDatabase();
 
+        double locationBubbleCenterLat = locationBubbleCenter == null ? LOCATION_BUBBLE_CENTER_LAT_DEFAULT : locationBubbleCenter.getLatitude();
+        double locationBubbleCenterLong = locationBubbleCenter == null ? LOCATION_BUBBLE_CENTER_LONG_DEFAULT : locationBubbleCenter.getLongitude();
         ContentValues values = new ContentValues();
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_CENTER_LAT,locationBubbleCenterLat);
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_CENTER_LONG,locationBubbleCenterLong);
@@ -235,7 +237,16 @@ public class ESDatabaseAccessor {
         double locationBubbleCenterLat = cursor.getDouble(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_CENTER_LAT));
         double locationBubbleCenterLong = cursor.getDouble(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_CENTER_LONG));
 
-        return new ESSettings(uuid,maxStored,notificationInterval,locationBubbleCenterLat,locationBubbleCenterLong);
+        Location locationBubbleCenter;
+        if (locationBubbleCenterLat <= LOCATION_BUBBLE_CENTER_LAT_DEFAULT || locationBubbleCenterLong <= LOCATION_BUBBLE_CENTER_LONG_DEFAULT) {
+            locationBubbleCenter = null;
+        }
+        else {
+            locationBubbleCenter = new Location("BubbleCenter");
+            locationBubbleCenter.setLatitude(locationBubbleCenterLat);
+            locationBubbleCenter.setLongitude(locationBubbleCenterLong);
+        }
+        return new ESSettings(uuid,maxStored,notificationInterval,locationBubbleCenter);
     }
 
     /**

@@ -1,6 +1,7 @@
 package edu.ucsd.calab.extrasensory.data;
 
 import android.content.Context;
+import android.location.Location;
 
 import edu.ucsd.calab.extrasensory.ESApplication;
 
@@ -12,31 +13,17 @@ import edu.ucsd.calab.extrasensory.ESApplication;
  */
 public class ESSettings {
 
-    public static class ESBubbleCenter {
-        private double _locationBubbleCenterLat = -1.;
-        private double _locationBubbleCenterLong = -1.;
-        private ESBubbleCenter(double locationBubbleCenterLat,double locationBubbleCenterLong) {
-            _locationBubbleCenterLat = locationBubbleCenterLat;
-            _locationBubbleCenterLong = locationBubbleCenterLong;
-        }
-        public double get_locationBubbleCenterLat() {
-            return _locationBubbleCenterLat;
-        }
-        public double get_locationBubbleCenterLong() {
-            return _locationBubbleCenterLong;
-        }
-    }
     private String _uuid;
     private int _maxStoredExamples;
     private int _notificationIntervalInSeconds;
-    private ESBubbleCenter _locationBubbleCenter;
+    private Location _locationBubbleCenter;
 
     ESSettings(String uuid,int maxStoredExamples,int notificationIntervalInSeconds,
-               double locationBubbleCenterLat,double locationBubbleCenterLong) {
+               Location locationBubbleCenter) {
         _uuid = uuid;
         _maxStoredExamples = maxStoredExamples;
         _notificationIntervalInSeconds = notificationIntervalInSeconds;
-        _locationBubbleCenter = new ESBubbleCenter(locationBubbleCenterLat, locationBubbleCenterLong);
+        _locationBubbleCenter = locationBubbleCenter;
     }
 
     private static ESSettings _settings = null;
@@ -82,11 +69,7 @@ public class ESSettings {
      *
      * @return The location of the bubble center, or null if there is no bubble requirement.
      */
-    public static ESBubbleCenter locationBubbleCenter() {
-        ESBubbleCenter bubbleCenter = getTheSettings()._locationBubbleCenter;
-        if (bubbleCenter._locationBubbleCenterLat < 0. || bubbleCenter._locationBubbleCenterLong < 0.) {
-            return null;
-        }
+    public static Location locationBubbleCenter() {
         return getTheSettings()._locationBubbleCenter;
     }
 
@@ -110,12 +93,11 @@ public class ESSettings {
     }
 
     /**
-     * Set the location Bubble center (latitude and longitude)
-     * @param locationBubbleCenterLat
-     * @param locationBubbleCenterLong
+     * Set the location of the bubble center
+     * @param locationBubbleCenter
      */
-    public static void setLocationBubbleCenter(double locationBubbleCenterLat,double locationBubbleCenterLong) {
-        _settings = getTheDBAccessor().setSettings(locationBubbleCenterLat,locationBubbleCenterLong);
+    public static void setLocationBubbleCenter(Location locationBubbleCenter) {
+        _settings = getTheDBAccessor().setSettings(locationBubbleCenter);
     }
 
     private static ESDatabaseAccessor getTheDBAccessor() {
