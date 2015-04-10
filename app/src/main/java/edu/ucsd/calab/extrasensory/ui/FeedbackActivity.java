@@ -10,6 +10,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.AdapterView;
 import android.widget.SimpleAdapter;
@@ -17,6 +18,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +40,19 @@ public class FeedbackActivity extends BaseActivity {
     public static final int FEEDBACK_TYPE_HISTORY_CONTINUOUS_ACTIVITY = 2;
 
     Button button;
+
+    private static final String TEXT1 = "text1";
+    private static final String TEXT2 = "text2";
+
+    private static final int MAIN = 0;
+    private static final int SECONDARY = 1;
+    private static final int MOOD = 2;
+    private static final int VALID = 3;
+
+    private static final String[] values = new String[] { "Main Activity", "Secondary Activities", "Mood", "Valid for" };
+    private static String[] userResponse = new String[4];
+
+
     /**
      * This parameter type is to be used to transfer parameters to the feedback view,
      * that indicate what kind of feedback to perform and pass relevant data.
@@ -141,39 +156,36 @@ public class FeedbackActivity extends BaseActivity {
                 //TODO: how to handle such a case? leave blank/default page? present active feedback? present error message? close activity and go back to previous?
         }
 
-        //CHANGE TO GLOBAL/FINAL VALUES/RESOURCES STRINGS
-        final String[] values = new String[] { "Main Activity", "Secondary Activities", "Mood", "Valid for" };
-
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, values);
+        //original
+       /* ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, values);
         ListView listView = (ListView) findViewById(R.id.listview_activity);
         listView.setAdapter(adapter);
+*/
+        ListView listView = (ListView) findViewById(R.id.listview_activity);
 
-       /* List<Map<String, String>> data = new ArrayList<Map<String, String>>();
-        for (String act:values) {
+        //BELOW IS WORKING
+        //final userActivity[] feedbackList = userActivity.values();
+        //final ListAdapter listAdapter = createListAdapter(feedbackList);
+        //listView.setAdapter(listAdapter);
+
+        List<Map<String, String>> data = new ArrayList<Map<String, String>>();
+        for (int i = 0; i < values.length; i ++) {
             Map<String, String> datum = new HashMap<String, String>(2);
-            datum.put("row header", act);
-            datum.put("row detail", "item chosen by user");
+            datum.put("row header", values[i]);
+            datum.put("row detail", userResponse[i]);
             data.add(datum);
         }
         SimpleAdapter adapter = new SimpleAdapter(this, data,
                 android.R.layout.simple_list_item_2,
-                new String[] {"title", "date"},
+                new String[] {"row header", "row detail"},
                 new int[] {android.R.id.text1,
                         android.R.id.text2});
         listView.setAdapter(adapter);
-*/
+
         View sendButton = getLayoutInflater().inflate(R.layout.activity_feedback_button, null);
         listView.addFooterView(sendButton);
         addListenerOnButton();
 
-       /* listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
-            public void onItemClick(AdapterView<?> arg0, View arg1, int arg2,
-                                    long arg3) {
-                // For Long Duration Toast
-                //Toast.makeText(getApplicationContext(), values[arg2], Toast.LENGTH_LONG).show();
-            }
-        });  */
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -185,18 +197,18 @@ public class FeedbackActivity extends BaseActivity {
                     case 0:
                         intent = new Intent(ESApplication.getTheAppContext(), SelectionFromListActivity.class);
                         intent.putExtra(SelectionFromListActivity.LIST_TYPE_KEY, SelectionFromListActivity.LIST_TYPE_MAIN_ACTIVITY);
-                        startActivityForResult(intent, 2);
+                        startActivityForResult(intent, MAIN);
                         break;
                     case 1:
                         intent = new Intent(ESApplication.getTheAppContext(), SelectionFromListActivity.class);
                         intent.putExtra(SelectionFromListActivity.LIST_TYPE_KEY, SelectionFromListActivity.LIST_TYPE_SECONDARY_ACTIVITIES);
                         intent.putExtra(SelectionFromListActivity.PRESELECTED_LABELS_KEY, new String[]{"At home"});
-                        startActivityForResult(intent, 3);
+                        startActivityForResult(intent, SECONDARY);
                         break;
                     case 2:
                         intent = new Intent(ESApplication.getTheAppContext(), SelectionFromListActivity.class);
                         intent.putExtra(SelectionFromListActivity.LIST_TYPE_KEY, SelectionFromListActivity.LIST_TYPE_MOODS);
-                        startActivityForResult(intent, 4);
+                        startActivityForResult(intent, MOOD);
                         break;
                     case 3:
                         Toast.makeText(getApplicationContext(), "Hello", Toast.LENGTH_LONG).show();
@@ -224,19 +236,44 @@ public class FeedbackActivity extends BaseActivity {
         });
 
     }
- /*   public void onItemClick(int mPosition)
-    {
-        ListModel tempValues = ( ListModel ) CustomListViewValuesArr.get(mPosition);
 
-        // SHOW ALERT
+    @Override
+    public void onActivityResult (int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode,resultCode,data);
+        Log.d(LOG_TAG,"got activity result");
+        if (requestCode == MAIN) {
+            Log.d(LOG_TAG,"return from selecting main");
+        }
+        if (requestCode == SECONDARY) {
+            Log.d(LOG_TAG,"return from selecting secondary");
+        }
+        if (requestCode == MOOD) {
+            Log.d(LOG_TAG, "return from selecting mood");
+        }
+        if (requestCode==MAIN || requestCode==SECONDARY || requestCode==MOOD) {
+            if (data == null) {
+                Log.e(LOG_TAG,"Output from selection had null data");
+                return;
+            }
+            if (!data.hasExtra(SelectionFromListActivity.SELECTED_LABELS_OUTPUT_KEY)) {
+                Log.e(LOG_TAG,"Output from selection is missing the selected labels");
+                return;
+            }
+            String[] selected = data.getStringArrayExtra(SelectionFromListActivity.SELECTED_LABELS_OUTPUT_KEY);
+            Log.d(LOG_TAG,"selected: ");
 
-        Toast.makeText(CustomListView,
-                ""+tempValues.getCompanyName()
-                        +"
-                Image:"+tempValues.getImage()
-            +"
-        Url:"+tempValues.getUrl(),
-        Toast.LENGTH_LONG)
-        .show();
-    }*/
+            String newSelected = "";
+            for (int i=0;i<selected.length;i++) {
+                Log.d(LOG_TAG,selected[i]);
+                if(userResponse[requestCode] == null){
+                    userResponse[requestCode] = "";
+                    newSelected = selected[i];
+                }
+                else
+                    newSelected = newSelected + ", " + selected[i];
+            }
+            userResponse[requestCode] = userResponse[requestCode] + newSelected;
+            //Log.d(LOG_TAG, "updated response: " + userResponse[requestCode]);
+        }
+    }
 }
