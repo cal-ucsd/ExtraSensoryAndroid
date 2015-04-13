@@ -36,5 +36,11 @@
     <string name="uuid_label">UUID:</string>
     <string name="max_storage_label">Max stored examples:</string>
     <string name="notification_interval">Notification interval:</string>
+    <string name="location_bubble_header">Location hidden bubble:</string>
+    <string name="location_bubble_on">on</string>
+    <string name="location_bubble_off">off</string>
+    <string name="latitude_label">latitude:</string>
+    <string name="longitude_label">longitude:</string>
+    <string name="location_bubble_update_button_label">Update latitude/longitude</string>
 
 </resources>

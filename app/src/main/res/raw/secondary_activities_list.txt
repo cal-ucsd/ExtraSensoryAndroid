@@ -34,7 +34,7 @@ Strolling|Leisure
 Hiking|Leisure
 Shopping|Housework,Leisure,Basic needs
 Watching TV|Leisure
-Talking with friends|Leisure
+Talking|Leisure,Physical,Work
 Reading a book|Leisure
 Drinking (alcohol)|Leisure
 Smoking|Leisure,Basic needs

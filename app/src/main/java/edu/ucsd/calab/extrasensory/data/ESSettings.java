@@ -16,13 +16,15 @@ public class ESSettings {
     private String _uuid;
     private int _maxStoredExamples;
     private int _notificationIntervalInSeconds;
+    private boolean _locationBubbleUsed;
     private Location _locationBubbleCenter;
 
     ESSettings(String uuid,int maxStoredExamples,int notificationIntervalInSeconds,
-               Location locationBubbleCenter) {
+               boolean locationBubbleUsed, Location locationBubbleCenter) {
         _uuid = uuid;
         _maxStoredExamples = maxStoredExamples;
         _notificationIntervalInSeconds = notificationIntervalInSeconds;
+        _locationBubbleUsed = locationBubbleUsed;
         _locationBubbleCenter = locationBubbleCenter;
     }
 
@@ -64,10 +66,16 @@ public class ESSettings {
     }
 
     /**
+     * Should we use a location bubble?
+     * @return
+     */
+    public static boolean shouldUseLocationBubble() { return getTheSettings()._locationBubbleUsed; }
+
+    /**
      * Get the location bubble center - representing the home of the user,
      * a location that within a ball around it we shouldn't expose actual latitude/longitute values through the network.
      *
-     * @return The location of the bubble center, or null if there is no bubble requirement.
+     * @return The location of the bubble center.
      */
     public static Location locationBubbleCenter() {
         return getTheSettings()._locationBubbleCenter;
@@ -90,6 +98,19 @@ public class ESSettings {
      */
     public static void setNotificationIntervalInSeconds(int notificationIntervalInSeconds) {
         _settings = getTheDBAccessor().setSettings(maxStoredExamples(),notificationIntervalInSeconds);
+    }
+
+    public static void setLocationBubbleUsed(boolean useLocationBubble) {
+        _settings = getTheDBAccessor().setSettings(useLocationBubble);
+    }
+
+    /**
+     * Set the location bubble center by providing the coordinates of the center
+     * @param locationBubbleCenterLat The latitude coordinate
+     * @param locationBubbleCenterLong The longitude coordinate
+     */
+    public static void setLocationBubbleCenter(double locationBubbleCenterLat, double locationBubbleCenterLong) {
+        _settings = getTheDBAccessor().setSettings(locationBubbleCenterLat,locationBubbleCenterLong);
     }
 
     /**

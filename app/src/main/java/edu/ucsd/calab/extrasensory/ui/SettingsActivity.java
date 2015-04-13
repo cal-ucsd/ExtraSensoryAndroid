@@ -1,14 +1,16 @@
 package edu.ucsd.calab.extrasensory.ui;
 
-import android.support.v7.app.ActionBarActivity;
+import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.RadioGroup;
 import android.widget.SeekBar;
 import android.widget.TextView;
-
-import java.util.LinkedHashMap;
 
 import edu.ucsd.calab.extrasensory.R;
 import edu.ucsd.calab.extrasensory.data.ESSettings;
@@ -66,6 +68,42 @@ public class SettingsActivity extends BaseActivity {
             }
         });
 
+        RadioGroup locationUsedRG = (RadioGroup)findViewById(R.id.radio_group_location_bubble);
+        final EditText latitudeEdit = (EditText)findViewById(R.id.edit_location_bubble_latitude);
+        final EditText longitudeEdit = (EditText)findViewById(R.id.edit_location_bubble_longitude);
+        final Button updateLatLongButton = (Button)findViewById(R.id.button_location_bubble_update);
+
+        locationUsedRG.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                switch (checkedId) {
+                    case R.id.radio_location_bubble_off:
+                        ESSettings.setLocationBubbleUsed(false);
+                        latitudeEdit.setEnabled(false);
+                        longitudeEdit.setEnabled(false);
+                        updateLatLongButton.setEnabled(false);
+                        break;
+                    case R.id.radio_location_bubble_on:
+                        ESSettings.setLocationBubbleUsed(true);
+                        latitudeEdit.setEnabled(true);
+                        longitudeEdit.setEnabled(true);
+                        updateLatLongButton.setEnabled(true);
+                        break;
+                    default:
+                        Log.e(LOG_TAG,"got unexpected id for radio group");
+                }
+            }
+        });
+
+        updateLatLongButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Update the coordinates of the location bubble:
+                double newLatitude = Double.parseDouble(latitudeEdit.getText().toString());
+                double newLongitude = Double.parseDouble(longitudeEdit.getText().toString());
+                ESSettings.setLocationBubbleCenter(newLatitude,newLongitude);
+            }
+        });
 
         setDisplayedContent();
     }
@@ -83,6 +121,32 @@ public class SettingsActivity extends BaseActivity {
         displayNotificationIntervalValue(intervalMinutes);
         SeekBar intervalSeekBar = (SeekBar)findViewById(R.id.notification_interval_seek_bar);
         intervalSeekBar.setProgress(intervalMinutes);
+
+        // Location bubble:
+        Location bubbleCenter = ESSettings.locationBubbleCenter();
+        EditText latitudeEdit = (EditText)findViewById(R.id.edit_location_bubble_latitude);
+        EditText longitudeEdit = (EditText)findViewById(R.id.edit_location_bubble_longitude);
+        Button updateLatLongButton = (Button)findViewById(R.id.button_location_bubble_update);
+
+        if (bubbleCenter != null) {
+            latitudeEdit.setText("" + bubbleCenter.getLatitude());
+            longitudeEdit.setText("" + bubbleCenter.getLongitude());
+        }
+
+        boolean useLocationBubble = ESSettings.shouldUseLocationBubble();
+        RadioGroup useLocationRG = (RadioGroup)findViewById(R.id.radio_group_location_bubble);
+        if (useLocationBubble) {
+            useLocationRG.check(R.id.radio_location_bubble_on);
+            latitudeEdit.setEnabled(true);
+            longitudeEdit.setEnabled(true);
+            updateLatLongButton.setEnabled(true);
+        }
+        else {
+            useLocationRG.check(R.id.radio_location_bubble_off);
+            latitudeEdit.setEnabled(false);
+            longitudeEdit.setEnabled(false);
+            updateLatLongButton.setEnabled(false);
+        }
 
         // Set the UUID:
         TextView uuid_text = (TextView)findViewById(R.id.uuid_content);
