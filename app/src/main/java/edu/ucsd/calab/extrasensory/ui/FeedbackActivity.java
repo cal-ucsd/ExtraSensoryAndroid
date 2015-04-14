@@ -44,6 +44,7 @@ public class FeedbackActivity extends BaseActivity {
     private static final String TEXT1 = "text1";
     private static final String TEXT2 = "text2";
 
+    private static boolean feedbackFlag = false;
     private static final int MAIN = 0;
     private static final int SECONDARY = 1;
     private static final int MOOD = 2;
@@ -111,6 +112,13 @@ public class FeedbackActivity extends BaseActivity {
 
     }
 
+    //refresh feedback list with user selections each time we open feedback page
+    @Override
+    protected void onStart(){
+        super.onStart();
+        presentFeedbackView();
+    }
+
     @Override
     protected void onDestroy() {
         Log.d(LOG_TAG,"activity being destroyed");
@@ -156,17 +164,7 @@ public class FeedbackActivity extends BaseActivity {
                 //TODO: how to handle such a case? leave blank/default page? present active feedback? present error message? close activity and go back to previous?
         }
 
-        //original
-       /* ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, values);
         ListView listView = (ListView) findViewById(R.id.listview_activity);
-        listView.setAdapter(adapter);
-*/
-        ListView listView = (ListView) findViewById(R.id.listview_activity);
-
-        //BELOW IS WORKING
-        //final userActivity[] feedbackList = userActivity.values();
-        //final ListAdapter listAdapter = createListAdapter(feedbackList);
-        //listView.setAdapter(listAdapter);
 
         List<Map<String, String>> data = new ArrayList<Map<String, String>>();
         for (int i = 0; i < values.length; i ++) {
@@ -182,10 +180,13 @@ public class FeedbackActivity extends BaseActivity {
                         android.R.id.text2});
         listView.setAdapter(adapter);
 
-        View sendButton = getLayoutInflater().inflate(R.layout.activity_feedback_button, null);
-        listView.addFooterView(sendButton);
-        addListenerOnButton();
-
+        //only create feedback button once
+        if(feedbackFlag == false) {
+            View sendButton = getLayoutInflater().inflate(R.layout.activity_feedback_button, null);
+            listView.addFooterView(sendButton);
+            addListenerOnButton();
+            feedbackFlag = true;
+        }
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -202,7 +203,7 @@ public class FeedbackActivity extends BaseActivity {
                     case 1:
                         intent = new Intent(ESApplication.getTheAppContext(), SelectionFromListActivity.class);
                         intent.putExtra(SelectionFromListActivity.LIST_TYPE_KEY, SelectionFromListActivity.LIST_TYPE_SECONDARY_ACTIVITIES);
-                        intent.putExtra(SelectionFromListActivity.PRESELECTED_LABELS_KEY, new String[]{"At home"});
+                       // intent.putExtra(SelectionFromListActivity.PRESELECTED_LABELS_KEY, new String[]{"At home"});
                         startActivityForResult(intent, SECONDARY);
                         break;
                     case 2:
@@ -231,6 +232,8 @@ public class FeedbackActivity extends BaseActivity {
                 //TODO: if this is feedback for continuous activity: go over the minute-activities and for each activity
                 // update the activity's labels through the DBAccessor
                 //TODO: (need to change code of DBAccessor - that function should itself call the NetworkAccessor to send the feedback API)
+
+                Log.d(LOG_TAG,"returning from send feedback button");
                 finish();
             }
         });
