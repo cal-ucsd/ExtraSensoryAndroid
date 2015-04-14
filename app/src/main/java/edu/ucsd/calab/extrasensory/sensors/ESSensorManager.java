@@ -70,6 +70,7 @@ public class ESSensorManager
     private static final double MILLISECONDS_IN_SECOND = 1000;
     private static final long LOCATION_UPDATE_INTERVAL_MILLIS = 500;
     private static final long LOCATION_FASTEST_UPDATE_INTERVAL_MILLIS = 50;
+    private static final float LOCATION_BUBBLE_RADIUS_METERS = 500.0f;
     private static final String HIGH_FREQ_DATA_FILENAME = "HF_DUR_DATA.txt";
 
     // Raw motion sensors:
@@ -801,8 +802,17 @@ public class ESSensorManager
         Log.d(LOG_TAG,"got location update with time reference: " + timerefSeconds);
 
         addHighFrequencyMeasurement(LOC_TIME, timerefSeconds);
-        addHighFrequencyMeasurement(LOC_LAT,location.getLatitude());
-        addHighFrequencyMeasurement(LOC_LONG,location.getLongitude());
+        // Should we send the exact coordinates?
+        if ((!ESSettings.shouldUseLocationBubble()) ||
+                (ESSettings.locationBubbleCenter() == null) ||
+                (ESSettings.locationBubbleCenter().distanceTo(location) > LOCATION_BUBBLE_RADIUS_METERS)) {
+            Log.i(LOG_TAG,"Sending location coordinates");
+            addHighFrequencyMeasurement(LOC_LAT,location.getLatitude());
+            addHighFrequencyMeasurement(LOC_LONG,location.getLongitude());
+        }
+        else {
+            Log.i(LOG_TAG,"Hiding location coordinates. We're in the bubble.");
+        }
 
         addHighFrequencyMeasurement(LOC_HOR_ACCURACY,location.hasAccuracy() ? location.getAccuracy() : LOC_ACCURACY_UNAVAILABLE);
         addHighFrequencyMeasurement(LOC_ALT,location.hasAltitude() ? location.getAltitude() : LOC_ALT_UNAVAILABLE);
