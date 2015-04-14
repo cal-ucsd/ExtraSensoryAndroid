@@ -70,6 +70,7 @@ import edu.ucsd.calab.extrasensory.data.ESTimestamp;
 public class ESNetworkAccessor {
 
     public static final String BROADCAST_NETWORK_QUEUE_SIZE_CHANGED = "edu.ucsd.calab.extrasensory.broadcast.network_queue_size_changed";
+    public static final String BROADCAST_FEEDBACK_QUEUE_SIZE_CHANGED = "edu.ucsd.calab.extrasensory.broadcast.feedback_queue_size_changed";
 
     private static final String LOG_TAG = "[ESNetworkAccessor]";
     private static final long WAIT_TIME_AFTER_UPLOAD_IN_MILLIS = 15000;
@@ -99,6 +100,9 @@ public class ESNetworkAccessor {
                 _timestampsQueue.add(timestamp);
             }
             _activitiesToSend.put(timestamp,activity);
+            // Send notification to other components:
+            Intent intent = new Intent(BROADCAST_FEEDBACK_QUEUE_SIZE_CHANGED);
+            LocalBroadcastManager.getInstance(ESApplication.getTheAppContext()).sendBroadcast(intent);
         }
 
         public int size() {
@@ -117,6 +121,9 @@ public class ESNetworkAccessor {
         public void removeFromQueue(ESTimestamp timestamp) {
             _timestampsQueue.remove(timestamp);
             _activitiesToSend.remove(timestamp);
+            // Send notification to other components:
+            Intent intent = new Intent(BROADCAST_FEEDBACK_QUEUE_SIZE_CHANGED);
+            LocalBroadcastManager.getInstance(ESApplication.getTheAppContext()).sendBroadcast(intent);
         }
 
         public String toString() {

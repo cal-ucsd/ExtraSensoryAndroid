@@ -34,6 +34,7 @@ public class HomeFragment extends BaseTabFragment {
 
     private RadioGroup _dataCollectionRadioGroup = null;
     private TextView _storedExamplesCount = null;
+    private TextView _feedbackQueueCount = null;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -62,6 +63,10 @@ public class HomeFragment extends BaseTabFragment {
 
         _storedExamplesCount = (TextView)homeView.findViewById(R.id.text_zip_file_count);
         presentNumStoredExamples();
+
+        _feedbackQueueCount = (TextView)homeView.findViewById(R.id.text_feedback_count);
+        presentFeedbackQueueCount();
+
 
 
         Button selectMainButton = (Button) homeView.findViewById(R.id.select_main_button);
@@ -122,6 +127,11 @@ public class HomeFragment extends BaseTabFragment {
         _storedExamplesCount.setText("" + num);
     }
 
+    private void presentFeedbackQueueCount() {
+        int num = ESNetworkAccessor.getESNetworkAccessor().feedbackQueueSize();
+        _feedbackQueueCount.setText("" + num);
+    }
+
     @Override
     public void onResume() {
         super.onResume();
@@ -148,6 +158,12 @@ public class HomeFragment extends BaseTabFragment {
     protected void reactToNetworkQueueSizeChangedEvent() {
         super.reactToNetworkQueueSizeChangedEvent();
         presentNumStoredExamples();
+    }
+
+    @Override
+    protected void reactToFeedbackQueueSizeChangedEvent() {
+        super.reactToFeedbackQueueSizeChangedEvent();
+        presentFeedbackQueueCount();
     }
 
 

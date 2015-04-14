@@ -35,6 +35,11 @@ public class BaseTabFragment extends Fragment {
             if (ESNetworkAccessor.BROADCAST_NETWORK_QUEUE_SIZE_CHANGED.equals(intent.getAction())) {
                 Log.v(LOG_TAG, "Caught network queue broadcast");
                 reactToNetworkQueueSizeChangedEvent();
+                return;
+            }
+            if (ESNetworkAccessor.BROADCAST_FEEDBACK_QUEUE_SIZE_CHANGED.equals(intent.getAction())) {
+                Log.v(LOG_TAG, "Caught feedback queue broadcast");
+                reactToFeedbackQueueSizeChangedEvent();
             }
 
         }
@@ -42,6 +47,10 @@ public class BaseTabFragment extends Fragment {
 
     protected void reactToNetworkQueueSizeChangedEvent() {
         Log.d(LOG_TAG,"reacting to network queue size change");
+    }
+
+    protected void reactToFeedbackQueueSizeChangedEvent() {
+        Log.d(LOG_TAG,"reacting to feedback queue size change");
     }
 
     protected void reactToRecordsUpdatedEvent() {
@@ -54,6 +63,7 @@ public class BaseTabFragment extends Fragment {
         LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(ESApplication.getTheAppContext());
         localBroadcastManager.registerReceiver(_broadcastReceiver, new IntentFilter(ESDatabaseAccessor.BROADCAST_DATABASE_RECORDS_UPDATED));
         localBroadcastManager.registerReceiver(_broadcastReceiver,new IntentFilter(ESNetworkAccessor.BROADCAST_NETWORK_QUEUE_SIZE_CHANGED));
+        localBroadcastManager.registerReceiver(_broadcastReceiver,new IntentFilter(ESNetworkAccessor.BROADCAST_FEEDBACK_QUEUE_SIZE_CHANGED));
     }
 
     @Override

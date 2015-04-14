@@ -52,6 +52,23 @@
                 android:text="0"/>
         </LinearLayout>
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_weight="2"
+                android:layout_height="wrap_content"
+                android:text="@string/currently_waiting_feedback_text"/>
+            <TextView
+                android:id="@+id/text_feedback_count"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:text="0"/>
+        </LinearLayout>
+
         <Button
             android:id="@+id/select_main_button"
             android:text="select main"
