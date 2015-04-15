@@ -131,10 +131,21 @@ public class ESSensorManager
     private static final String LOC_HOR_ACCURACY = "location_horizontal_accuracy";
     private static final String LOC_BEARING = "location_bearing";
     private static final String LOC_TIME = "location_timeref";
+
     private static final double LOC_ACCURACY_UNAVAILABLE = -1;
     private static final double LOC_ALT_UNAVAILABLE = -1000000;
     private static final double LOC_BEARING_UNAVAILABLE = -1;
     private static final double LOC_SPEED_UNAVAILABLE = -1;
+    private static final double LOC_LAT_HIDDEN = -1000;
+    private static final double LOC_LONG_HIDDEN = -1000;
+
+    private static final String LOCATION_QUICK_FEATURES = "location_quick_features";
+    private static final String LOCATION_FEATURE_STD_LAT = "std_lat";
+    private static final String LOCATION_FEATURE_STD_LONG = "std_long";
+    private static final String LOCATION_FEATURE_LAT_CHANGE = "lat_change";
+    private static final String LOCATION_FEATURE_LONG_CHANGE = "long_change";
+    private static final String LOCATION_FEATURE_LAT_DERIV = "mean_abs_lat_deriv";
+    private static final String LOCATION_FEATURE_LONG_DERIV = "mean_abs_long_deriv";
 
     // Low frequency measurements:
     private static final String LOW_FREQ = "low_frequency";
@@ -229,6 +240,7 @@ public class ESSensorManager
     private GoogleApiClient _googleApiClient;
 
     private HashMap<String,ArrayList<Double>> _highFreqData;
+    private HashMap<String,ArrayList<Double>> _locationCoordinatesData;
     private JSONObject _lowFreqData;
     private ESTimestamp _timestamp;
     private ArrayList<Sensor> _hiFreqSensors;
@@ -408,6 +420,11 @@ public class ESSensorManager
     private void clearRecordingSession() {
         // Clear the high frequency map:
         _highFreqData = new HashMap<>(20);
+
+        _locationCoordinatesData = new HashMap<>(2);
+        _locationCoordinatesData.put(LOC_LAT,new ArrayList<Double>(10));
+        _locationCoordinatesData.put(LOC_LONG,new ArrayList<Double>(10));
+
         _lowFreqData = new JSONObject();
         // Clear temporary data files:
         ESApplication.getTheAppContext().deleteFile(currentZipFilename());
@@ -494,7 +511,7 @@ public class ESSensorManager
                 data.put(key, samples);
             }
             catch (JSONException e) {
-                Log.e(LOG_TAG,e.getMessage());
+                Log.e(LOG_TAG,"JSON: failed putting key " + key + ". Message: " + e.getMessage());
             }
         }
 
@@ -502,7 +519,15 @@ public class ESSensorManager
         try {
             data.put(LOW_FREQ,_lowFreqData);
         } catch (JSONException e) {
-            Log.e(LOG_TAG,e.getMessage());
+            Log.e(LOG_TAG,"JSON: failed putting low frequency data. Message: " + e.getMessage());
+        }
+
+        // Add location quick features:
+        JSONObject locationQuickFeatures = calcLocationQuickFeatures();
+        try {
+            data.put(LOCATION_QUICK_FEATURES,locationQuickFeatures);
+        } catch (JSONException e) {
+            Log.e(LOG_TAG,"JSON: failed putting location quick features. Message: " + e.getMessage());
         }
 
         // Save data to file:
@@ -516,6 +541,66 @@ public class ESSensorManager
         // Add this zip file to the network queue:
         if (zipFilename != null) {
             ESNetworkAccessor.getESNetworkAccessor().addToUploadQueue(zipFilename);
+        }
+    }
+
+    private JSONObject calcLocationQuickFeatures() {
+        ArrayList<Double> latVals = _locationCoordinatesData.get(LOC_LAT);
+        ArrayList<Double> longVals = _locationCoordinatesData.get(LOC_LONG);
+        ArrayList<Double> timerefs = _highFreqData.get(LOC_TIME);
+
+        int n = latVals.size();
+        if (longVals.size() != n || timerefs.size() != n) {
+            Log.e(LOG_TAG,"Number of longitude values or location timerefs doesn't match number of latitude values");
+            return null;
+        }
+        if (n == 0) {
+            return null;
+        }
+
+        double sumLat=0,sumLong=0,sumSqLat=0,sumSqLong=0,sumAbsLatDeriv=0,sumAbsLongDeriv=0;
+        for (int i=0; i < n; i++) {
+            sumLat += latVals.get(i);
+            sumLong += longVals.get(i);
+            sumSqLat += Math.pow(latVals.get(i),2);
+            sumSqLong += Math.pow(longVals.get(i),2);
+            if (i>0) {
+                double timeDiff = timerefs.get(i)-timerefs.get(i-1);
+                sumAbsLatDeriv += Math.abs(latVals.get(i)-latVals.get(i-1)) / timeDiff;
+                sumAbsLongDeriv += Math.abs(longVals.get(i)-longVals.get(i-1)) / timeDiff;
+            }
+        }
+
+        double meanLat = sumLat / n;
+        double meanLong = sumLong / n;
+        double meanSqLat = sumSqLat / n;
+        double meanSqLong = sumSqLong / n;
+        double varLat = meanSqLat - Math.pow(meanLat,2);
+        double varLong = meanSqLong - Math.pow(meanLong,2);
+        double meanAbsLatDeriv = n > 1 ? sumAbsLatDeriv / (n-1) : 0;
+        double meanAbsLongDeriv = n > 1 ? sumAbsLongDeriv / (n-1) : 0;
+
+        double latStd = Math.sqrt(varLat);
+        double longStd = Math.sqrt(varLong);
+        double latChange = latVals.get(n-1)-latVals.get(0);
+        double longChange = longVals.get(n-1)-longVals.get(0);
+
+        Log.d(LOG_TAG,String.format("Calculated location quick features: latChange %f. longChange %f. latStd %f. longStd %f. latDeriv %f. longDerig %f",
+                latChange,longChange,latStd,longStd,meanAbsLatDeriv,meanAbsLongDeriv));
+
+        JSONObject locationQuickFeatures = new JSONObject();
+        try {
+            locationQuickFeatures.put(LOCATION_FEATURE_LAT_CHANGE,latChange);
+            locationQuickFeatures.put(LOCATION_FEATURE_LONG_CHANGE,longChange);
+            locationQuickFeatures.put(LOCATION_FEATURE_STD_LAT,latStd);
+            locationQuickFeatures.put(LOCATION_FEATURE_STD_LONG,longStd);
+            locationQuickFeatures.put(LOCATION_FEATURE_LAT_DERIV,meanAbsLatDeriv);
+            locationQuickFeatures.put(LOCATION_FEATURE_LONG_DERIV,meanAbsLongDeriv);
+
+            return locationQuickFeatures;
+        } catch (JSONException e) {
+            Log.e(LOG_TAG,"JSON: failed putting feature into location quick features. Message: " + e.getMessage());
+            return null;
         }
     }
 
@@ -806,13 +891,18 @@ public class ESSensorManager
         if ((!ESSettings.shouldUseLocationBubble()) ||
                 (ESSettings.locationBubbleCenter() == null) ||
                 (ESSettings.locationBubbleCenter().distanceTo(location) > LOCATION_BUBBLE_RADIUS_METERS)) {
-            Log.i(LOG_TAG,"Sending location coordinates");
-            addHighFrequencyMeasurement(LOC_LAT,location.getLatitude());
+            Log.i(LOG_TAG, "Sending location coordinates");
+            addHighFrequencyMeasurement(LOC_LAT, location.getLatitude());
             addHighFrequencyMeasurement(LOC_LONG,location.getLongitude());
         }
         else {
-            Log.i(LOG_TAG,"Hiding location coordinates. We're in the bubble.");
+            Log.i(LOG_TAG,"Hiding location coordinates (sending invalid coordinates). We're in the bubble.");
+            addHighFrequencyMeasurement(LOC_LAT,LOC_LAT_HIDDEN);
+            addHighFrequencyMeasurement(LOC_LONG,LOC_LONG_HIDDEN);
         }
+        // Anyway, store the location coordinates separately:
+        _locationCoordinatesData.get(LOC_LAT).add(location.getLatitude());
+        _locationCoordinatesData.get(LOC_LONG).add(location.getLongitude());
 
         addHighFrequencyMeasurement(LOC_HOR_ACCURACY,location.hasAccuracy() ? location.getAccuracy() : LOC_ACCURACY_UNAVAILABLE);
         addHighFrequencyMeasurement(LOC_ALT,location.hasAltitude() ? location.getAltitude() : LOC_ALT_UNAVAILABLE);
