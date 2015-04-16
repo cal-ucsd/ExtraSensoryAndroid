@@ -8,9 +8,12 @@ import android.content.Intent;
 import android.util.Log;
 
 import java.io.File;
+import java.util.Date;
 
 import edu.ucsd.calab.extrasensory.data.ESActivity;
 import edu.ucsd.calab.extrasensory.data.ESLabelStrings;
+import edu.ucsd.calab.extrasensory.data.ESLabelStruct;
+import edu.ucsd.calab.extrasensory.data.ESTimestamp;
 import edu.ucsd.calab.extrasensory.sensors.ESSensorManager;
 
 /**
@@ -33,6 +36,43 @@ public class ESApplication extends Application {
     public static Context getTheAppContext() {
         return _appContext;
     }
+
+    public static class PredeterminedLabels {
+        private ESLabelStruct _labels = null;
+        private boolean _startedFirstActivityRecording = false;
+        private ESTimestamp _validUntil = new ESTimestamp(0);
+
+        private void clearLabels() {
+            _labels = null;
+            _startedFirstActivityRecording = false;
+            _validUntil = new ESTimestamp(0);
+        }
+
+        public ESLabelStruct getLabels() {
+            if (_labels == null || _validUntil == null || _validUntil.isEarlierThan(new ESTimestamp())) {
+                // Then there are no predetermined labels, or those that are here are no longer valid:
+                clearLabels();
+            }
+            return _labels;
+        }
+
+        boolean is_startedFirstActivityRecording() {
+            return _startedFirstActivityRecording;
+        }
+
+        void set_startedFirstActivityRecording(boolean startedFirstActivityRecording) {
+            _startedFirstActivityRecording = startedFirstActivityRecording;
+        }
+
+        private void setPredeterminedLabels(ESLabelStruct labels,int validForHowManyMinutes) {
+            _labels = new ESLabelStruct(labels);
+            _startedFirstActivityRecording = false;
+            //TODO: set valid until
+//            _validUntil = new ESTimestamp(new ESTimestamp().)
+        }
+    }
+
+    static PredeterminedLabels _predeterminedLabels = new PredeterminedLabels();
 
     public static File getZipDir() {
         return getTheAppContext().getDir(ZIP_DIR_NAME, Context.MODE_PRIVATE);
@@ -90,6 +130,21 @@ public class ESApplication extends Application {
 
 
         // Start the scheduling of periodic recordings:
+        startRecordingSchedule();
+    }
+
+    /**
+     * Start user initiated recording (and schedule).
+     * This function first stops any current recording (if there is one), and stops the recording schedule,
+     * then starts a new recording schedule.
+     * The given labels are used for the started recording from now until the end time specified by the user.
+     *
+     * @param labelsToAssign - The labels to assign to the following activities
+     * @param validForHowMinutes - How many minutes should the given labels be automatically assigned?
+     */
+    public void startActiveFeedback(ESLabelStruct labelsToAssign,int validForHowMinutes) {
+        _predeterminedLabels.setPredeterminedLabels(labelsToAssign,validForHowMinutes);
+        stopCurrentRecordingAndRecordingSchedule();
         startRecordingSchedule();
     }
 
