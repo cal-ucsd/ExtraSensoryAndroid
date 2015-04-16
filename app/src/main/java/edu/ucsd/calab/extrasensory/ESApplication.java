@@ -25,7 +25,7 @@ import edu.ucsd.calab.extrasensory.sensors.ESSensorManager;
 public class ESApplication extends Application {
 
     private static final String LOG_TAG = "[ESApplication]";
-    private static final long WAIT_BEFORE_START_FIRST_RECORDING_MILLIS = 500;
+    private static final long WAIT_BEFORE_START_FIRST_RECORDING_MILLIS = 4000;
     private static final long RECORDING_SESSIONS_INTERVAL_MILLIS = 1000*60;
     private static final long MILLISECONDS_IN_MINUTE = 1000*60;
     private static final String ZIP_DIR_NAME = "zip";
@@ -113,7 +113,7 @@ public class ESApplication extends Application {
 
         _userSelectedDataCollectionOn = userSelectedDataCollectionOn;
         if (_userSelectedDataCollectionOn) {
-            startRecordingSchedule();
+            startRecordingSchedule(0);
         }
         else {
             stopCurrentRecordingAndRecordingSchedule();
@@ -133,7 +133,7 @@ public class ESApplication extends Application {
 
 
         // Start the scheduling of periodic recordings:
-        startRecordingSchedule();
+        startRecordingSchedule(WAIT_BEFORE_START_FIRST_RECORDING_MILLIS);
     }
 
     /**
@@ -148,13 +148,15 @@ public class ESApplication extends Application {
     public void startActiveFeedback(ESLabelStruct labelsToAssign,int validForHowMinutes) {
         _predeterminedLabels.setPredeterminedLabels(labelsToAssign, validForHowMinutes);
         stopCurrentRecordingAndRecordingSchedule();
-        startRecordingSchedule();
+        startRecordingSchedule(0);
     }
 
     /**
-     * Start a repeating schedule of recording sessions (every 1 minute) from now.
+     * Start a repeating schedule of recording sessions (every 1 minute).
+     *
+     * @param millisWaitBeforeStart - time to wait (milliseconds) before the first recording session in this schedule.
      */
-    private void startRecordingSchedule() {
+    private void startRecordingSchedule(long millisWaitBeforeStart) {
         if (_alarmManager == null) {
             Log.e(LOG_TAG,"Alarm manager is null");
             return;
@@ -166,7 +168,7 @@ public class ESApplication extends Application {
 
         Log.i(LOG_TAG,"Scheduling the recording sessions with interval of " + RECORDING_SESSIONS_INTERVAL_MILLIS/1000 + " seconds.");
         _alarmManager.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
-                WAIT_BEFORE_START_FIRST_RECORDING_MILLIS,
+                millisWaitBeforeStart,
                 RECORDING_SESSIONS_INTERVAL_MILLIS,
                 pendingIntent);
     }
