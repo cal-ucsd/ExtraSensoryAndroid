@@ -27,6 +27,7 @@ public class ESApplication extends Application {
     private static final String LOG_TAG = "[ESApplication]";
     private static final long WAIT_BEFORE_START_FIRST_RECORDING_MILLIS = 500;
     private static final long RECORDING_SESSIONS_INTERVAL_MILLIS = 1000*60;
+    private static final long MILLISECONDS_IN_MINUTE = 1000*60;
     private static final String ZIP_DIR_NAME = "zip";
     private static final String DATA_DIR_NAME = "data";
     private static final String FEEDBACK_DIR_NAME = "feedback";
@@ -67,8 +68,10 @@ public class ESApplication extends Application {
         private void setPredeterminedLabels(ESLabelStruct labels,int validForHowManyMinutes) {
             _labels = new ESLabelStruct(labels);
             _startedFirstActivityRecording = false;
-            //TODO: set valid until
-//            _validUntil = new ESTimestamp(new ESTimestamp().)
+
+            long gracePeriod = 2000;
+            Date validUntilDate = new Date(new Date().getTime() + validForHowManyMinutes*MILLISECONDS_IN_MINUTE + gracePeriod);
+            _validUntil = new ESTimestamp(validUntilDate);
         }
     }
 
@@ -143,7 +146,7 @@ public class ESApplication extends Application {
      * @param validForHowMinutes - How many minutes should the given labels be automatically assigned?
      */
     public void startActiveFeedback(ESLabelStruct labelsToAssign,int validForHowMinutes) {
-        _predeterminedLabels.setPredeterminedLabels(labelsToAssign,validForHowMinutes);
+        _predeterminedLabels.setPredeterminedLabels(labelsToAssign, validForHowMinutes);
         stopCurrentRecordingAndRecordingSchedule();
         startRecordingSchedule();
     }
