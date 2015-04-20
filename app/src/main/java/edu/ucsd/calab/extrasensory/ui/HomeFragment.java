@@ -15,6 +15,7 @@ import android.widget.TextView;
 import edu.ucsd.calab.extrasensory.ESApplication;
 import edu.ucsd.calab.extrasensory.R;
 import edu.ucsd.calab.extrasensory.network.ESNetworkAccessor;
+import edu.ucsd.calab.extrasensory.sensors.AudioProcessing.MFCC;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -89,6 +90,38 @@ public class HomeFragment extends BaseTabFragment {
                 intent.putExtra(SelectionFromListActivity.LIST_TYPE_KEY,SelectionFromListActivity.LIST_TYPE_SECONDARY_ACTIVITIES);
                 intent.putExtra(SelectionFromListActivity.PRESELECTED_LABELS_KEY,new String[]{"At home"});
                 startActivityForResult(intent,3);
+            }
+        });
+
+        Button testAudioButton = (Button) homeView.findViewById(R.id.test_audio_button);
+        testAudioButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d(LOG_TAG,"clicked test audio button");
+                MFCC mfcc = new MFCC(13,22050,40,1024,false,-1,true);
+                Log.d(LOG_TAG,"created MFCC processor: " + mfcc.toString());
+
+                double[] segment1 = new double[1024];
+                double[] segment2 = new double[1024];
+                for (int i=0; i< segment1.length; i++ ) {
+                    segment1[i] = 30*Math.cos(i) + 20*Math.cos(i/10) + 2*Math.sin(i/100) + Math.cos(i/1000);
+                    segment2[i] = Math.cos(i) + 2*Math.cos(i/10) + 20*Math.sin(i/100) + 30*Math.cos(i/1000);
+                }
+                Log.d(LOG_TAG,"created 2 audio segments");
+
+                double[] mfcc1 = mfcc.getParameters(segment1);
+                double[] mfcc2 = mfcc.getParameters(segment2);
+                Log.d(LOG_TAG,"calculated mfcc for the 2 segments with lengths: " + mfcc1.length + " and " + mfcc2.length);
+                String str1 = "<",str2 = "<";
+                for (int i=0; i<13; i++) {
+                    str1 += "," + mfcc1[i];
+                    str2 += "," + mfcc2[i];
+                }
+                str1 += ">";
+                str2 += ">";
+
+                Log.d(LOG_TAG,"mfcc1: " + str1);
+                Log.d(LOG_TAG,"mfcc2: " + str2);
             }
         });
 

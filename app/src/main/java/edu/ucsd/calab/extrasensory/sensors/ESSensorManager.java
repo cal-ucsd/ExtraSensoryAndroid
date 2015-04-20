@@ -42,6 +42,7 @@ import edu.ucsd.calab.extrasensory.ESApplication;
 import edu.ucsd.calab.extrasensory.data.ESSettings;
 import edu.ucsd.calab.extrasensory.data.ESTimestamp;
 import edu.ucsd.calab.extrasensory.network.ESNetworkAccessor;
+import edu.ucsd.calab.extrasensory.sensors.AudioProcessing.ESAudioProcessor;
 
 /**
  * This class is to handle the activation of sensors for the recording period,
@@ -238,6 +239,7 @@ public class ESSensorManager
     // Non static part:
     private SensorManager _sensorManager;
     private GoogleApiClient _googleApiClient;
+    private ESAudioProcessor _audioProcessor;
 
     private HashMap<String,ArrayList<Double>> _highFreqData;
     private HashMap<String,ArrayList<Double>> _locationCoordinatesData;
@@ -282,6 +284,9 @@ public class ESSensorManager
         _lowFreqSensors = new ArrayList<>(10);
         _lowFreqSensorFeatureKeys = new ArrayList<>(10);
         _timestamp = new ESTimestamp(0);
+
+        // Audio processor:
+        _audioProcessor = new ESAudioProcessor();
 
         // Add raw motion sensors:
         if (!tryToAddSensor(Sensor.TYPE_ACCELEROMETER,true,"raw accelerometer",RAW_ACC_X)) {
@@ -358,6 +363,9 @@ public class ESSensorManager
             Log.i(LOG_TAG,"We don't have required google play services, so not using location services.");
         }
 
+        // Start recording audio:
+        _audioProcessor.startRecordingSession();
+
         // Start recording hi-frequency sensors:
         for (Sensor sensor : _hiFreqSensors) {
             _sensorManager.registerListener(this,sensor,SAMPLE_PERIOD_MICROSECONDS);
@@ -428,6 +436,9 @@ public class ESSensorManager
         _lowFreqData = new JSONObject();
         // Clear temporary data files:
         ESApplication.getTheAppContext().deleteFile(currentZipFilename());
+
+        // Clear audio data:
+        _audioProcessor.clearAudioData();
     }
 
     /**
@@ -499,6 +510,9 @@ public class ESSensorManager
         Log.i(LOG_TAG,"Finishing recording session.");
         //LocationServices.FusedLocationApi.removeLocationUpdates(_googleApiClient,this);
         _googleApiClient.disconnect();
+
+        // Finish audio recording:
+        _audioProcessor.stopRecordingSession(true);
 
         set_recordingRightNow(false);
 
