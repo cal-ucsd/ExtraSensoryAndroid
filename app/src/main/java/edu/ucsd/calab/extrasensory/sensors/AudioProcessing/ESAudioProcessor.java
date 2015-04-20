@@ -28,7 +28,7 @@ public class ESAudioProcessor {
     private static final String LOG_TAG = "[ESAudioProcessor]";
 
     private static final int RECORDER_AUDIO_SOURCE = MediaRecorder.AudioSource.MIC;
-    private static final int RECORDER_SAMPLING_RATE = 8000;//22050;
+    private static final int RECORDER_SAMPLING_RATE = 22050;
     private static final int RECORDER_CHANNELS = AudioFormat.CHANNEL_IN_MONO;
     private static final int RECORDER_AUDIO_ENCODING = AudioFormat.ENCODING_PCM_16BIT;
     private static final int RECORDER_BUFFER_NUM_ELEMENTS = 4096;
@@ -198,7 +198,7 @@ public class ESAudioProcessor {
         _audioRecorder = null;
 
         if (andCalculateMFCC) {
-//            calculateMFCCFeatures();
+            calculateMFCCFeatures();
         }
 
     }

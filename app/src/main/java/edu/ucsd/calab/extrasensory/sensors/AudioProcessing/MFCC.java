@@ -264,10 +264,20 @@ public class MFCC {
      */
     public double[] getParameters(double[] fspeechFrame) {
 
-        //use mel filter bank   
+        // First, calculate the spectrum (added by Yonatan, to do just once, outside the loop):
+        double[] spectrum = m_ousePowerInsteadOfMagnitude ? m_fft.calculateFFTPower(fspeechFrame) : m_fft.calculateFFTMagnitude(fspeechFrame);
+
+        //use mel filter bank
         for(int i=0; i < m_nnumberOfFilters; i++) {
             m_dfilterOutput[i] = 0.0;
-            //Notice that the FFT samples at 0 (DC) and fs/2 are not considered on this calculation   
+            //Notice that the FFT samples at 0 (DC) and fs/2 are not considered on this calculation
+
+            // Added by Yonatan: using the pre-calculated spectrum (either power or magnitude):
+            for(int j=m_nboundariesDFTBins[i][0], k=0;j<=m_nboundariesDFTBins[i][1];j++,k++) {
+                m_dfilterOutput[i] += spectrum[j] * m_dweights[i][k];
+            }
+
+/*
             if (m_ousePowerInsteadOfMagnitude) {
                 double[] fpowerSpectrum = m_fft.calculateFFTPower(fspeechFrame);
                 for(int j=m_nboundariesDFTBins[i][0], k=0;j<=m_nboundariesDFTBins[i][1];j++,k++) {
@@ -279,6 +289,7 @@ public class MFCC {
                     m_dfilterOutput[i] += fmagnitudeSpectrum[j] * m_dweights[i][k];
                 }
             }
+*/
 
             //ISIP (Mississipi univ.) implementation   
             if (m_dfilterOutput[i] > m_dminimumFilterOutput) {//floor power to avoid log(0)   
@@ -381,10 +392,23 @@ public class MFCC {
     }
 
     public double[] getFilterBankOutputs(double[] fspeechFrame) {
+        // First, calculate the spectrum (added by Yonatan, to be outside the loop):
+        double[] spectrum;
+        if (m_ousePowerInsteadOfMagnitude) {
+            spectrum = m_fft.calculateFFTPower(fspeechFrame);
+        }
+        else {
+            spectrum = m_fft.calculateFFTMagnitude(fspeechFrame);
+        }
+
         //use mel filter bank   
         double dfilterOutput[] = new double[m_nnumberOfFilters];
         for(int i=0; i < m_nnumberOfFilters; i++) {
-            //Notice that the FFT samples at 0 (DC) and fs/2 are not considered on this calculation   
+            //Notice that the FFT samples at 0 (DC) and fs/2 are not considered on this calculation
+            for(int j=m_nboundariesDFTBins[i][0], k=0;j<=m_nboundariesDFTBins[i][1];j++,k++) {
+                dfilterOutput[i] += spectrum[j] * m_dweights[i][k];
+            }
+/*
             if (m_ousePowerInsteadOfMagnitude) {
                 double[] fpowerSpectrum = m_fft.calculateFFTPower(fspeechFrame);
                 for(int j=m_nboundariesDFTBins[i][0], k=0;j<=m_nboundariesDFTBins[i][1];j++,k++) {
@@ -396,6 +420,7 @@ public class MFCC {
                     dfilterOutput[i] += fmagnitudeSpectrum[j] * m_dweights[i][k];
                 }
             }
+*/
 
             //ISIP (Mississipi univ.) implementation   
             if (dfilterOutput[i] > m_dminimumFilterOutput) {//floor power to avoid log(0)   
