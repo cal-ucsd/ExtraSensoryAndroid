@@ -29,13 +29,16 @@ import org.json.JSONObject;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import edu.ucsd.calab.extrasensory.ESApplication;
@@ -73,6 +76,7 @@ public class ESSensorManager
     private static final long LOCATION_FASTEST_UPDATE_INTERVAL_MILLIS = 50;
     private static final float LOCATION_BUBBLE_RADIUS_METERS = 500.0f;
     private static final String HIGH_FREQ_DATA_FILENAME = "HF_DUR_DATA.txt";
+    private static final String MFCC_FILENAME_IN_ZIP = "f_audio_mfcc.dat";
 
     // Raw motion sensors:
     private static final String RAW_ACC_X = "raw_acc_x";
@@ -564,6 +568,11 @@ public class ESSensorManager
         ArrayList<Double> timerefs = _highFreqData.get(LOC_TIME);
 
         int n = latVals.size();
+        if (longVals == null || latVals == null) {
+            Log.e(LOG_TAG,"Missing the internally-saved location coordinates.");
+            return null;
+        }
+
         if (longVals.size() != n || timerefs.size() != n) {
             Log.e(LOG_TAG,"Number of longitude values or location timerefs doesn't match number of latitude values");
             return null;
@@ -631,6 +640,23 @@ public class ESSensorManager
             zos.putNextEntry(new ZipEntry(HIGH_FREQ_DATA_FILENAME));
             zos.write(highFreqDataStr.getBytes());
             zos.closeEntry();
+            // The MFCC file:
+            File mfccFile = _audioProcessor.getMFCCFile();
+            if (!mfccFile.exists()) {
+                Log.e(LOG_TAG,"data-zipping. MFCC file doesn't exist");
+            }
+            else {
+                Log.i(LOG_TAG,"data-zipping. Adding MFCC file.");
+                FileInputStream fileInputStream = new FileInputStream(mfccFile);
+                byte[] buffer = new byte[2048];
+                zos.putNextEntry(new ZipEntry(MFCC_FILENAME_IN_ZIP));
+                int numBytes;
+                while ((numBytes = fileInputStream.read(buffer)) > 0) {
+                    Log.d(LOG_TAG,"data-zipping. Reading " + numBytes + " from MFCC file to zip.");
+                    zos.write(buffer,0,numBytes);
+                }
+                zos.closeEntry();
+            }
 
             // Close the zip:
             zos.close();

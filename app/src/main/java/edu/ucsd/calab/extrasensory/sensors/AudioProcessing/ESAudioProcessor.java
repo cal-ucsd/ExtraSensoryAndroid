@@ -70,7 +70,7 @@ public class ESAudioProcessor {
         return new File(ESApplication.getDataDir(),SOUND_FILENAME);
     }
 
-    private File getMFCCFile() { return new File(ESApplication.getDataDir(),MFCC_FILENAME); }
+    public File getMFCCFile() { return new File(ESApplication.getDataDir(),MFCC_FILENAME); }
 
     private String getSoundFullFilename() {
         return getSoundFile().getPath();
@@ -265,6 +265,9 @@ public class ESAudioProcessor {
         } catch (IOException e) {
             Log.e(LOG_TAG,"Failed last flush for writing MFCC file. " + e.getMessage());
         }
+
+        File mfccFile = getMFCCFile();
+        Log.d(LOG_TAG,String.format("=== mfcc file exist: %b. Size: %d",mfccFile.exists(),mfccFile.length()));
     }
 
     private boolean readIntoFrame(DataInputStream dataInputStream,double[] frameToFill,int startFrom) {
@@ -309,9 +312,16 @@ public class ESAudioProcessor {
             try {
                 fileWriter.write("" + frameMFCC[i] + ",");
             } catch (IOException e) {
-                Log.e(LOG_TAG,"Failed writing MFCC vector to file. Frame " + i + ". " + e.getMessage());
+                Log.e(LOG_TAG,"Failed writing MFCC vector to file. Coefficient " + i + ". " + e.getMessage());
                 continue;
             }
+        }
+
+        // Add newline:
+        try {
+            fileWriter.write("\n");
+        } catch (IOException e) {
+            Log.e(LOG_TAG,"Failed writing newline to MFCC file. " + e.getMessage());
         }
 
         try {
