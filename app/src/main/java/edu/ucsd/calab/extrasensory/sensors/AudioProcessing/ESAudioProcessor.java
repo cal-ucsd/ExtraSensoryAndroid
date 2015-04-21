@@ -145,9 +145,9 @@ public class ESAudioProcessor {
         while (_isRecording) {
             bufferCount ++;
             int numShortsRead = _audioRecorder.read(soundFrame,0,AUDIO_WRITER_BUFFER_SIZE_IN_SHORTS);
-            if (bufferCount % 20 == 1) {
-                Log.d(LOG_TAG,String.format("buffer %d) Read %d short values from recorder.",bufferCount,numShortsRead));
-            }
+//            if (bufferCount % 20 == 1) {
+//                Log.d(LOG_TAG,String.format("buffer %d) Read %d short values from recorder.",bufferCount,numShortsRead));
+//            }
 
             int short_i;
             for (short_i=0; short_i < numShortsRead; short_i++) {
@@ -163,9 +163,9 @@ public class ESAudioProcessor {
             } catch (IOException e) {
                 Log.e(LOG_TAG,"Failed flushing data from dataOutputStream. " + e.getMessage());
             }
-            if (bufferCount % 20 == 1) {
-                Log.i(LOG_TAG, String.format("buffer %d) Wrote %d short values to audio data file.", bufferCount, short_i));
-            }
+//            if (bufferCount % 20 == 1) {
+//                Log.i(LOG_TAG, String.format("buffer %d) Wrote %d short values to audio data file.", bufferCount, short_i));
+//            }
         }
 
         try {
@@ -241,26 +241,26 @@ public class ESAudioProcessor {
         int logHop = 20;
         while(theresMoreData) {
             frameCount++;
-            if (frameCount % logHop == 1) {
-                Log.d(LOG_TAG, String.format("frame %d) doing MFCC. Shifting frame...", frameCount));
-            }
+//            if (frameCount % logHop == 1) {
+//                Log.d(LOG_TAG, String.format("frame %d) doing MFCC. Shifting frame...", frameCount));
+//            }
             // Hop to next overlapping frame:
             shiftRawFrame(rawFramePreemphasized,AUDIO_FRAME_HOP_SIZE);
-            if (frameCount % logHop == 1) {
-                Log.d(LOG_TAG, String.format("frame %d) doing MFCC. Reading next hop frame...", frameCount));
-            }
+//            if (frameCount % logHop == 1) {
+//                Log.d(LOG_TAG, String.format("frame %d) doing MFCC. Reading next hop frame...", frameCount));
+//            }
             theresMoreData = readIntoFrame(dataInputStream,rawFramePreemphasized,AUDIO_FRAME_HOP_SIZE);
-            if (frameCount % logHop == 1) {
-                Log.d(LOG_TAG, String.format("frame %d) doing MFCC. Windowing...", frameCount));
-            }
+//            if (frameCount % logHop == 1) {
+//                Log.d(LOG_TAG, String.format("frame %d) doing MFCC. Windowing...", frameCount));
+//            }
             windowTheFrame(rawFramePreemphasized,windowedFrame);
-            if (frameCount % logHop == 1) {
-                Log.d(LOG_TAG, String.format("frame %d) doing MFCC. Calculating the MFCC...", frameCount));
-            }
+//            if (frameCount % logHop == 1) {
+//                Log.d(LOG_TAG, String.format("frame %d) doing MFCC. Calculating the MFCC...", frameCount));
+//            }
             calculateFrameMFCCAndWriteToFile(windowedFrame,fileWriter);
-            if (frameCount % logHop == 1) {
-                Log.d(LOG_TAG, String.format("frame %d) doing MFCC. done.", frameCount));
-            }
+//            if (frameCount % logHop == 1) {
+//                Log.d(LOG_TAG, String.format("frame %d) doing MFCC. done.", frameCount));
+//            }
 
             // Every few records, flush the writer:
             if (frameCount % 50 == 1) {
@@ -279,7 +279,7 @@ public class ESAudioProcessor {
         }
 
         File mfccFile = getMFCCFile();
-        Log.d(LOG_TAG,String.format("=== mfcc file exist: %b. Size: %d",mfccFile.exists(),mfccFile.length()));
+        Log.d(LOG_TAG,String.format("Does MFCC file exist: %b. Size: %d",mfccFile.exists(),mfccFile.length()));
     }
 
     private boolean readIntoFrame(DataInputStream dataInputStream,double[] frameToFill,int startFrom) {
