@@ -5,6 +5,7 @@ import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.util.Log;
 
+import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
@@ -206,14 +207,16 @@ public class ESAudioProcessor {
 
     private void calculateMFCCFeatures() {
         FileInputStream fileInputStream = null;
+        BufferedInputStream bufferedInputStream = null;
         try {
             fileInputStream = new FileInputStream(getSoundFile());
+            bufferedInputStream = new BufferedInputStream(fileInputStream,RECORDER_BUFFER_SIZE_IN_BYTES);
         } catch (FileNotFoundException e) {
             Log.e(LOG_TAG,"Failed creating input stream to read audio data file. " + e.getMessage());
             return;
         }
 
-        DataInputStream dataInputStream = new DataInputStream(fileInputStream);
+        DataInputStream dataInputStream = new DataInputStream(bufferedInputStream);
         double[] rawFramePreemphasized = new double[AUDIO_FRAME_WINDOW_SIZE];
         // Read first frame:
         boolean theresMoreData;
@@ -257,6 +260,15 @@ public class ESAudioProcessor {
             calculateFrameMFCCAndWriteToFile(windowedFrame,fileWriter);
             if (frameCount % logHop == 1) {
                 Log.d(LOG_TAG, String.format("frame %d) doing MFCC. done.", frameCount));
+            }
+
+            // Every few records, flush the writer:
+            if (frameCount % 50 == 1) {
+                try {
+                    fileWriter.flush();
+                } catch (IOException e) {
+                    Log.e(LOG_TAG, "Failed flushing for writing MFCC file. " + e.getMessage());
+                }
             }
         }
 
@@ -324,11 +336,11 @@ public class ESAudioProcessor {
             Log.e(LOG_TAG,"Failed writing newline to MFCC file. " + e.getMessage());
         }
 
-        try {
-            fileWriter.flush();
-        } catch (IOException e) {
-            Log.e(LOG_TAG,"Failed flushing row of frame MFCC to MFCC file. " + e.getMessage());
-        }
+//        try {
+//            fileWriter.flush();
+//        } catch (IOException e) {
+//            Log.e(LOG_TAG,"Failed flushing row of frame MFCC to MFCC file. " + e.getMessage());
+//        }
     }
 
     private void shiftRawFrame(double[] rawFrame,int shiftBy) {
