@@ -98,6 +98,7 @@ public class ESSettings {
      */
     public static void setNotificationIntervalInSeconds(int notificationIntervalInSeconds) {
         _settings = getTheDBAccessor().setSettings(maxStoredExamples(),notificationIntervalInSeconds);
+        ((ESApplication)ESApplication.getTheAppContext()).checkShouldWeCollectDataAndManageAppropriately();
     }
 
     public static void setLocationBubbleUsed(boolean useLocationBubble) {
