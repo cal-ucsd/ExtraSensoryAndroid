@@ -44,8 +44,10 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.TreeMap;
 
+import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManagerFactory;
 
 import edu.ucsd.calab.extrasensory.ESApplication;
@@ -74,9 +76,14 @@ public class ESNetworkAccessor {
 
     private static final String LOG_TAG = "[ESNetworkAccessor]";
     private static final long WAIT_TIME_AFTER_UPLOAD_IN_MILLIS = 15000;
+    private static final String SERVER_HOSTNAME = "137.110.112.50";
+    private static final String HTTP_PREFIX = "http://";
+    private static final String HTTPS_PREFIX = "https://";
+    private static final String HTTP_PORT = "8080";
+    private static final String HTTPS_PORT = "443";
+    private static final String SERVER_HTTP_API_PREFIX = HTTP_PREFIX + SERVER_HOSTNAME + ":" + HTTP_PORT + "/api/";
+    private static final String SERVER_HTTPS_API_PREFIX = HTTPS_PREFIX + SERVER_HOSTNAME + ":" + HTTPS_PORT + "/api/";
 
-
-    private static final String KEY_ZIP_FILENAME = "zip_filename";
     private static final String FEEDBACK_FILE_EXTENSION = ".feedback";
 
     private boolean _useHttps = false;
@@ -191,7 +198,7 @@ public class ESNetworkAccessor {
         } catch (CertificateException e) {
             e.printStackTrace();
         }
-        InputStream inputStream = ESApplication.getTheAppContext().getResources().openRawResource(R.raw.calab_macserver_ucsd_edu_der);
+        InputStream inputStream = ESApplication.getTheAppContext().getResources().openRawResource(R.raw.calab_macserver_ucsd_edu);
         InputStream caInput = new BufferedInputStream(inputStream);
         Certificate ca = null;
         try {
@@ -580,12 +587,23 @@ public class ESNetworkAccessor {
 
         }
 
+        private void prepareConnectionForHTTPS(HttpURLConnection conn,ESApiParams params) {
+            HttpsURLConnection httpsURLConnection = (HttpsURLConnection)conn;
+            httpsURLConnection.setSSLSocketFactory(params._requester._sslContext.getSocketFactory());
+            httpsURLConnection.setHostnameVerifier(new HostnameVerifier() {
+                @Override
+                public boolean verify(String hostname, SSLSession session) {
+                    return SERVER_HOSTNAME.equals(hostname);
+                }
+            });
+        }
+
         private void apiFeedback(ESApiParams params) {
             Resources resources = ESApplication.getTheAppContext().getResources();
             String apiSuffix = resources.getString(R.string.api_feedback) + "?" + prepareFeedbackApiParameters(params._activityForFeedback);
             Log.i(LOG_TAG,"Feedback api call: " + apiSuffix);
 
-            String apiUrl = resources.getString(params._requester.shouldSendWithHttps() ? R.string.server_https_api_prefix : R.string.server_api_prefix)
+            String apiUrl = (params._requester.shouldSendWithHttps() ? SERVER_HTTPS_API_PREFIX : SERVER_HTTP_API_PREFIX)
                     + apiSuffix;
             Log.i(LOG_TAG,"Feedback api url: " + apiUrl);
 
@@ -593,8 +611,7 @@ public class ESNetworkAccessor {
                 URL url = new URL(apiUrl);
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 if (params._requester.shouldSendWithHttps()) {
-                    HttpsURLConnection httpsURLConnection = (HttpsURLConnection)conn;
-                    httpsURLConnection.setSSLSocketFactory(params._requester._sslContext.getSocketFactory());
+                    prepareConnectionForHTTPS(conn,params);
                 }
                 conn.setConnectTimeout(CONNECT_TIMEOUT_MILLIS);
                 conn.setReadTimeout(READ_TIMEOUT_MILLIS);
@@ -702,13 +719,12 @@ public class ESNetworkAccessor {
                     return;
                 }
 
-                URL url = new URL(resources.getString(params._requester.shouldSendWithHttps() ? R.string.server_https_api_prefix : R.string.server_api_prefix)
+                URL url = new URL((params._requester.shouldSendWithHttps() ? SERVER_HTTPS_API_PREFIX : SERVER_HTTP_API_PREFIX)
                         + resources.getString(R.string.api_upload_zip));
                 Log.i(LOG_TAG,"Api url: " + url);
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 if (params._requester.shouldSendWithHttps()) {
-                    HttpsURLConnection httpsURLConnection = (HttpsURLConnection)conn;
-                    httpsURLConnection.setSSLSocketFactory(params._requester._sslContext.getSocketFactory());
+                    prepareConnectionForHTTPS(conn,params);
                 }
                 conn.setConnectTimeout(CONNECT_TIMEOUT_MILLIS);
                 conn.setReadTimeout(READ_TIMEOUT_MILLIS);
