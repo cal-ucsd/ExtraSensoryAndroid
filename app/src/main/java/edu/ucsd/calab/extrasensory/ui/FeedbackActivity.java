@@ -4,28 +4,27 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.AdapterView;
 import android.widget.SimpleAdapter;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import edu.ucsd.calab.extrasensory.ESApplication;
 import edu.ucsd.calab.extrasensory.R;
+import edu.ucsd.calab.extrasensory.data.ESActivity;
 import edu.ucsd.calab.extrasensory.data.ESContinuousActivity;
+import edu.ucsd.calab.extrasensory.data.ESLabelStruct;
+
+import static edu.ucsd.calab.extrasensory.data.ESDatabaseAccessor.getESDatabaseAccessor;
 
 /**
  * Feedback view for the user to provide the ground truth labels of what they are doing/feeling.
@@ -53,7 +52,7 @@ public class FeedbackActivity extends BaseActivity {
     private static final String[] values = new String[] { "Main Activity", "Secondary Activities", "Mood", "Valid for" };
     private static String[] userResponse = new String[4];
 
-
+    private static ESLabelStruct labelStruct = new ESLabelStruct();
     /**
      * This parameter type is to be used to transfer parameters to the feedback view,
      * that indicate what kind of feedback to perform and pass relevant data.
@@ -173,6 +172,7 @@ public class FeedbackActivity extends BaseActivity {
             datum.put("row detail", userResponse[i]);
             data.add(datum);
         }
+
         SimpleAdapter adapter = new SimpleAdapter(this, data,
                 android.R.layout.simple_list_item_2,
                 new String[] {"row header", "row detail"},
@@ -229,8 +229,36 @@ public class FeedbackActivity extends BaseActivity {
             public void onClick(View arg0) {
                 //TODO: if this is active feedback, start the scheduling (need to receive the timestamp of the newly created activity)
                 // and update the activity's labels through the DBAccessor.
+                if(_transientInputParameters._feedbackType == FEEDBACK_TYPE_ACTIVE){
+
+                }
                 //TODO: if this is feedback for continuous activity: go over the minute-activities and for each activity
                 // update the activity's labels through the DBAccessor
+                else if(_transientInputParameters._feedbackType == FEEDBACK_TYPE_HISTORY_CONTINUOUS_ACTIVITY) {
+
+                    //ESLabelStruct.ESContinuousActivity.
+                    ESContinuousActivity esContAct = _transientInputParameters._continuousActivityToEdit;
+                    /*ESActivity [] esActivityArr =
+                    for (ESActivity minute : esContAct....){
+                        //for each minute activity in the continuous activity
+                        //1. call function of dbAcessor, setESActivityValues()
+                        //2. finish()
+                        getESDatabaseAccessor().setESActivityValues(...,
+                                                                    labelStruct,
+                                                                    esContAct.getMainActivityServerPrediction(),
+                                                                    esContAct.getMainActivityUserCorrection(),
+                                                                    esContAct.getSecondaryActivities(),
+                                                                    esContAct.getMoods());
+
+                        //pass in parameters from ESLabelStruct
+                        setESActivityValues(ESActivity activity, ESActivity.ESLabelSource labelSource,
+                                String mainActivityServerPrediction, String mainActivityUserCorrection,
+                                String[]secondaryActivities, String[]moods)
+                    } */
+                    finish();
+                }
+
+              //  ((ESApplication)getApplication()).startActiveFeedback();  //new activity, valid for
                 //TODO: (need to change code of DBAccessor - that function should itself call the NetworkAccessor to send the feedback API)
 
                 Log.d(LOG_TAG,"returning from send feedback button");
@@ -244,15 +272,10 @@ public class FeedbackActivity extends BaseActivity {
     public void onActivityResult (int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode,resultCode,data);
         Log.d(LOG_TAG,"got activity result");
-        if (requestCode == MAIN) {
-            Log.d(LOG_TAG,"return from selecting main");
-        }
-        if (requestCode == SECONDARY) {
-            Log.d(LOG_TAG,"return from selecting secondary");
-        }
-        if (requestCode == MOOD) {
-            Log.d(LOG_TAG, "return from selecting mood");
-        }
+
+        String[] selected = data.getStringArrayExtra(SelectionFromListActivity.SELECTED_LABELS_OUTPUT_KEY);
+        String[] responses = new String[selected.length];
+
         if (requestCode==MAIN || requestCode==SECONDARY || requestCode==MOOD) {
             if (data == null) {
                 Log.e(LOG_TAG,"Output from selection had null data");
@@ -262,7 +285,7 @@ public class FeedbackActivity extends BaseActivity {
                 Log.e(LOG_TAG,"Output from selection is missing the selected labels");
                 return;
             }
-            String[] selected = data.getStringArrayExtra(SelectionFromListActivity.SELECTED_LABELS_OUTPUT_KEY);
+
             Log.d(LOG_TAG,"selected: ");
 
             String newSelected = "";
@@ -274,8 +297,31 @@ public class FeedbackActivity extends BaseActivity {
                 }
                 else
                     newSelected = newSelected + ", " + selected[i];
+
+                if (requestCode == MAIN) {
+                    Log.d(LOG_TAG,"return from selecting main");
+                    labelStruct._mainActivity = selected[i];
+                }
+                else if (requestCode == SECONDARY) {
+                    Log.d(LOG_TAG,"return from selecting secondary");
+                    responses[i] = selected[i];
+                }
+                else if (requestCode == MOOD) {
+                    Log.d(LOG_TAG, "return from selecting mood");
+                   responses[i] = selected[i];
+                }
             }
+
+            //update the string list of user responses displayed in feedback page
             userResponse[requestCode] = userResponse[requestCode] + newSelected;
+
+            if (requestCode == SECONDARY) {
+                labelStruct._secondaryActivities = responses;
+            }
+            else if (requestCode == MOOD) {
+                labelStruct._moods = responses;
+            }
+
             //Log.d(LOG_TAG, "updated response: " + userResponse[requestCode]);
         }
     }
