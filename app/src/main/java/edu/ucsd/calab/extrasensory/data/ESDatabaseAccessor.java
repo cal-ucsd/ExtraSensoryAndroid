@@ -590,6 +590,22 @@ public class ESDatabaseAccessor {
 
     }
 
+    /**
+     * Get the latest activity that has user provided labels.
+     * @param startFrom The earliest timestamp to check from
+     * @return The latest verified activity, or null if no such activity was found in the desired time range.
+     */
+    public ESActivity getLatestVerifiedActivity(ESTimestamp startFrom) {
+        ESActivity[] recentActivities = getActivitiesFromTimeRange(startFrom,new ESTimestamp());
+        for (int i = recentActivities.length - 1; i >= 0; i --) {
+            if (recentActivities[i].hasUserProvidedLabels()) {
+                return recentActivities[i];
+            }
+        }
+
+        return null;
+    }
+
 
     private String[] parseCSV(String csv) {
         return csv.split(",");

@@ -10,6 +10,7 @@ import edu.ucsd.calab.extrasensory.data.ESDatabaseAccessor;
 import edu.ucsd.calab.extrasensory.data.ESLabelStruct;
 import edu.ucsd.calab.extrasensory.data.ESTimestamp;
 import edu.ucsd.calab.extrasensory.sensors.ESSensorManager;
+import edu.ucsd.calab.extrasensory.ui.FeedbackActivity;
 
 
 /**
@@ -27,6 +28,7 @@ public class ESIntentService extends IntentService {
     // IntentService can perform, e.g. ACTION_FETCH_NEW_ITEMS
     public static final String ACTION_START_RECORDING = "edu.ucsd.calab.extrasensory.action.START_RECORDING";
     public static final String ACTION_NOTIFICATION_CHECKUP = "edu.ucsd.calab.extrasensory.action.NOTIFICATION_CHECKUP";
+    public static final String ACTION_LAUNCH_ACTIVE_FEEDBACK = "edu.ucsd.calab.extrasensory.action.LAUNCH_ACTIVE_FEEDBACK";
 
     public ESIntentService() {
         super("ESIntentService");
@@ -84,7 +86,14 @@ public class ESIntentService extends IntentService {
             ESSensorManager.getESSensorManager().startRecordingSensors(timestamp);
         }
         else if (ACTION_NOTIFICATION_CHECKUP.equals(action)) {
-
+            Log.i(LOG_TAG,"Got intent for notification checkup");
+            ((ESApplication)getApplication()).notificationCheckup();
+        }
+        else if (ACTION_LAUNCH_ACTIVE_FEEDBACK.equals(action)) {
+            Log.i(LOG_TAG,"Got intent for launching active feedback");
+            intent = new Intent(getApplicationContext(),FeedbackActivity.class);
+            FeedbackActivity.setFeedbackParametersBeforeStartingFeedback(new FeedbackActivity.FeedbackParameters());
+            startActivity(intent);
         }
         else {
             Log.e(LOG_TAG,"Got intent for unsupported action: " + action);

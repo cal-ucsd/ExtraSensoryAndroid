@@ -572,6 +572,10 @@ public class ESSensorManager
             Log.e(LOG_TAG,"Missing the internally-saved location coordinates.");
             return null;
         }
+        if (timerefs == null) {
+            Log.e(LOG_TAG,"Missing the timereference of location updates.");
+            return null;
+        }
 
         if (longVals.size() != n || timerefs.size() != n) {
             Log.e(LOG_TAG,"Number of longitude values or location timerefs doesn't match number of latitude values");
