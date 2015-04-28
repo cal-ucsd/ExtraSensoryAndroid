@@ -146,6 +146,14 @@ public class ESContinuousActivity {
         return _minuteActivities[0].get_moods();
     }
 
+    /**
+     * Get the minute (atomic) activities that are included in this continuous activity
+     * @return The minute activities in this continuous activity
+     */
+    public ESActivity[] getMinuteActivities() {
+        return _minuteActivities;
+    }
+
     @Override
     public String toString() {
         return "<start-timestamp: " + getStartTimestamp() +

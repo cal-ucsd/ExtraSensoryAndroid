@@ -3,6 +3,7 @@ package edu.ucsd.calab.extrasensory;
 import android.app.AlarmManager;
 import android.app.Application;
 import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -37,6 +38,7 @@ public class ESApplication extends Application {
     private static final long RECORDING_SESSIONS_INTERVAL_MILLIS = 1000*60;
     private static final long MILLISECONDS_IN_MINUTE = 1000*60;
     private static final long RECENT_TIME_PERIOD_IN_MILLIS = 20*MILLISECONDS_IN_MINUTE;
+    private static final int NOTIFICATION_ID = 2;
     private static final String ZIP_DIR_NAME = "zip";
     private static final String DATA_DIR_NAME = "data";
     private static final String FEEDBACK_DIR_NAME = "feedback";
@@ -144,7 +146,7 @@ public class ESApplication extends Application {
 
     private void turnDataCollectionOff() {
         stopCurrentRecordingAndRecordingSchedule();
-        stopNotificationSchedule();
+        //stopNotificationSchedule();
     }
 
     private void turnDataCollectionOn() {
@@ -242,10 +244,10 @@ public class ESApplication extends Application {
         int notificationIntervalSeconds = ESSettings.notificationIntervalInSeconds();
         long notificationIntervalMillis = 1000*notificationIntervalSeconds;
         Log.i(LOG_TAG,"Scheduling the notification schedule with interval " + notificationIntervalSeconds + " seconds.");
-//        _alarmManager.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
-//                notificationIntervalMillis,
-//                notificationIntervalMillis,
-//                pendingIntent);
+        _alarmManager.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                notificationIntervalMillis,
+                notificationIntervalMillis,
+                pendingIntent);
     }
 
     private PendingIntent createESPendingIntent(String action) {
@@ -300,6 +302,7 @@ public class ESApplication extends Application {
         if (!shouldDataCollectionBeOn()) {
             Log.i(LOG_TAG,"Notification: data collection should be off. Not doing notification.");
             turnDataCollectionOff();
+            // return;//////////////////////TODO
         }
 
         Date now = new Date();
@@ -315,13 +318,18 @@ public class ESApplication extends Application {
             builder.setSmallIcon(R.drawable.ic_launcher);
             builder.setContentTitle(NOTIFICATION_TITLE);
             builder.setContentText(NOTIFICATION_TEXT_NO_VERIFIED);
+            builder.setPriority(Notification.PRIORITY_HIGH);
+            builder.setCategory(Notification.CATEGORY_ALARM);
+
 
             Intent answerYesIntent = new Intent(this,ESIntentService.class).setAction(ESIntentService.ACTION_LAUNCH_ACTIVE_FEEDBACK);
             PendingIntent answerYesPendingIntent = PendingIntent.getService(this,0,answerYesIntent,0);
             builder.addAction(0,NOTIFICATION_BUTTON_TEXT_YES,answerYesPendingIntent);
 
             Notification notification = builder.build();
-            notification.notify();
+            Log.d(LOG_TAG,"Created notification: " + notification);
+            NotificationManager notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
+            notificationManager.notify(NOTIFICATION_ID,notification);
         }
         else {
             // Then use this verified activity's labels to ask if still doing the same
