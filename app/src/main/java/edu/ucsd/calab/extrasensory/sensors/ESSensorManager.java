@@ -656,7 +656,7 @@ public class ESSensorManager
                 zos.putNextEntry(new ZipEntry(MFCC_FILENAME_IN_ZIP));
                 int numBytes;
                 while ((numBytes = fileInputStream.read(buffer)) > 0) {
-                    Log.d(LOG_TAG,"data-zipping. Reading " + numBytes + " from MFCC file to zip.");
+                    //Log.d(LOG_TAG,"data-zipping. Reading " + numBytes + " from MFCC file to zip.");
                     zos.write(buffer,0,numBytes);
                 }
                 zos.closeEntry();

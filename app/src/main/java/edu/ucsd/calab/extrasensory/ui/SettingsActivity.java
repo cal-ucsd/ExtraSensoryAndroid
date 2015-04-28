@@ -14,6 +14,7 @@ import android.widget.TextView;
 
 import edu.ucsd.calab.extrasensory.R;
 import edu.ucsd.calab.extrasensory.data.ESSettings;
+import edu.ucsd.calab.extrasensory.network.ESNetworkAccessor;
 
 public class SettingsActivity extends BaseActivity {
 
@@ -105,6 +106,23 @@ public class SettingsActivity extends BaseActivity {
             }
         });
 
+        RadioGroup useHttpsRG = (RadioGroup)findViewById(R.id.radio_group_use_https);
+        useHttpsRG.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                switch (checkedId) {
+                    case R.id.radio_https_on:
+                        ESNetworkAccessor.getESNetworkAccessor().set_useHttps(true);
+                        break;
+                    case R.id.radio_https_off:
+                        ESNetworkAccessor.getESNetworkAccessor().set_useHttps(false);
+                        break;
+                    default:
+                        Log.e(LOG_TAG,"got unexpected id for radio group of Https");
+                }
+            }
+        });
+
         setDisplayedContent();
     }
 
@@ -146,6 +164,15 @@ public class SettingsActivity extends BaseActivity {
             latitudeEdit.setEnabled(false);
             longitudeEdit.setEnabled(false);
             updateLatLongButton.setEnabled(false);
+        }
+
+        boolean useHttps = ESNetworkAccessor.getESNetworkAccessor().get_useHttps();
+        RadioGroup useHttpsRG = (RadioGroup)findViewById(R.id.radio_group_use_https);
+        if (useHttps) {
+            useHttpsRG.check(R.id.radio_https_on);
+        }
+        else {
+            useHttpsRG.check(R.id.radio_https_off);
         }
 
         // Set the UUID:

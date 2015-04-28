@@ -41,5 +41,8 @@
     <string name="longitude_label">longitude:</string>
     <string name="location_bubble_update_button_label">Update latitude/longitude</string>
     <string name="currently_waiting_feedback_text">Waiting to send feedback:</string>
+    <string name="use_secure_communication">Use secure communication:</string>
+    <string name="https_on">on</string>
+    <string name="https_off">off</string>
 
 </resources>
