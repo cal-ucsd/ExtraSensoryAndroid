@@ -29,7 +29,7 @@ import edu.ucsd.calab.extrasensory.sensors.ESSensorManager;
 public class ESDatabaseAccessor {
 
     private static final String LOG_TAG = "[ESDatabaseAccessor]";
-    private static final int MAX_STORED_EXAMPLES_DEFAULT = 120;
+    private static final int MAX_STORED_EXAMPLES_DEFAULT = 600;
     private static final int NOTIFICATION_INTERVAL_DEFAULT = 600;
     private static final double LOCATION_BUBBLE_CENTER_LONG_DEFAULT = 0.0;
     private static final double LOCATION_BUBBLE_CENTER_LAT_DEFAULT = 0.0;

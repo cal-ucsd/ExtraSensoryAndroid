@@ -26,6 +26,8 @@ public class SettingsActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_setting);
+
+/*
         SeekBar maxStorageSeekBar = (SeekBar)findViewById(R.id.max_storage_seek_bar);
         maxStorageSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
@@ -46,6 +48,7 @@ public class SettingsActivity extends BaseActivity {
 
             }
         });
+*/
 
         SeekBar notificationIntervalSeekBar = (SeekBar)findViewById(R.id.notification_interval_seek_bar);
         notificationIntervalSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -127,11 +130,13 @@ public class SettingsActivity extends BaseActivity {
     }
 
     private void setDisplayedContent() {
+/*
         // Set the max storage value:
         int maxStorage = ESSettings.maxStoredExamples();
         displayMaxStorageValue(maxStorage);
         SeekBar maxStorageSeekBar = (SeekBar)findViewById(R.id.max_storage_seek_bar);
         maxStorageSeekBar.setProgress(maxStorage);
+*/
 
         // Set the notification interval value:
         int notificationIntervalInSeconds = ESSettings.notificationIntervalInSeconds();
@@ -186,6 +191,7 @@ public class SettingsActivity extends BaseActivity {
         intervalValueView.setText(intervalString);
     }
 
+/*
     private void displayMaxStorageValue(int maxStorage) {
         TextView maxStorageValue = (TextView)findViewById(R.id.max_storage_value);
         float hours = ((float)maxStorage) / 60f;
@@ -193,6 +199,7 @@ public class SettingsActivity extends BaseActivity {
         String storageString = String.format("%d (~%.2f hr, ~%.2f MB)",maxStorage,hours,megaBytes);
         maxStorageValue.setText(storageString);
     }
+*/
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
