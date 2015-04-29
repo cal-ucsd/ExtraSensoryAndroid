@@ -26,7 +26,7 @@ Listening to music (with earphones)|Leisure
 Listening to music (no earphones)|Leisure
 Playing musical instrument|Leisure
 Singing|Leisure
-Wistling|Leisure
+Whistling|Leisure
 Playing videogames|Leisure
 Playing phone-games|Leisure
 Relaxing|Leisure
@@ -38,21 +38,22 @@ Talking|Leisure,Physical,Work
 Reading a book|Leisure
 Drinking (alcohol)|Leisure
 Smoking|Leisure,Basic needs
-Eating|Basic needs
+Eating|Basic needs,Functional independence
 Drinking (non-alcohol)|Leisure,Basic needs
 Sleeping|Basic needs
-Toilet|Basic needs
-Bath|Basic needs
-Shower|Basic needs
-Grooming|Basic needs
-Stairs - going up|Physical
-Stairs - going down|Physical
+Toilet|Basic needs,Functional independence
+Bathing - bath|Basic needs,Functional independence
+Bathing - shower|Basic needs,Functional independence
+Grooming|Basic needs,Functional independence
+Dressing|Basic needs,Functional independence
+Stairs - going up|Physical,Functional independence
+Stairs - going down|Physical,Functional independence
 Limping|Physical
 Jumping|Physical
 Laughing|Physical
 Crying|Physical
-Using crutches|Physical
-Wheelchair|Physical,Transportation
+Using crutches|Physical,Transportation,Functional independence
+Wheelchair|Physical,Transportation,Functional independence
 Lab work|Work
 Written work|Work
 Drawing|Work
@@ -91,3 +92,7 @@ Phone in bag|Phone
 Phone on table|Phone
 Phone away from me|Phone
 Phone strapped|Phone
+Transfer - bed to wheelchair|Functional independence
+Transfer - bed to stand|Functional independence
+Transfer - wheelchair to bed|Functional independence
+Transfer - stand to bed|Functional independence
