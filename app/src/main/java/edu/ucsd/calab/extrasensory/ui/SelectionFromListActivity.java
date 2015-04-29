@@ -66,7 +66,11 @@ public class SelectionFromListActivity extends BaseActivity {
     public static final int LIST_TYPE_MAIN_ACTIVITY = 1;
     public static final int LIST_TYPE_SECONDARY_ACTIVITIES = 2;
     public static final int LIST_TYPE_MOODS = 3;
+    public static final int LIST_TYPE_VALID_FOR = 4;
 
+    private static String[] getValidForValues() {
+        return new String[]{"1 minute","2 minutes","5 minutes","10 minutes","15 minutes","20 minutes","25 minutes","30 minutes"};
+    }
 
     private ListView _choicesListView;
     private LinearLayout _sideIndex;
@@ -136,6 +140,10 @@ public class SelectionFromListActivity extends BaseActivity {
                 _allowMultiSelection = true;
                 _useIndex = true;
                 break;
+            case LIST_TYPE_VALID_FOR:
+                _labelChoices = getValidForValues();
+                _allowMultiSelection = false;
+                _useIndex = false;
             default:
                 Log.e(LOG_TAG,"Unsupported list type received: " + listType);
                 finish();

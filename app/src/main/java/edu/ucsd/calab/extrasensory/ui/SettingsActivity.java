@@ -14,6 +14,7 @@ import android.widget.TextView;
 
 import edu.ucsd.calab.extrasensory.R;
 import edu.ucsd.calab.extrasensory.data.ESSettings;
+import edu.ucsd.calab.extrasensory.network.ESNetworkAccessor;
 
 public class SettingsActivity extends BaseActivity {
 
@@ -25,6 +26,8 @@ public class SettingsActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_setting);
+
+/*
         SeekBar maxStorageSeekBar = (SeekBar)findViewById(R.id.max_storage_seek_bar);
         maxStorageSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
@@ -45,6 +48,7 @@ public class SettingsActivity extends BaseActivity {
 
             }
         });
+*/
 
         SeekBar notificationIntervalSeekBar = (SeekBar)findViewById(R.id.notification_interval_seek_bar);
         notificationIntervalSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -105,15 +109,34 @@ public class SettingsActivity extends BaseActivity {
             }
         });
 
+        RadioGroup useHttpsRG = (RadioGroup)findViewById(R.id.radio_group_use_https);
+        useHttpsRG.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                switch (checkedId) {
+                    case R.id.radio_https_on:
+                        ESNetworkAccessor.getESNetworkAccessor().set_useHttps(true);
+                        break;
+                    case R.id.radio_https_off:
+                        ESNetworkAccessor.getESNetworkAccessor().set_useHttps(false);
+                        break;
+                    default:
+                        Log.e(LOG_TAG,"got unexpected id for radio group of Https");
+                }
+            }
+        });
+
         setDisplayedContent();
     }
 
     private void setDisplayedContent() {
+/*
         // Set the max storage value:
         int maxStorage = ESSettings.maxStoredExamples();
         displayMaxStorageValue(maxStorage);
         SeekBar maxStorageSeekBar = (SeekBar)findViewById(R.id.max_storage_seek_bar);
         maxStorageSeekBar.setProgress(maxStorage);
+*/
 
         // Set the notification interval value:
         int notificationIntervalInSeconds = ESSettings.notificationIntervalInSeconds();
@@ -148,6 +171,15 @@ public class SettingsActivity extends BaseActivity {
             updateLatLongButton.setEnabled(false);
         }
 
+        boolean useHttps = ESNetworkAccessor.getESNetworkAccessor().get_useHttps();
+        RadioGroup useHttpsRG = (RadioGroup)findViewById(R.id.radio_group_use_https);
+        if (useHttps) {
+            useHttpsRG.check(R.id.radio_https_on);
+        }
+        else {
+            useHttpsRG.check(R.id.radio_https_off);
+        }
+
         // Set the UUID:
         TextView uuid_text = (TextView)findViewById(R.id.uuid_content);
         uuid_text.setText(ESSettings.uuid());
@@ -159,6 +191,7 @@ public class SettingsActivity extends BaseActivity {
         intervalValueView.setText(intervalString);
     }
 
+/*
     private void displayMaxStorageValue(int maxStorage) {
         TextView maxStorageValue = (TextView)findViewById(R.id.max_storage_value);
         float hours = ((float)maxStorage) / 60f;
@@ -166,6 +199,7 @@ public class SettingsActivity extends BaseActivity {
         String storageString = String.format("%d (~%.2f hr, ~%.2f MB)",maxStorage,hours,megaBytes);
         maxStorageValue.setText(storageString);
     }
+*/
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

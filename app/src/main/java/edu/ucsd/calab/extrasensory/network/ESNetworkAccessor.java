@@ -86,7 +86,7 @@ public class ESNetworkAccessor {
 
     private static final String FEEDBACK_FILE_EXTENSION = ".feedback";
 
-    private boolean _useHttps = false;
+    private boolean _useHttps = true;
     private SSLContext _sslContext = null;
     private boolean shouldSendWithHttps() {
         return _useHttps && (_sslContext != null);
@@ -274,6 +274,18 @@ public class ESNetworkAccessor {
         }
 
         return _theSingleNetworkAccessor;
+    }
+
+    public boolean get_useHttps() {
+        return _useHttps;
+    }
+
+    public void set_useHttps(boolean useHttps) {
+        _useHttps = useHttps;
+        if (_useHttps && _sslContext == null) {
+            prepareTLSContext();
+        }
+        Log.d(LOG_TAG,"Setting use-https to: " + _useHttps);
     }
 
     /**
