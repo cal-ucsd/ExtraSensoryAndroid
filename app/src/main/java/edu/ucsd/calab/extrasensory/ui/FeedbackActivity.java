@@ -107,6 +107,7 @@ public class FeedbackActivity extends BaseActivity {
         _parameters = _transientInputParameters;
         _transientInputParameters = null;
 
+        feedbackFlag = false;
         presentFeedbackView();
 
     }
@@ -229,40 +230,34 @@ public class FeedbackActivity extends BaseActivity {
             public void onClick(View arg0) {
                 //TODO: if this is active feedback, start the scheduling (need to receive the timestamp of the newly created activity)
                 // and update the activity's labels through the DBAccessor.
-                if(_transientInputParameters._feedbackType == FEEDBACK_TYPE_ACTIVE){
-
+                if(_parameters._feedbackType == FEEDBACK_TYPE_ACTIVE){
+                    Log.d(LOG_TAG,"ACTIVE FEEDBACK");
+                    ((ESApplication)getApplication()).startActiveFeedback(labelStruct,  _parameters._continuousActivityToEdit.getDurationInMinutes());
                 }
+
                 //TODO: if this is feedback for continuous activity: go over the minute-activities and for each activity
                 // update the activity's labels through the DBAccessor
-                else if(_transientInputParameters._feedbackType == FEEDBACK_TYPE_HISTORY_CONTINUOUS_ACTIVITY) {
-
-                    //ESLabelStruct.ESContinuousActivity.
-                    ESContinuousActivity esContAct = _transientInputParameters._continuousActivityToEdit;
-                    /*ESActivity [] esActivityArr =
-                    for (ESActivity minute : esContAct....){
-                        //for each minute activity in the continuous activity
-                        //1. call function of dbAcessor, setESActivityValues()
-                        //2. finish()
-                        getESDatabaseAccessor().setESActivityValues(...,
-                                                                    labelStruct,
-                                                                    esContAct.getMainActivityServerPrediction(),
-                                                                    esContAct.getMainActivityUserCorrection(),
-                                                                    esContAct.getSecondaryActivities(),
-                                                                    esContAct.getMoods());
-
-                        //pass in parameters from ESLabelStruct
-                        setESActivityValues(ESActivity activity, ESActivity.ESLabelSource labelSource,
-                                String mainActivityServerPrediction, String mainActivityUserCorrection,
-                                String[]secondaryActivities, String[]moods)
-                    } */
-                    finish();
+                else if(_parameters._feedbackType == FEEDBACK_TYPE_HISTORY_CONTINUOUS_ACTIVITY) {
+                    Log.d(LOG_TAG,"HISTORY CONTINUOUS ACTIVITY");
+                    ESContinuousActivity esContAct =_parameters._continuousActivityToEdit;
+                    ESActivity [] esActivityArr = esContAct.getMinuteActivities();
+                    //for each minute activity in the continuous activity
+                    //call setESActivityValues()
+                    for (ESActivity minute : esActivityArr){
+                        getESDatabaseAccessor().setESActivityValues(minute,
+                                                                    minute.get_labelSource(),
+                                                                    minute.get_mainActivityServerPrediction(),
+                                                                    minute.get_mainActivityUserCorrection(),
+                                                                    minute.get_secondaryActivities(),
+                                                                    minute.get_moods());
+                        finish();
+                    }
                 }
 
-              //  ((ESApplication)getApplication()).startActiveFeedback();  //new activity, valid for
                 //TODO: (need to change code of DBAccessor - that function should itself call the NetworkAccessor to send the feedback API)
 
                 Log.d(LOG_TAG,"returning from send feedback button");
-                finish();
+
             }
         });
 

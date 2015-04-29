@@ -68,7 +68,7 @@ public class HistoryFragment extends BaseTabFragment {
 
         Log.d(LOG_TAG,"getting activities from " + startTime.infoString() + " to " + endTime.infoString());
 
-        ESContinuousActivity [] activityList = ESDatabaseAccessor.getESDatabaseAccessor().getContinuousActivitiesFromTimeRange(startTime, endTime);
+        final ESContinuousActivity [] activityList = ESDatabaseAccessor.getESDatabaseAccessor().getContinuousActivitiesFromTimeRange(startTime, endTime);
         Log.d(LOG_TAG,"==== Got " + activityList.length + " cont activities: ");
         for (int i= 0; i < activityList.length; i++) {
             Log.d(LOG_TAG, activityList[i].toString());
@@ -98,7 +98,10 @@ public class HistoryFragment extends BaseTabFragment {
                                     int position, long id) {
                 // Launching new Activity on selecting single List Item
                 Intent i = new Intent(getActivity(), FeedbackActivity.class);
-                FeedbackActivity.setFeedbackParametersBeforeStartingFeedback(new FeedbackActivity.FeedbackParameters());
+                Log.d(LOG_TAG, "HELLO: " + position);
+                Log.d(LOG_TAG, "HELLO: " + id);
+                Log.d(LOG_TAG, "HELLO: " + activityList[(int)id]);
+                FeedbackActivity.setFeedbackParametersBeforeStartingFeedback(new FeedbackActivity.FeedbackParameters(activityList[position-1]));
                 startActivity(i);
             }
         });
