@@ -76,7 +76,7 @@ public class ESSensorManager
     private static final long LOCATION_FASTEST_UPDATE_INTERVAL_MILLIS = 50;
     private static final float LOCATION_BUBBLE_RADIUS_METERS = 500.0f;
     private static final String HIGH_FREQ_DATA_FILENAME = "HF_DUR_DATA.txt";
-    private static final String MFCC_FILENAME_IN_ZIP = "f_audio_mfcc.dat";
+    private static final String MFCC_FILENAME_IN_ZIP = "sound.mfcc";
 
     // Raw motion sensors:
     private static final String RAW_ACC_X = "raw_acc_x";
