@@ -76,7 +76,6 @@ public class ESSensorManager
     private static final long LOCATION_FASTEST_UPDATE_INTERVAL_MILLIS = 50;
     private static final float LOCATION_BUBBLE_RADIUS_METERS = 500.0f;
     private static final String HIGH_FREQ_DATA_FILENAME = "HF_DUR_DATA.txt";
-    private static final String MFCC_FILENAME_IN_ZIP = "sound.mfcc";
 
     // Raw motion sensors:
     private static final String RAW_ACC_X = "raw_acc_x";
@@ -653,10 +652,26 @@ public class ESSensorManager
                 Log.i(LOG_TAG,"data-zipping. Adding MFCC file.");
                 FileInputStream fileInputStream = new FileInputStream(mfccFile);
                 byte[] buffer = new byte[2048];
-                zos.putNextEntry(new ZipEntry(MFCC_FILENAME_IN_ZIP));
+                zos.putNextEntry(new ZipEntry(ESAudioProcessor.MFCC_FILENAME));
                 int numBytes;
                 while ((numBytes = fileInputStream.read(buffer)) > 0) {
                     //Log.d(LOG_TAG,"data-zipping. Reading " + numBytes + " from MFCC file to zip.");
+                    zos.write(buffer,0,numBytes);
+                }
+                zos.closeEntry();
+            }
+            // The audio properties file:
+            File audioPropFile = _audioProcessor.getAudioPropertiesFile();
+            if (!audioPropFile.exists()) {
+                Log.e(LOG_TAG,"data-zipping. Audio properties file doesn't exist.");
+            }
+            else {
+                Log.i(LOG_TAG,"data-zipping. Adding audio properties file.");
+                FileInputStream fileInputStream = new FileInputStream(audioPropFile);
+                byte[] buffer = new byte[2048];
+                zos.putNextEntry(new ZipEntry(ESAudioProcessor.AUDIO_PROPERTIES_FILENAME));
+                int numBytes;
+                while ((numBytes = fileInputStream.read(buffer)) > 0) {
                     zos.write(buffer,0,numBytes);
                 }
                 zos.closeEntry();

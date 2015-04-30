@@ -5,6 +5,9 @@ import android.media.AudioRecord;
 import android.media.MediaRecorder;
 import android.util.Log;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -44,14 +47,19 @@ public class ESAudioProcessor {
     private static final int NUM_MEL_FILTERS = 34;
     private static final int NUM_CEPSTRAL_COEFFS = 13;
     private static final boolean USE_FIRST_COEFF = true;
+    private static final double DEFAULT_AUDIO_NORMALIZATION_MULTIPLIER = 1. / (double)Short.MAX_VALUE;
+    private static final String MAX_ABS_VALUE_KEY = "max_abs_value";
+    private static final String NORMAILING_MULTIPLIER_KEY = "normalization_multiplier";
 
     private static final String SOUND_FILENAME = "sound_16bit_short_values.pcm";
-    private static final String MFCC_FILENAME = "sound.mfcc";
+    public static final String MFCC_FILENAME = "sound.mfcc";
+    public static final String AUDIO_PROPERTIES_FILENAME = "m_audio_properties.json";
 
     private AudioRecord _audioRecorder = null;
     private Thread _recordingThread = null;
     private boolean _isRecording = false;
-    private double _normalizingFactor;
+    private int _maxAbsValue = 0;
+    private double _normalizingMultiplier = DEFAULT_AUDIO_NORMALIZATION_MULTIPLIER;
 
     private double[] _hammingWindow;
     private MFCC _mfccProcessor;
@@ -64,15 +72,8 @@ public class ESAudioProcessor {
             _hammingWindow[i] = HAMMING_ALPHA - HAMMING_BETTA*Math.cos(i*factor);
         }
 
-        // Set the audio normalizer:
-        setNormlizingFactorToDefault();
-
         // Initialize the MFCC processor:
         _mfccProcessor = new MFCC(NUM_CEPSTRAL_COEFFS,RECORDER_SAMPLING_RATE,NUM_MEL_FILTERS,AUDIO_FRAME_WINDOW_SIZE,false,0,USE_FIRST_COEFF);
-    }
-
-    private void setNormlizingFactorToDefault() {
-        _normalizingFactor = Short.MAX_VALUE;
     }
 
     private File getSoundFile() {
@@ -81,12 +82,10 @@ public class ESAudioProcessor {
 
     public File getMFCCFile() { return new File(ESApplication.getDataDir(),MFCC_FILENAME); }
 
+    public File getAudioPropertiesFile() { return new File(ESApplication.getDataDir(), AUDIO_PROPERTIES_FILENAME); }
+
     private String getSoundFullFilename() {
         return getSoundFile().getPath();
-    }
-
-    public String getMFCCFullFilename() {
-        return getMFCCFile().getPath();
     }
 
     public void clearAudioData() {
@@ -110,7 +109,17 @@ public class ESAudioProcessor {
             Log.i(LOG_TAG,"clearAudioData: MFCC file doesn't exist. Nothing to delete");
         }
 
-        setNormlizingFactorToDefault();
+        File audioPropFile = getAudioPropertiesFile();
+        if (audioPropFile.exists()) {
+            Log.i(LOG_TAG,"clearAudioData: Audio properties file exists. Deleting it...");
+            audioPropFile.delete();
+        }
+        else {
+            Log.i(LOG_TAG,"clearAudioData: Audio properties file doesn't exist.");
+        }
+
+        _maxAbsValue = 0;
+        _normalizingMultiplier = DEFAULT_AUDIO_NORMALIZATION_MULTIPLIER;
     }
 
     public void startRecordingSession() {
@@ -138,7 +147,7 @@ public class ESAudioProcessor {
 
     private void writeAudioDataToFile() {
         String filePath = getSoundFullFilename();
-        int maxAbsValue = 0;
+        int maxAbsValueTmp = 0;
         short[] soundFrame = new short[AUDIO_WRITER_BUFFER_SIZE_IN_SHORTS];
         FileOutputStream fileOutputStream = null;
         try {
@@ -170,8 +179,8 @@ public class ESAudioProcessor {
                 }
                 // Check the maximal absolute sample value:
                 absVal = Math.abs(soundFrame[short_i]);
-                if (absVal > maxAbsValue) {
-                    maxAbsValue = absVal;
+                if (absVal > maxAbsValueTmp) {
+                    maxAbsValueTmp = absVal;
                 }
             }
             try {
@@ -185,18 +194,42 @@ public class ESAudioProcessor {
         }
 
         // Use the max absolute value as normalizer:
-        if (maxAbsValue > 0) {
-            Log.i(LOG_TAG,"Finished recording audio. Maximal magnitude of signal is " + maxAbsValue);
-            _normalizingFactor = (double)maxAbsValue;
+        _maxAbsValue = maxAbsValueTmp;
+        if (_maxAbsValue > 0) {
+            _normalizingMultiplier = 1. / (double)_maxAbsValue;
         }
         else {
-            setNormlizingFactorToDefault();
+            _normalizingMultiplier = DEFAULT_AUDIO_NORMALIZATION_MULTIPLIER;
         }
+        writeAudioPropertiesToFile();
 
         try {
             fileOutputStream.flush();
         } catch (IOException e) {
             Log.e(LOG_TAG,"Failed flushing audio data writing stream. " + e.getMessage());
+        }
+    }
+
+    private void writeAudioPropertiesToFile() {
+        JSONObject json = new JSONObject();
+        try {
+            json.put(MAX_ABS_VALUE_KEY,_maxAbsValue);
+            json.put(NORMAILING_MULTIPLIER_KEY,_normalizingMultiplier);
+        } catch (JSONException e) {
+            Log.e(LOG_TAG,"Failed creating json object for audio properties file. " + e.getMessage());
+            return;
+        }
+
+        String properties = json.toString();
+        Log.i(LOG_TAG,"After recording audio. Got properties: " + properties);
+        FileWriter fileWriter;
+        try {
+            fileWriter = new FileWriter(getAudioPropertiesFile());
+            fileWriter.write(properties);
+            fileWriter.flush();
+        } catch (IOException e) {
+            Log.e(LOG_TAG,"Failed to write audio properties file. " + e.getMessage());
+            return;
         }
     }
 
@@ -305,8 +338,10 @@ public class ESAudioProcessor {
 
         Log.i(LOG_TAG,String.format("Calculated MFCC for %d frames.",frameCount));
         File mfccFile = getMFCCFile();
-        Log.d(LOG_TAG,String.format("Does MFCC file exist: %b. Size: %d",mfccFile.exists(),mfccFile.length()));
-        setNormlizingFactorToDefault();
+        Log.d(LOG_TAG, String.format("Does MFCC file exist: %b. Size: %d", mfccFile.exists(), mfccFile.length()));
+
+        _maxAbsValue = 0;
+        _normalizingMultiplier = DEFAULT_AUDIO_NORMALIZATION_MULTIPLIER;
     }
 
     private boolean readIntoFrame(DataInputStream dataInputStream,double[] frameToFill,int startFrom) {
@@ -326,7 +361,7 @@ public class ESAudioProcessor {
                 Log.e(LOG_TAG, "Failed reading short value from audio data file. " + e.getMessage());
                 break;
             }
-            double doubleVal = (double)shortValue / _normalizingFactor;
+            double doubleVal = (double)shortValue * _normalizingMultiplier;
             if (PREEMPHASIS_COEFFICIENT > 0 && i>0) {
                 // Pre-emphasize. Filter with the previous value:
                 doubleVal -= PREEMPHASIS_COEFFICIENT*frameToFill[i-1];
