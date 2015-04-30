@@ -1,5 +1,7 @@
 package edu.ucsd.calab.extrasensory.sensors.AudioProcessing;
 
+import android.util.Log;
+
 /**Calculates the mel-based cepstra coefficients for one frame of speech.
  * Based on the original MFCC implementation described in:  
  * [1] Davis & Mermelstein - IEEE Transactions on ASSP, August 1980.  
@@ -53,9 +55,10 @@ public class MFCC {
     /**Minimum value of filter output, otherwise the log is not calculated  
      * and m_dlogFilterOutputFloor is adopted.  
      * ISIP implementation assumes m_dminimumFilterOutput = 1 and this value is used  
-     * here.  
+     * here.
+     * ///// Yonatan change this to accept much lower values of filter output
      */
-    private final double m_dminimumFilterOutput = 1.0;
+    private final double m_dminimumFilterOutput = 1.0e-10;//1.0;
 
     /**True if the zero'th MFCC should be calculated.  
      */
@@ -63,9 +66,10 @@ public class MFCC {
 
     /**Floor value for filter output in log domain.  
      * ISIP implementation assumes m_dlogFilterOutputFloor = 0 and this value is used  
-     * here.  
+     * here.
+     * ///// Yonatan change this to fit the new minimal filter output value.
      */
-    private final double m_dlogFilterOutputFloor = 0.0;
+    private final double m_dlogFilterOutputFloor = Math.log10(m_dminimumFilterOutput);//0.0;
     private int[][] m_nboundariesDFTBins;
     private double[][] m_dweights;
     private FFT m_fft;
@@ -293,11 +297,27 @@ public class MFCC {
 
             //ISIP (Mississipi univ.) implementation   
             if (m_dfilterOutput[i] > m_dminimumFilterOutput) {//floor power to avoid log(0)   
-                m_dfilterOutput[i] = Math.log(m_dfilterOutput[i]); //using ln   
+                m_dfilterOutput[i] = Math.log10(m_dfilterOutput[i]); //using ln
             } else {
+                Log.v("[MFCC]","Setting floor of log mel bin. mel bin value was: " + m_dfilterOutput[i]);
                 m_dfilterOutput[i] = m_dlogFilterOutputFloor;
             }
         }
+
+        // Calculate the non-zero'th MFCCs:
+        double[] dPosMFCCParameters = new double[m_nnumberOfParameters];
+        //cosine transform
+        for(int i=0;i<m_nnumberOfParameters;i++) {
+            for(int j=0;j<m_nnumberOfFilters;j++) {
+                dPosMFCCParameters[i] += m_dfilterOutput[j]*m_ddCTMatrix[i][j];
+                //the original equations have the first index as 1
+            }
+            //could potentially incorporate liftering factor and
+            //factor below to save multiplications, but will not
+            //do it for the sake of clarity
+            dPosMFCCParameters[i] *= m_dscalingFactor;
+        }
+
 
         //need to allocate space for output array   
         //because it allows the user to call this method   
@@ -314,23 +334,16 @@ public class MFCC {
                 dzeroThCepstralCoefficient += m_dfilterOutput[j];
             }
             dzeroThCepstralCoefficient *= m_dscalingFactor;
-            dMFCCParameters[dMFCCParameters.length-1] = dzeroThCepstralCoefficient;
+            // Copy the 0'th element and the other coefficients:
+            dMFCCParameters[0] = dzeroThCepstralCoefficient;
+            for (int ii = 0; ii < m_nnumberOfParameters; ii ++) {
+                dMFCCParameters[ii+1] = dPosMFCCParameters[ii];
+            }
         } else {
-            //allocate space   
-            dMFCCParameters = new double[m_nnumberOfParameters];
+            // Simply copy the previously allocated and calculated array of coefficients:
+            dMFCCParameters = dPosMFCCParameters;
         }
 
-        //cosine transform   
-        for(int i=0;i<m_nnumberOfParameters;i++) {
-            for(int j=0;j<m_nnumberOfFilters;j++) {
-                dMFCCParameters[i] += m_dfilterOutput[j]*m_ddCTMatrix[i][j];
-                //the original equations have the first index as 1   
-            }
-            //could potentially incorporate liftering factor and   
-            //factor below to save multiplications, but will not   
-            //do it for the sake of clarity   
-            dMFCCParameters[i] *= m_dscalingFactor;
-        }
 
         //debugging purposes   
         //System.out.println("Windowed speech");   
@@ -391,6 +404,7 @@ public class MFCC {
                         "\n" + "MFCC.oisZeroThCepstralCoefficientCalculated = " + m_oisZeroThCepstralCoefficientCalculated;
     }
 
+/*
     public double[] getFilterBankOutputs(double[] fspeechFrame) {
         // First, calculate the spectrum (added by Yonatan, to be outside the loop):
         double[] spectrum;
@@ -408,6 +422,7 @@ public class MFCC {
             for(int j=m_nboundariesDFTBins[i][0], k=0;j<=m_nboundariesDFTBins[i][1];j++,k++) {
                 dfilterOutput[i] += spectrum[j] * m_dweights[i][k];
             }
+*/
 /*
             if (m_ousePowerInsteadOfMagnitude) {
                 double[] fpowerSpectrum = m_fft.calculateFFTPower(fspeechFrame);
@@ -420,7 +435,8 @@ public class MFCC {
                     dfilterOutput[i] += fmagnitudeSpectrum[j] * m_dweights[i][k];
                 }
             }
-*/
+*//*
+
 
             //ISIP (Mississipi univ.) implementation   
             if (dfilterOutput[i] > m_dminimumFilterOutput) {//floor power to avoid log(0)   
@@ -431,6 +447,7 @@ public class MFCC {
         }
         return dfilterOutput;
     }
+*/
 
     /*
     public static void main(String[] args) {
