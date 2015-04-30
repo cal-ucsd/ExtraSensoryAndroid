@@ -146,7 +146,7 @@ public class ESApplication extends Application {
 
     private void turnDataCollectionOff() {
         stopCurrentRecordingAndRecordingSchedule();
-        //stopNotificationSchedule();
+        stopNotificationSchedule();
     }
 
     private void turnDataCollectionOn() {
