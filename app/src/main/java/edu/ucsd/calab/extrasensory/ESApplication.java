@@ -302,7 +302,7 @@ public class ESApplication extends Application {
         if (!shouldDataCollectionBeOn()) {
             Log.i(LOG_TAG,"Notification: data collection should be off. Not doing notification.");
             turnDataCollectionOff();
-            // return;//////////////////////TODO
+            return;
         }
 
         Date now = new Date();
