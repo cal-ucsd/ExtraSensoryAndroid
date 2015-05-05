@@ -1,5 +1,7 @@
 package edu.ucsd.calab.extrasensory;
 
+import android.app.Activity;
+import android.app.ActivityManager;
 import android.app.AlarmManager;
 import android.app.Application;
 import android.app.Notification;
@@ -9,12 +11,15 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.Bundle;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import java.io.File;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 
 import edu.ucsd.calab.extrasensory.data.ESActivity;
 import edu.ucsd.calab.extrasensory.data.ESDatabaseAccessor;
@@ -24,6 +29,7 @@ import edu.ucsd.calab.extrasensory.data.ESSettings;
 import edu.ucsd.calab.extrasensory.data.ESTimestamp;
 import edu.ucsd.calab.extrasensory.network.ESNetworkAccessor;
 import edu.ucsd.calab.extrasensory.sensors.ESSensorManager;
+import edu.ucsd.calab.extrasensory.ui.MainActivity;
 
 /**
  * This class serves as a central location to manage various aspects of the application,
@@ -108,6 +114,7 @@ public class ESApplication extends Application {
     private ESSensorManager _sensorManager;
     private AlarmManager _alarmManager;
     private boolean _userSelectedDataCollectionOn = true;
+    private ESLifeCycleCallback _lifeCycleMonitor = new ESLifeCycleCallback();
 
     private BroadcastReceiver _broadcastReceiver = new BroadcastReceiver() {
         @Override
@@ -182,6 +189,7 @@ public class ESApplication extends Application {
         super.onCreate();
         Log.v(LOG_TAG, "Application being created.");
         _appContext = getApplicationContext();
+        registerActivityLifecycleCallbacks(_lifeCycleMonitor);
 
         _sensorManager = ESSensorManager.getESSensorManager();
         _alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
@@ -293,6 +301,7 @@ public class ESApplication extends Application {
         Log.i(LOG_TAG,"Stopped the repeated notification schedule.");
     }
 
+
     /**
      * Perform a checkup to see if it's time for user notification.
      * If it's time, trigger the notification.
@@ -305,6 +314,7 @@ public class ESApplication extends Application {
             return;
         }
 
+        Log.i(LOG_TAG,"Notification: checkup.");
         Date now = new Date();
         Date recentTimeAgo = new Date(now.getTime() - RECENT_TIME_PERIOD_IN_MILLIS);
         ESTimestamp lookBackFrom = new ESTimestamp(recentTimeAgo);
@@ -322,9 +332,14 @@ public class ESApplication extends Application {
             builder.setCategory(Notification.CATEGORY_ALARM);
 
 
+            Intent defaultActionIntent = new Intent(getTheAppContext(), MainActivity.class);
+            PendingIntent defaultActionPendingIntent = PendingIntent.getActivity(getTheAppContext(),3,defaultActionIntent,0);
+            builder.setContentIntent(defaultActionPendingIntent);
+
             Intent answerYesIntent = new Intent(this,ESIntentService.class).setAction(ESIntentService.ACTION_LAUNCH_ACTIVE_FEEDBACK);
             PendingIntent answerYesPendingIntent = PendingIntent.getService(this,0,answerYesIntent,0);
-            builder.addAction(0,NOTIFICATION_BUTTON_TEXT_YES,answerYesPendingIntent);
+            //builder.addAction(0,NOTIFICATION_BUTTON_TEXT_YES,answerYesPendingIntent);
+            //builder.setContentIntent(answerYesPendingIntent);
 
             Notification notification = builder.build();
             Log.d(LOG_TAG,"Created notification: " + notification);
@@ -338,6 +353,84 @@ public class ESApplication extends Application {
             int minutesPassed = (int)(millisPassed / MILLISECONDS_IN_MINUTE);
         }
 
+
     }
+
+
+    private static class ESLifeCycleCallback implements ActivityLifecycleCallbacks {
+
+        private static final String LOG_TAG_LIFE_CYCLE = LOG_TAG + "[lifeCycle]";
+
+        private HashMap<String,Integer> _startedActivityCounts = new HashMap<>(3);
+
+        private boolean isAppInForeground() {
+            for (String activityName : _startedActivityCounts.keySet()) {
+                if (_startedActivityCounts.get(activityName) > 0) {
+                    // Then we found an activity that is started, so the app is in foreground:
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        @Override
+        public void onActivityCreated(Activity activity, Bundle savedInstanceState) {
+        }
+
+        @Override
+        public void onActivityStarted(Activity activity) {
+            // Check if app is already in foreground:
+            boolean foregroundBeforeActivityStarted = isAppInForeground();
+
+            String activityName = activity.getLocalClassName();
+            if (_startedActivityCounts.containsKey(activityName)) {
+                _startedActivityCounts.put(activityName,_startedActivityCounts.get(activityName) + 1);
+            }
+            else {
+                _startedActivityCounts.put(activityName,1);
+            }
+
+            // Did the app just switch to foreground:
+            if (!foregroundBeforeActivityStarted) {
+                // Then the app just now switched to foreground with this started activity:
+                Log.i(LOG_TAG_LIFE_CYCLE,String.format("App switched to foreground (%s just started)",activityName));
+            }
+        }
+
+        @Override
+        public void onActivityResumed(Activity activity) {
+        }
+
+        @Override
+        public void onActivityPaused(Activity activity) {
+        }
+
+        @Override
+        public void onActivityStopped(Activity activity) {
+            String activityName = activity.getLocalClassName();
+            if (!_startedActivityCounts.containsKey(activityName) || _startedActivityCounts.get(activityName) <= 0) {
+                Log.e(LOG_TAG_LIFE_CYCLE,"Activity " + activityName + " stopped, but wasn't registered as started.");
+                return;
+            }
+
+            _startedActivityCounts.put(activityName,_startedActivityCounts.get(activityName) - 1);
+
+            // Is the app now in the background:
+            if (!isAppInForeground()) {
+                // Then probably the app just now moved to the background, when this activity was stopped:
+                Log.i(LOG_TAG_LIFE_CYCLE,String.format("App switched to background (%s just stopped)",activityName));
+            }
+        }
+
+        @Override
+        public void onActivitySaveInstanceState(Activity activity, Bundle outState) {
+        }
+
+        @Override
+        public void onActivityDestroyed(Activity activity) {
+        }
+    }
+
 
 }
