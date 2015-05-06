@@ -127,7 +127,7 @@ public class ESTimestamp {
      * Get the number of seconds since the epoch.
      * @return
      */
-    int get_secondsSinceEpoch() {
+    public int get_secondsSinceEpoch() {
         return _secondsSinceEpoch;
     }
 

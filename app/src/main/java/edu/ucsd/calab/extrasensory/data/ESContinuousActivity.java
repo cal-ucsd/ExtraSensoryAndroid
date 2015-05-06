@@ -18,7 +18,7 @@ public class ESContinuousActivity {
     private static final int MAX_TIME_GAP_FOR_MERGING_ACTIVITIES = 120;
 
     private ESActivity[] _minuteActivities;
-    private ESContinuousActivity(ESActivity[] minuteActivities) {
+    ESContinuousActivity(ESActivity[] minuteActivities) {
         _minuteActivities = minuteActivities;
     }
 

@@ -35,6 +35,10 @@ public class MainActivity extends BaseActivity {
 
     private static final String LOG_TAG = "[MainActivity]";
 
+    public static final String KEY_LAST_VERIFIED_TIMESTAMP = "edu.ucsd.calab.extrasensory.extra_key.last_verified_timestamp";
+    public static final String KEY_UNTIL_TIMESTAMP = "edu.ucsd.calab.extrasensory.extra_key.until_timestamp";
+    public static final String KEY_ALERT_QUESTION = "edu.ucsd.calab.extrasensory.extra_key.alert_question";
+
     private FragmentTabHost _fragmentTabHost;
 
 

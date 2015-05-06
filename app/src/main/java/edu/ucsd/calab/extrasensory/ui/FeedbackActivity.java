@@ -102,10 +102,11 @@ public class FeedbackActivity extends BaseActivity {
             // Then behave as active feedback:
             _parameters = new FeedbackParameters();
         }
-
-        // Quickly, copy the given input parameters and save them to the current Feedback object:
-        _parameters = _transientInputParameters;
-        _transientInputParameters = null;
+        else {
+            // Quickly, copy the given input parameters and save them to the current Feedback object:
+            _parameters = _transientInputParameters;
+            _transientInputParameters = null;
+        }
 
         feedbackFlag = false;
         presentFeedbackView();

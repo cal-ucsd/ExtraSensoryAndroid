@@ -465,6 +465,20 @@ public class ESDatabaseAccessor {
     }
 
     /**
+     * Get a single continuous activity, representing all the activities in a given time range.
+     * Notice that this function doesn't merge activities according to their labels,
+     * so it may result in a continuous activity containing activities with different labels.
+     * You must be careful when using this function!!!
+     * @param fromTimestamp
+     * @param toTimestamp
+     * @return
+     */
+    public ESContinuousActivity getSingleContinuousActivityFromTimeRange(ESTimestamp fromTimestamp,ESTimestamp toTimestamp) {
+        ESActivity[] minuteActivities = getActivitiesFromTimeRange(fromTimestamp,toTimestamp);
+        return new ESContinuousActivity(minuteActivities);
+    }
+
+    /**
      * Get all the activities from the given time range.
      * This method will extract the relevant information from the DB
      * and return an array of corresponding objects in ascending order of time (timestamp).
