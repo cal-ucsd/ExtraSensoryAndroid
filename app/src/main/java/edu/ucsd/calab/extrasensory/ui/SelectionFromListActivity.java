@@ -262,6 +262,12 @@ public class SelectionFromListActivity extends BaseActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    public void onBackPressed() {
+        setResult(Activity.RESULT_CANCELED);
+        finish();
+    }
+
     /**
      * Call this function when user presses "done" button.
      * This function will return the selected items list to whoever called this activity.

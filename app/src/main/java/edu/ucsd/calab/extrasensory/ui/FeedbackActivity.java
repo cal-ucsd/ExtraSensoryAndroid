@@ -1,5 +1,6 @@
 package edu.ucsd.calab.extrasensory.ui;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -264,7 +265,11 @@ public class FeedbackActivity extends BaseActivity {
     @Override
     public void onActivityResult (int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode,resultCode,data);
-        Log.d(LOG_TAG,"got activity result");
+        Log.d(LOG_TAG,"got activity result with result code: " + requestCode);
+        if (resultCode != Activity.RESULT_OK) {
+            Log.i(LOG_TAG,"requested task was canceled.");
+            return;
+        }
 
         String[] selected = data.getStringArrayExtra(SelectionFromListActivity.SELECTED_LABELS_OUTPUT_KEY);
         String[] responses = new String[selected.length];
