@@ -380,15 +380,14 @@ public class ESDatabaseAccessor {
      *
      * @param activity The activity instance to set
      * @param labelSource The label source value to assign to the activity
-     * @param mainActivityServerPrediction The server prediction to assign to the activity
      * @param mainActivityUserCorrection The user correction to assign to the activity
      * @param secondaryActivities The array of secondary activities to assign to the activity
      * @param moods The array of moods to assign to the activity
      */
-    public void setESActivityValues(ESActivity activity,ESActivity.ESLabelSource labelSource,
-                                    String mainActivityServerPrediction,String mainActivityUserCorrection,
+    public void setESActivityValues(ESActivity activity,
+                                    ESActivity.ESLabelSource labelSource,String mainActivityUserCorrection,
                                     String[] secondaryActivities,String[] moods) {
-        setESActivityValuesAndPossiblySendFeedback(activity,labelSource,mainActivityServerPrediction,mainActivityUserCorrection,
+        setESActivityValuesAndPossiblySendFeedback(activity,labelSource,activity.get_mainActivityServerPrediction(),mainActivityUserCorrection,
                 secondaryActivities,moods,true);
     }
 

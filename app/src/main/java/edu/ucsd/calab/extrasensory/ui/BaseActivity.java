@@ -154,8 +154,8 @@ public class BaseActivity extends ActionBarActivity {
     }
 
     public void displayAlertForPastFeedback(Intent intent) {
-        int lastVerifiedTimestampSeconds = intent.getIntExtra(KEY_LAST_VERIFIED_TIMESTAMP,LAST_VERIFIED_TIMESTAMP_DEFAULT);
-        int untilTimestampSeconds = intent.getIntExtra(KEY_UNTIL_TIMESTAMP,UNTIL_TIMESTAMP_DEFAULT);
+        int lastVerifiedTimestampSeconds = intent.getIntExtra(KEY_LAST_VERIFIED_TIMESTAMP, LAST_VERIFIED_TIMESTAMP_DEFAULT);
+        int untilTimestampSeconds = intent.getIntExtra(KEY_UNTIL_TIMESTAMP, UNTIL_TIMESTAMP_DEFAULT);
         String question = intent.getStringExtra(KEY_ALERT_QUESTION);
         if (lastVerifiedTimestampSeconds == LAST_VERIFIED_TIMESTAMP_DEFAULT || untilTimestampSeconds == UNTIL_TIMESTAMP_DEFAULT || question == null) {
             Log.e(LOG_TAG,"Activity started from notification, but missing info.");
@@ -170,7 +170,7 @@ public class BaseActivity extends ActionBarActivity {
         ESTimestamp fromTimestamp = new ESTimestamp(fromVerifiedActivityTimestampSeconds);
         ESTimestamp toTimestamp = new ESTimestamp(toTimestampSeconds);
 
-        ESActivity latestVerifiedActivity = ESDatabaseAccessor.getESDatabaseAccessor().getESActivity(fromTimestamp);
+        final ESActivity latestVerifiedActivity = ESDatabaseAccessor.getESDatabaseAccessor().getESActivity(fromTimestamp);
         if (latestVerifiedActivity == null) {
             Log.e(LOG_TAG,"Got request for alert, but with timestamp that has no activity: " + fromVerifiedActivityTimestampSeconds);
             return;
@@ -182,7 +182,15 @@ public class BaseActivity extends ActionBarActivity {
         builder.setPositiveButton(ALERT_BUTTON_TEXT_CORRECT,new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                //TODO: set the labels from the verified to all the minute activities
+                // Update the labels (and send feedback) of all the minutes in the range:
+                for (ESActivity minuteActivity : entireRange.getMinuteActivities()) {
+                    ESDatabaseAccessor.getESDatabaseAccessor().setESActivityValues(
+                            minuteActivity,
+                            ESActivity.ESLabelSource.ES_LABEL_SOURCE_NOTIFICATION_ANSWER_CORRECT,
+                            latestVerifiedActivity.get_mainActivityUserCorrection(),
+                            latestVerifiedActivity.get_secondaryActivities(),
+                            latestVerifiedActivity.get_moods());
+                }
                 dialog.dismiss();
             }
         });

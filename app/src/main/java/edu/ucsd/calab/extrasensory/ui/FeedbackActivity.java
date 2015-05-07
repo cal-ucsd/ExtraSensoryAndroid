@@ -247,7 +247,6 @@ public class FeedbackActivity extends BaseActivity {
                     for (ESActivity minute : esActivityArr){
                         getESDatabaseAccessor().setESActivityValues(minute,
                                                                     minute.get_labelSource(),
-                                                                    minute.get_mainActivityServerPrediction(),
                                                                     minute.get_mainActivityUserCorrection(),
                                                                     minute.get_secondaryActivities(),
                                                                     minute.get_moods());
