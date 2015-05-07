@@ -128,7 +128,7 @@ public class ESDatabaseAccessor {
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_CENTER_LAT,LOCATION_BUBBLE_CENTER_LAT_DEFAULT);
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_CENTER_LONG,LOCATION_BUBBLE_CENTER_LONG_DEFAULT);
 
-        long rowID = db.insert(ESDatabaseContract.ESSettingsEntry.TABLE_NAME,null,values);
+        db.insert(ESDatabaseContract.ESSettingsEntry.TABLE_NAME,null,values);
         Location bubbleCenter = new Location(LOCATION_BUBBLE_LOCATION_PROVIDER);
         bubbleCenter.setLatitude(LOCATION_BUBBLE_CENTER_LAT_DEFAULT);
         bubbleCenter.setLongitude(LOCATION_BUBBLE_CENTER_LONG_DEFAULT);
@@ -305,7 +305,7 @@ public class ESDatabaseAccessor {
         values.put(ESDatabaseContract.ESActivityEntry.COLUMN_NAME_SECONDARY_ACTIVITIES_CSV,"");
         values.put(ESDatabaseContract.ESActivityEntry.COLUMN_NAME_MOODS_CSV,"");
 
-        long rowID = db.insert(ESDatabaseContract.ESActivityEntry.TABLE_NAME,null,values);
+        db.insert(ESDatabaseContract.ESActivityEntry.TABLE_NAME,null,values);
         ESActivity newActivity = new ESActivity(timestamp);
 
         _dbHelper.close();
@@ -468,9 +468,9 @@ public class ESDatabaseAccessor {
      * Notice that this function doesn't merge activities according to their labels,
      * so it may result in a continuous activity containing activities with different labels.
      * You must be careful when using this function!!!
-     * @param fromTimestamp
-     * @param toTimestamp
-     * @return
+     * @param fromTimestamp The first timestamp in the desired time range
+     * @param toTimestamp The last timestamp in the desired time range
+     * @return A single continuous activity object, representing all the activities in the desired time range
      */
     public ESContinuousActivity getSingleContinuousActivityFromTimeRange(ESTimestamp fromTimestamp,ESTimestamp toTimestamp) {
         ESActivity[] minuteActivities = getActivitiesFromTimeRange(fromTimestamp,toTimestamp);
@@ -511,7 +511,7 @@ public class ESDatabaseAccessor {
                 projection,selection,null,null,null,sortOrder);
 
         int count = cursor.getCount();
-        ArrayList<ESActivity> activitiesList = new ArrayList<ESActivity>(count);
+        ArrayList<ESActivity> activitiesList = new ArrayList<>(count);
         for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
             ESActivity activity = extractActivityFromCurrentRecord(cursor);
             activitiesList.add(activity);
@@ -577,10 +577,8 @@ public class ESDatabaseAccessor {
         Cursor cursor = db.query(ESDatabaseContract.ESActivityEntry.TABLE_NAME,
                 projection,selection,null,null,null,sortOrder);
 
-        int count = cursor.getCount();
         for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
             int timestampSeconds = cursor.getInt(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESActivityEntry.COLUMN_NAME_TIMESTAMP));
-            String serverMain = cursor.getString(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESActivityEntry.COLUMN_NAME_MAIN_ACTIVITY_SERVER_PREDICTION));
 
             // Check if this record has a corresponding zip file (if so, then it is still waiting to get server prediction from the server):
             File possibleZipFile = ESSensorManager.getZipFileForRecord(new ESTimestamp(timestampSeconds));
