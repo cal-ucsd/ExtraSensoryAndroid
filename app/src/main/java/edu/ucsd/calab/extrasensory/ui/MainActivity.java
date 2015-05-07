@@ -38,6 +38,8 @@ public class MainActivity extends BaseActivity {
     public static final String KEY_LAST_VERIFIED_TIMESTAMP = "edu.ucsd.calab.extrasensory.extra_key.last_verified_timestamp";
     public static final String KEY_UNTIL_TIMESTAMP = "edu.ucsd.calab.extrasensory.extra_key.until_timestamp";
     public static final String KEY_ALERT_QUESTION = "edu.ucsd.calab.extrasensory.extra_key.alert_question";
+    public static final int LAST_VERIFIED_TIMESTAMP_DEFAULT = -1;
+    public static final int UNTIL_TIMESTAMP_DEFAULT = -1;
 
     private FragmentTabHost _fragmentTabHost;
 
@@ -76,6 +78,22 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void onStart() {
         super.onStart();
+
+        // Was this activity started by a notification:
+        Intent startingIntent = getIntent();
+        if (startingIntent.hasExtra(KEY_LAST_VERIFIED_TIMESTAMP)) {
+            // Then this was started from notification, and we need to display the relevant alert:
+            int lastVerifiedTimestampSeconds = startingIntent.getIntExtra(KEY_LAST_VERIFIED_TIMESTAMP,LAST_VERIFIED_TIMESTAMP_DEFAULT);
+            int untilTimestampSeconds = startingIntent.getIntExtra(KEY_UNTIL_TIMESTAMP,UNTIL_TIMESTAMP_DEFAULT);
+            String question = startingIntent.getStringExtra(KEY_ALERT_QUESTION);
+            if (lastVerifiedTimestampSeconds == LAST_VERIFIED_TIMESTAMP_DEFAULT || untilTimestampSeconds == UNTIL_TIMESTAMP_DEFAULT || question == null) {
+                Log.e(LOG_TAG,"Activity started from notification, but missing info.");
+            }
+            else {
+                displayAlertForPastFeedback(lastVerifiedTimestampSeconds,untilTimestampSeconds,question);
+            }
+        }
+
         checkGooglePlay();
     }
 

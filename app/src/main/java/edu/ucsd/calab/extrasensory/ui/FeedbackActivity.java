@@ -255,8 +255,6 @@ public class FeedbackActivity extends BaseActivity {
                     }
                 }
 
-                //TODO: (need to change code of DBAccessor - that function should itself call the NetworkAccessor to send the feedback API)
-
                 Log.d(LOG_TAG,"returning from send feedback button");
 
             }

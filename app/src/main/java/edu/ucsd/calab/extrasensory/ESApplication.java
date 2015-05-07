@@ -43,22 +43,15 @@ import edu.ucsd.calab.extrasensory.ui.MainActivity;
  */
 public class ESApplication extends Application {
 
+    public static final long MILLISECONDS_IN_MINUTE = 1000*60;
+
     private static final String LOG_TAG = "[ESApplication]";
     private static final long WAIT_BEFORE_START_FIRST_RECORDING_MILLIS = 4000;
     private static final long RECORDING_SESSIONS_INTERVAL_MILLIS = 1000*60;
-    private static final long MILLISECONDS_IN_MINUTE = 1000*60;
-    private static final long RECENT_TIME_PERIOD_IN_MILLIS = 20*MILLISECONDS_IN_MINUTE;
-    private static final int NOTIFICATION_ID = 2;
     private static final String ZIP_DIR_NAME = "zip";
     private static final String DATA_DIR_NAME = "data";
     private static final String FEEDBACK_DIR_NAME = "feedback";
 
-    private static final String NOTIFICATION_TITLE = "ExtraSensory";
-    private static final String NOTIFICATION_TEXT_NO_VERIFIED = "Can you please report what you are doing?";
-    private static final String NOTIFICATION_BUTTON_TEXT_YES = "Yes";
-    private static final String NOTIFICATION_BUTTON_TEXT_NOT_NOW = "Not now";
-    private static final String NOTIFICATION_BUTTON_TEXT_CORRECT = "Correct";
-    private static final String NOTIFICATION_BUTTON_NOT_EXACTLY = "Not exactly";
 
     private static Context _appContext;
 
@@ -307,143 +300,15 @@ public class ESApplication extends Application {
         Log.i(LOG_TAG,"Stopped the repeated notification schedule.");
     }
 
-
-
-    /**
-     * Perform a checkup to see if it's time for user notification.
-     * If it's time, trigger the notification.
-     */
-    public void notificationCheckup() {
-
-        if (!shouldDataCollectionBeOn()) {
-            Log.i(LOG_TAG,"Notification: data collection should be off. Not doing notification.");
-            turnDataCollectionOff();
-            return;
-        }
-
-        Log.i(LOG_TAG,"Notification: checkup.");
-        Date now = new Date();
-        Date recentTimeAgo = new Date(now.getTime() - RECENT_TIME_PERIOD_IN_MILLIS);
-        ESTimestamp lookBackFrom = new ESTimestamp(recentTimeAgo);
-
-        ESActivity latestVerifiedActivity = ESDatabaseAccessor.getESDatabaseAccessor().getLatestVerifiedActivity(lookBackFrom);
-
-        if (latestVerifiedActivity == null) {
-            // Then there hasn't been a verified activity in a long time. Need to call for active feedback
-            Log.i(LOG_TAG,"Notification: Latest activity was too long ago. Need to prompt for active feedback.");
-            NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
-            builder.setSmallIcon(R.drawable.ic_launcher);
-            builder.setContentTitle(NOTIFICATION_TITLE);
-            builder.setContentText(NOTIFICATION_TEXT_NO_VERIFIED);
-            builder.setPriority(Notification.PRIORITY_HIGH);
-            builder.setCategory(Notification.CATEGORY_ALARM);
-
-
-            Intent defaultActionIntent = new Intent(getTheAppContext(), FeedbackActivity.class);
-            PendingIntent defaultActionPendingIntent = PendingIntent.getActivity(getTheAppContext(), 0, defaultActionIntent, 0);
-            //TODO: add parameters indicating the source is notification_fresh - add this to the labelSource also....
-            builder.setContentIntent(defaultActionPendingIntent);
-
-            Notification notification = builder.build();
-            Log.d(LOG_TAG,"Created notification: " + notification);
-            NotificationManager notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
-            notificationManager.notify(NOTIFICATION_ID,notification);
+    public boolean isAppInForeground() {
+        if (_lifeCycleMonitor == null) {
+            return false;
         }
         else {
-            // Then use this verified activity's labels to ask if still doing the same
-            Log.i(LOG_TAG,"Notification: Found latest verified activity. Need to ask user if was doing the same until now.");
-            ESTimestamp nowTimestamp = new ESTimestamp(now);
-            long millisPassed = now.getTime() - latestVerifiedActivity.get_timestamp().getDateOfTimestamp().getTime();
-            int minutesPassed = (int)(millisPassed / MILLISECONDS_IN_MINUTE);
-            String question = getAlertQuestion(latestVerifiedActivity,minutesPassed);
-
-            NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
-            builder.setSmallIcon(R.drawable.ic_launcher);
-            builder.setContentTitle(NOTIFICATION_TITLE);
-            builder.setContentText(question);
-            builder.setPriority(Notification.PRIORITY_HIGH);
-            builder.setCategory(Notification.CATEGORY_ALARM);
-
-            Intent defaultActionIntent = new Intent(getTheAppContext(), MainActivity.class);
-            defaultActionIntent.putExtra(MainActivity.KEY_LAST_VERIFIED_TIMESTAMP,latestVerifiedActivity.get_timestamp().get_secondsSinceEpoch());
-            defaultActionIntent.putExtra(MainActivity.KEY_UNTIL_TIMESTAMP,nowTimestamp.get_secondsSinceEpoch());
-            defaultActionIntent.putExtra(MainActivity.KEY_ALERT_QUESTION,question);
-
-            PendingIntent defaultActionPendingIntent = PendingIntent.getActivity(getTheAppContext(), 0, defaultActionIntent, 0);
-            builder.setContentIntent(defaultActionPendingIntent);
-
-            Notification notification = builder.build();
-            Log.d(LOG_TAG,"Created notification: " + notification);
-            NotificationManager notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
-            notificationManager.notify(NOTIFICATION_ID,notification);
+            return _lifeCycleMonitor.isAppInForeground();
         }
     }
 
-    private static String getAlertQuestion(ESActivity latestVerifiedActivity,int minutesPassed) {
-        String question = "In the past " + minutesPassed + " minutes were still " + latestVerifiedActivity.get_mainActivityUserCorrection();
-
-        String[] secondaries = latestVerifiedActivity.get_secondaryActivities();
-        if (secondaries != null && secondaries.length > 0) {
-            question += "(" + secondaries[0];
-            for (int i = 1; i < secondaries.length; i ++) {
-                question += ", " + secondaries[i];
-            }
-            question += ")";
-        }
-
-        String[] moods = latestVerifiedActivity.get_moods();
-        if (moods != null && moods.length > 0) {
-            question += " and feeling " + moods[0];
-            for (int i = 1; i < moods.length; i ++) {
-                question += ", " + moods[i];
-            }
-        }
-
-        question += "?";
-        return question;
-    }
-
-    public void displayAlertForPastFeedback(int fromVerifiedActivityTimestampSeconds,int toTimestampSeconds,String question) {
-        //TODO: if there is already an existing dialog, dismiss it
-
-        ESTimestamp fromTimestamp = new ESTimestamp(fromVerifiedActivityTimestampSeconds);
-        ESTimestamp toTimestamp = new ESTimestamp(toTimestampSeconds);
-
-        ESActivity latestVerifiedActivity = ESDatabaseAccessor.getESDatabaseAccessor().getESActivity(fromTimestamp);
-        if (latestVerifiedActivity == null) {
-            Log.e(LOG_TAG,"Got request for alert, but with timestamp that has no activity: " + fromVerifiedActivityTimestampSeconds);
-            return;
-        }
-        ESContinuousActivity entireRange = ESDatabaseAccessor.getESDatabaseAccessor().getSingleContinuousActivityFromTimeRange(fromTimestamp,toTimestamp);
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(_appContext);
-        builder.setIcon(R.drawable.ic_launcher).setMessage(question);
-        builder.setPositiveButton(NOTIFICATION_BUTTON_TEXT_CORRECT,new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                //TODO: fill the labels of this continuous activity according to the verified activity and perform feedback on the entire continuous activity
-                dialog.dismiss();
-            }
-        });
-        builder.setNeutralButton(NOTIFICATION_BUTTON_NOT_EXACTLY,new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                //TODO: open feedback view with this continuous activity
-                dialog.dismiss();
-            }
-        });
-        builder.setNegativeButton(NOTIFICATION_BUTTON_TEXT_NOT_NOW,new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                // Do nothing. Just close the alert:
-                dialog.dismiss();
-            }
-        });
-
-        AlertDialog alertDialog = builder.create();
-        //TODO: save a reference for this alert dialog in the app
-        alertDialog.show();
-    }
 
     private static class ESLifeCycleCallback implements ActivityLifecycleCallbacks {
 

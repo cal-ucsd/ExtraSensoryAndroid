@@ -2,6 +2,7 @@ package edu.ucsd.calab.extrasensory;
 
 import android.app.IntentService;
 import android.content.Intent;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.animation.TranslateAnimation;
 
@@ -86,7 +87,9 @@ public class ESIntentService extends IntentService {
         }
         else if (ACTION_NOTIFICATION_CHECKUP.equals(action)) {
             Log.i(LOG_TAG,"Got intent for notification checkup");
-            ((ESApplication)getApplication()).notificationCheckup();
+            Intent broadcast = new Intent(ACTION_NOTIFICATION_CHECKUP);
+            LocalBroadcastManager manager = LocalBroadcastManager.getInstance(ESApplication.getTheAppContext());
+            manager.sendBroadcast(broadcast);
         }
         else {
             Log.e(LOG_TAG,"Got intent for unsupported action: " + action);
