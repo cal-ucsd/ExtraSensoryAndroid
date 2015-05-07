@@ -2,6 +2,7 @@ package edu.ucsd.calab.extrasensory.data;
 
 import android.content.Context;
 import android.location.Location;
+import android.util.Log;
 
 import edu.ucsd.calab.extrasensory.ESApplication;
 
@@ -12,6 +13,8 @@ import edu.ucsd.calab.extrasensory.ESApplication;
  * Created by Yonatan on 2/4/2015.
  */
 public class ESSettings {
+
+    private static final String LOG_TAG = "[ESSettings]";
 
     private String _uuid;
     private int _maxStoredExamples;
@@ -112,6 +115,7 @@ public class ESSettings {
      */
     public static void setLocationBubbleCenter(double locationBubbleCenterLat, double locationBubbleCenterLong) {
         _settings = getTheDBAccessor().setSettings(locationBubbleCenterLat,locationBubbleCenterLong);
+        Log.i(LOG_TAG,String.format("Changed location bubble center to: <lat=%f,long=%f>",locationBubbleCenterLat,locationBubbleCenterLong));
     }
 
     /**

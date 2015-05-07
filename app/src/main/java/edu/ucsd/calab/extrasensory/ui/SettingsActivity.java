@@ -2,6 +2,8 @@ package edu.ucsd.calab.extrasensory.ui;
 
 import android.location.Location;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -99,6 +101,24 @@ public class SettingsActivity extends BaseActivity {
             }
         });
 
+        latitudeEdit.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                // Update the coordinates of the location bubble:
+                double newLatitude = Double.parseDouble(latitudeEdit.getText().toString());
+                double newLongitude = Double.parseDouble(longitudeEdit.getText().toString());
+                ESSettings.setLocationBubbleCenter(newLatitude,newLongitude);
+            }
+        });
+        longitudeEdit.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                // Update the coordinates of the location bubble:
+                double newLatitude = Double.parseDouble(latitudeEdit.getText().toString());
+                double newLongitude = Double.parseDouble(longitudeEdit.getText().toString());
+                ESSettings.setLocationBubbleCenter(newLatitude,newLongitude);
+            }
+        });
         updateLatLongButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
