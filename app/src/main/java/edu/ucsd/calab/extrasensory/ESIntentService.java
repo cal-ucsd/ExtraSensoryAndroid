@@ -87,9 +87,7 @@ public class ESIntentService extends IntentService {
         }
         else if (ACTION_NOTIFICATION_CHECKUP.equals(action)) {
             Log.i(LOG_TAG,"Got intent for notification checkup");
-            Intent broadcast = new Intent(ACTION_NOTIFICATION_CHECKUP);
-            LocalBroadcastManager manager = LocalBroadcastManager.getInstance(ESApplication.getTheAppContext());
-            manager.sendBroadcast(broadcast);
+            ((ESApplication)getApplication()).notificationCheckup();
         }
         else {
             Log.e(LOG_TAG,"Got intent for unsupported action: " + action);

@@ -44,8 +44,14 @@ import edu.ucsd.calab.extrasensory.ui.MainActivity;
 public class ESApplication extends Application {
 
     public static final long MILLISECONDS_IN_MINUTE = 1000*60;
+    public static final String ACTION_ALERT_ACTIVE_FEEDBACK = "edu.ucsd.calab.extrasensory.action.ALERT_ACTIVE_FEEDBACK";
+    public static final String ACTION_ALERT_PAST_FEEDBACK = "edu.ucsd.calab.extrasensory.action.ALERT_PAST_FEEDBACK";
+    public static final String NOTIFICATION_TEXT_NO_VERIFIED = "Can you please report what you are doing?";
 
     private static final String LOG_TAG = "[ESApplication]";
+    private static final long RECENT_TIME_PERIOD_IN_MILLIS = 20*ESApplication.MILLISECONDS_IN_MINUTE;
+    private static final int NOTIFICATION_ID = 2;
+    private static final String NOTIFICATION_TITLE = "ExtraSensory";
     private static final long WAIT_BEFORE_START_FIRST_RECORDING_MILLIS = 4000;
     private static final long RECORDING_SESSIONS_INTERVAL_MILLIS = 1000*60;
     private static final String ZIP_DIR_NAME = "zip";
@@ -300,13 +306,127 @@ public class ESApplication extends Application {
         Log.i(LOG_TAG,"Stopped the repeated notification schedule.");
     }
 
-    public boolean isAppInForeground() {
+    private boolean isAppInForeground() {
         if (_lifeCycleMonitor == null) {
             return false;
         }
         else {
             return _lifeCycleMonitor.isAppInForeground();
         }
+    }
+
+    /**
+     * Perform a checkup to see if it's time for user notification.
+     * If it's time, trigger the notification.
+     */
+    public void notificationCheckup() {
+
+        if (!shouldDataCollectionBeOn()) {
+            Log.i(LOG_TAG,"Notification: data collection should be off. Not doing notification.");
+            checkShouldWeCollectDataAndManageAppropriately();
+            return;
+        }
+
+        Log.i(LOG_TAG,"Notification: checkup.");
+        Date now = new Date();
+        Date recentTimeAgo = new Date(now.getTime() - RECENT_TIME_PERIOD_IN_MILLIS);
+        ESTimestamp lookBackFrom = new ESTimestamp(recentTimeAgo);
+
+        ESActivity latestVerifiedActivity = ESDatabaseAccessor.getESDatabaseAccessor().getLatestVerifiedActivity(lookBackFrom);
+
+        if (latestVerifiedActivity == null) {
+            // Then there hasn't been a verified activity in a long time. Need to call for active feedback
+            Log.i(LOG_TAG,"Notification: Latest activity was too long ago. Need to prompt for active feedback.");
+            if (isAppInForeground()) {
+                // Don't deal with notifications. Send broadcast to show alert:
+                Intent broadcast = new Intent(ACTION_ALERT_ACTIVE_FEEDBACK);
+                LocalBroadcastManager manager = LocalBroadcastManager.getInstance(this);
+                manager.sendBroadcast(broadcast);
+                return;
+            }
+
+            // Then we're in the background and we need to raise user's attention with notification:
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
+            builder.setSmallIcon(R.drawable.ic_launcher);
+            builder.setContentTitle(NOTIFICATION_TITLE);
+            builder.setContentText(NOTIFICATION_TEXT_NO_VERIFIED);
+            builder.setPriority(Notification.PRIORITY_HIGH);
+            builder.setCategory(Notification.CATEGORY_ALARM);
+
+            Intent defaultActionIntent = new Intent(this, FeedbackActivity.class);
+            PendingIntent defaultActionPendingIntent = PendingIntent.getActivity(this, 0, defaultActionIntent, 0);
+            //TODO: add parameters indicating the source is notification_fresh - add this to the labelSource also....
+            builder.setContentIntent(defaultActionPendingIntent);
+
+            Notification notification = builder.build();
+            Log.d(LOG_TAG,"Created notification: " + notification);
+            NotificationManager notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
+            notificationManager.notify(NOTIFICATION_ID,notification);
+        }
+        else {
+            // Then use this verified activity's labels to ask if still doing the same
+            Log.i(LOG_TAG,"Notification: Found latest verified activity. Need to ask user if was doing the same until now.");
+            ESTimestamp nowTimestamp = new ESTimestamp(now);
+            long millisPassed = now.getTime() - latestVerifiedActivity.get_timestamp().getDateOfTimestamp().getTime();
+            int minutesPassed = (int)(millisPassed / ESApplication.MILLISECONDS_IN_MINUTE);
+            String question = getAlertQuestion(latestVerifiedActivity,minutesPassed);
+
+            // Prepare an intent to be used either inside notification or now in a broadcast.
+            Intent intent = new Intent();
+            intent.putExtra(MainActivity.KEY_LAST_VERIFIED_TIMESTAMP,latestVerifiedActivity.get_timestamp().get_secondsSinceEpoch());
+            intent.putExtra(MainActivity.KEY_UNTIL_TIMESTAMP,nowTimestamp.get_secondsSinceEpoch());
+            intent.putExtra(MainActivity.KEY_ALERT_QUESTION,question);
+
+            if (isAppInForeground()) {
+                // No need to use notification. Send broadcast to display an alert dialog:
+                intent.setAction(ACTION_ALERT_PAST_FEEDBACK);
+                LocalBroadcastManager manager = LocalBroadcastManager.getInstance(this);
+                manager.sendBroadcast(intent);
+                return;
+            }
+
+            // Then we're in the background and we need to raise user's attention with notification:
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
+            builder.setSmallIcon(R.drawable.ic_launcher);
+            builder.setContentTitle(NOTIFICATION_TITLE);
+            builder.setContentText(question);
+            builder.setPriority(Notification.PRIORITY_HIGH);
+            builder.setCategory(Notification.CATEGORY_ALARM);
+
+            intent.setClass(this,MainActivity.class);
+
+            PendingIntent defaultActionPendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
+            builder.setContentIntent(defaultActionPendingIntent);
+
+            Notification notification = builder.build();
+            Log.d(LOG_TAG,"Created notification: " + notification);
+            NotificationManager notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
+            notificationManager.notify(NOTIFICATION_ID,notification);
+        }
+    }
+
+    private static String getAlertQuestion(ESActivity latestVerifiedActivity,int minutesPassed) {
+        String question = "In the past " + minutesPassed + " minutes were still " + latestVerifiedActivity.get_mainActivityUserCorrection();
+
+        String[] secondaries = latestVerifiedActivity.get_secondaryActivities();
+        if (secondaries != null && secondaries.length > 0) {
+            question += "(" + secondaries[0];
+            for (int i = 1; i < secondaries.length; i ++) {
+                question += ", " + secondaries[i];
+            }
+            question += ")";
+        }
+
+        String[] moods = latestVerifiedActivity.get_moods();
+        if (moods != null && moods.length > 0) {
+            question += " and feeling " + moods[0];
+            for (int i = 1; i < moods.length; i ++) {
+                question += ", " + moods[i];
+            }
+        }
+
+        question += "?";
+        return question;
     }
 
 
