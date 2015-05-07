@@ -67,11 +67,13 @@ public class ESApplication extends Application {
 
     public static class PredeterminedLabels {
         private ESLabelStruct _labels = null;
+        private boolean _initiatedByNotification = false;
         private boolean _startedFirstActivityRecording = false;
         private ESTimestamp _validUntil = new ESTimestamp(0);
 
         private void clearLabels() {
             _labels = null;
+            _initiatedByNotification = false;
             _startedFirstActivityRecording = false;
             _validUntil = new ESTimestamp(0);
         }
@@ -84,6 +86,8 @@ public class ESApplication extends Application {
             return _labels;
         }
 
+        boolean is_initiatedByNotification() { return _initiatedByNotification; }
+
         boolean is_startedFirstActivityRecording() {
             return _startedFirstActivityRecording;
         }
@@ -92,8 +96,9 @@ public class ESApplication extends Application {
             _startedFirstActivityRecording = startedFirstActivityRecording;
         }
 
-        private void setPredeterminedLabels(ESLabelStruct labels,int validForHowManyMinutes) {
+        private void setPredeterminedLabels(ESLabelStruct labels,int validForHowManyMinutes,boolean initiatedByNotification) {
             _labels = new ESLabelStruct(labels);
+            _initiatedByNotification = initiatedByNotification;
             _startedFirstActivityRecording = false;
 
             long gracePeriod = 2000;
@@ -215,9 +220,10 @@ public class ESApplication extends Application {
      *
      * @param labelsToAssign - The labels to assign to the following activities
      * @param validForHowMinutes - How many minutes should the given labels be automatically assigned?
+     * @param initiatedByNotification - Was this active feedback initiated by a notification/reminder?
      */
-    public void startActiveFeedback(ESLabelStruct labelsToAssign,int validForHowMinutes) {
-        _predeterminedLabels.setPredeterminedLabels(labelsToAssign, validForHowMinutes);
+    public void startActiveFeedback(ESLabelStruct labelsToAssign,int validForHowMinutes,boolean initiatedByNotification) {
+        _predeterminedLabels.setPredeterminedLabels(labelsToAssign, validForHowMinutes,initiatedByNotification);
         stopCurrentRecordingAndRecordingSchedule();
         startRecordingSchedule(0);
     }
@@ -354,8 +360,8 @@ public class ESApplication extends Application {
             builder.setCategory(Notification.CATEGORY_ALARM);
 
             Intent defaultActionIntent = new Intent(this, FeedbackActivity.class);
+            defaultActionIntent.putExtra(FeedbackActivity.KEY_INITIATED_BY_NOTIFICATION,true);
             PendingIntent defaultActionPendingIntent = PendingIntent.getActivity(this, 0, defaultActionIntent, 0);
-            //TODO: add parameters indicating the source is notification_fresh - add this to the labelSource also....
             builder.setContentIntent(defaultActionPendingIntent);
 
             Notification notification = builder.build();

@@ -31,6 +31,9 @@ import static edu.ucsd.calab.extrasensory.data.ESDatabaseAccessor.getESDatabaseA
  * Feedback view for the user to provide the ground truth labels of what they are doing/feeling.
  * Right before starting this view you should call setFeedbackParametersBeforeStartingFeedback()
  * to inform this class what kind of feedback you need.
+ * In addition, if this feedback activity is initiated from a notification
+ * (or from an alert-dialog that was initiated by a notification/reminder),
+ * you should add an extra with key KEY_INITIATED_BY_NOTIFICATION to the intent that starts this activity.
  */
 public class FeedbackActivity extends BaseActivity {
 
@@ -38,6 +41,7 @@ public class FeedbackActivity extends BaseActivity {
 
     public static final int FEEDBACK_TYPE_ACTIVE = 1;
     public static final int FEEDBACK_TYPE_HISTORY_CONTINUOUS_ACTIVITY = 2;
+    public static final String KEY_INITIATED_BY_NOTIFICATION = "edu.ucsd.calab.extrasensory.extra_key.initiated_by_notification";
 
     Button button;
 
@@ -230,11 +234,12 @@ public class FeedbackActivity extends BaseActivity {
 
             @Override
             public void onClick(View arg0) {
-                //TODO: if this is active feedback, start the scheduling (need to receive the timestamp of the newly created activity)
-                // and update the activity's labels through the DBAccessor.
+                boolean initiatedByNotification = getIntent().hasExtra(KEY_INITIATED_BY_NOTIFICATION);
                 if(_parameters._feedbackType == FEEDBACK_TYPE_ACTIVE){
                     Log.d(LOG_TAG,"ACTIVE FEEDBACK");
-                    ((ESApplication)getApplication()).startActiveFeedback(labelStruct,  _parameters._continuousActivityToEdit.getDurationInMinutes());
+                    ((ESApplication)getApplication()).startActiveFeedback(labelStruct,  _parameters._continuousActivityToEdit.getDurationInMinutes(),initiatedByNotification);
+                    finish();
+                    return;
                 }
 
                 //TODO: if this is feedback for continuous activity: go over the minute-activities and for each activity
@@ -243,20 +248,22 @@ public class FeedbackActivity extends BaseActivity {
                     Log.d(LOG_TAG,"HISTORY CONTINUOUS ACTIVITY");
                     ESContinuousActivity esContAct =_parameters._continuousActivityToEdit;
                     ESActivity [] esActivityArr = esContAct.getMinuteActivities();
+                    ESActivity.ESLabelSource labelSource = initiatedByNotification ?
+                            ESActivity.ESLabelSource.ES_LABEL_SOURCE_NOTIFICATION_ANSWER_NOT_EXACTLY :
+                            ESActivity.ESLabelSource.ES_LABEL_SOURCE_HISTORY;
                     //for each minute activity in the continuous activity
                     //call setESActivityValues()
                     for (ESActivity minute : esActivityArr){
                         getESDatabaseAccessor().setESActivityValues(minute,
-                                                                    minute.get_labelSource(),
+                                                                    labelSource,
                                                                     minute.get_mainActivityUserCorrection(),
                                                                     minute.get_secondaryActivities(),
                                                                     minute.get_moods());
-                        finish();
                     }
+
+                    finish();
+                    return;
                 }
-
-                Log.d(LOG_TAG,"returning from send feedback button");
-
             }
         });
 

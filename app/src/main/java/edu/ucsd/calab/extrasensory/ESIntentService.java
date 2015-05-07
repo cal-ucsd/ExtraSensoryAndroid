@@ -63,7 +63,9 @@ public class ESIntentService extends IntentService {
                 // Is this the first activity in a sequence initiated by active feedback?
                 ESActivity.ESLabelSource labelSource;
                 if (ESApplication._predeterminedLabels.is_startedFirstActivityRecording()) {
-                    labelSource = ESActivity.ESLabelSource.ES_LABEL_SOURCE_ACTIVE_START;
+                    labelSource = ESApplication._predeterminedLabels.is_initiatedByNotification() ?
+                            ESActivity.ESLabelSource.ES_LABEL_SOURCE_NOTIFICATION_BLANK :
+                            ESActivity.ESLabelSource.ES_LABEL_SOURCE_ACTIVE_START;
                     ESApplication._predeterminedLabels.set_startedFirstActivityRecording(false);
                     Log.i(LOG_TAG,"This new activity is the start of user-initiated activity (active feedback).");
                 }
@@ -86,7 +88,7 @@ public class ESIntentService extends IntentService {
             ESSensorManager.getESSensorManager().startRecordingSensors(timestamp);
         }
         else if (ACTION_NOTIFICATION_CHECKUP.equals(action)) {
-            Log.i(LOG_TAG,"Got intent for notification checkup");
+            Log.i(LOG_TAG, "Got intent for notification checkup");
             ((ESApplication)getApplication()).notificationCheckup();
         }
         else {
