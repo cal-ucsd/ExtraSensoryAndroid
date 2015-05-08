@@ -237,7 +237,8 @@ public class FeedbackActivity extends BaseActivity {
                 boolean initiatedByNotification = getIntent().hasExtra(KEY_INITIATED_BY_NOTIFICATION);
                 if(_parameters._feedbackType == FEEDBACK_TYPE_ACTIVE){
                     Log.d(LOG_TAG,"ACTIVE FEEDBACK");
-                    ((ESApplication)getApplication()).startActiveFeedback(_labelStruct,  _parameters._continuousActivityToEdit.getDurationInMinutes(),initiatedByNotification);
+                    int validForHowManyMinutes = 1;//TODO: need to analyze this value from the user input to validFor
+                    ((ESApplication)getApplication()).startActiveFeedback(_labelStruct,validForHowManyMinutes,initiatedByNotification);
                     finish();
                     return;
                 }

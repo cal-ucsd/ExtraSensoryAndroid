@@ -219,11 +219,11 @@ public class ESApplication extends Application {
      * The given labels are used for the started recording from now until the end time specified by the user.
      *
      * @param labelsToAssign - The labels to assign to the following activities
-     * @param validForHowMinutes - How many minutes should the given labels be automatically assigned?
+     * @param validForHowManyMinutes - How many minutes should the given labels be automatically assigned?
      * @param initiatedByNotification - Was this active feedback initiated by a notification/reminder?
      */
-    public void startActiveFeedback(ESLabelStruct labelsToAssign,int validForHowMinutes,boolean initiatedByNotification) {
-        _predeterminedLabels.setPredeterminedLabels(labelsToAssign, validForHowMinutes,initiatedByNotification);
+    public void startActiveFeedback(ESLabelStruct labelsToAssign,int validForHowManyMinutes,boolean initiatedByNotification) {
+        _predeterminedLabels.setPredeterminedLabels(labelsToAssign, validForHowManyMinutes,initiatedByNotification);
         stopCurrentRecordingAndRecordingSchedule();
         startRecordingSchedule(0);
     }

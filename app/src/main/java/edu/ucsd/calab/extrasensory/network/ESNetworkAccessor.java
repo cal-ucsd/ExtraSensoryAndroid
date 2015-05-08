@@ -439,7 +439,7 @@ public class ESNetworkAccessor {
 
     private void createFeedbackFile(ESTimestamp timestamp) {
         try {
-            File file = new File(timestamp.toString() + FEEDBACK_FILE_EXTENSION);
+            File file = new File(ESApplication.getFeedbackDir(),timestamp.toString() + FEEDBACK_FILE_EXTENSION);
             BufferedWriter output = new BufferedWriter(new FileWriter(file));
             output.write(" ");
             output.close();
@@ -630,7 +630,7 @@ public class ESNetworkAccessor {
                 conn.setDoOutput(true);
                 conn.setDoInput(true); // Allow Inputs
                 conn.setUseCaches(false); // Don't use a Cached Copy
-                //conn.setRequestMethod("POST");
+                conn.setRequestMethod("POST");
                 conn.setRequestProperty("Connection", "Keep-Alive");
 
                 conn.connect();
