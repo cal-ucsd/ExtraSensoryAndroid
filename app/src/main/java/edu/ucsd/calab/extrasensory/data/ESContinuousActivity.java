@@ -119,6 +119,20 @@ public class ESContinuousActivity {
     }
 
     /**
+     * If there is a user correction to main activity for this continuous activity, return it.
+     * Otherwise return the server prediction you find for this continuous activity.
+     * @return The most up to date main activity label for this continuous activity.
+     */
+    public String mostUpToDateMainActivity() {
+        String userCorrection = getMainActivityUserCorrection();
+        if (userCorrection != null && !userCorrection.equals("")) {
+            return userCorrection;
+        }
+
+        return getMainActivityServerPrediction();
+    }
+
+    /**
      * Get the array of secondary activity labels associated with this continuous activity.
      * The order of the secondary activities is arbitrary.
      *

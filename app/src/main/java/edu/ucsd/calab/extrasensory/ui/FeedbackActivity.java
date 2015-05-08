@@ -47,15 +47,17 @@ public class FeedbackActivity extends BaseActivity {
 
     private static final String TEXT1 = "text1";
     private static final String TEXT2 = "text2";
+    private static final String KEY_ROW_HEADER = "row header";
+    private static final String KEY_ROW_DETAIL = "row detail";
 
     private static boolean feedbackFlag = false;
-    private static final int MAIN = 0;
-    private static final int SECONDARY = 1;
-    private static final int MOOD = 2;
-    private static final int VALID = 3;
+    private static final int ROW_MAIN = 0;
+    private static final int ROW_SECONDARY = 1;
+    private static final int ROW_MOOD = 2;
+    private static final int ROW_VALID = 3;
 
-    private static final String[] values = new String[] { "Main Activity", "Secondary Activities", "Mood", "Valid for" };
-    private static String[] userResponse = new String[4];
+    private static final String[] ROW_HEADERS = new String[] { "Main Activity", "Secondary Activities", "Mood", "Valid for" };
+    private String[] _presentedLabelStrings = new String[4];
 
     private ESLabelStruct _labelStruct = new ESLabelStruct();
     /**
@@ -111,6 +113,14 @@ public class FeedbackActivity extends BaseActivity {
             // Quickly, copy the given input parameters and save them to the current Feedback object:
             _parameters = _transientInputParameters;
             _transientInputParameters = null;
+        }
+
+        // If got an existing activity in the input parameters, copy its labels:
+        if (_parameters._feedbackType == FEEDBACK_TYPE_HISTORY_CONTINUOUS_ACTIVITY) {
+            _labelStruct = new ESLabelStruct();
+            _labelStruct._mainActivity = _parameters._continuousActivityToEdit.mostUpToDateMainActivity();
+            _labelStruct._secondaryActivities = _parameters._continuousActivityToEdit.getSecondaryActivities();
+            _labelStruct._moods = _parameters._continuousActivityToEdit.getMoods();
         }
 
         feedbackFlag = false;
@@ -173,16 +183,16 @@ public class FeedbackActivity extends BaseActivity {
         ListView listView = (ListView) findViewById(R.id.listview_activity);
 
         List<Map<String, String>> data = new ArrayList<Map<String, String>>();
-        for (int i = 0; i < values.length; i ++) {
+        for (int i = 0; i < ROW_HEADERS.length; i ++) {
             Map<String, String> datum = new HashMap<String, String>(2);
-            datum.put("row header", values[i]);
-            datum.put("row detail", userResponse[i]);
+            datum.put(KEY_ROW_HEADER, ROW_HEADERS[i]);
+            datum.put(KEY_ROW_DETAIL, _presentedLabelStrings[i]);
             data.add(datum);
         }
 
         SimpleAdapter adapter = new SimpleAdapter(this, data,
                 android.R.layout.simple_list_item_2,
-                new String[] {"row header", "row detail"},
+                new String[] {KEY_ROW_HEADER, KEY_ROW_DETAIL},
                 new int[] {android.R.id.text1,
                         android.R.id.text2});
         listView.setAdapter(adapter);
@@ -202,23 +212,23 @@ public class FeedbackActivity extends BaseActivity {
                 // "position" is the position/row of the item that you have clicked
                 Intent intent = null;
                 switch (position) {
-                    case 0:
+                    case ROW_MAIN:
                         intent = new Intent(ESApplication.getTheAppContext(), SelectionFromListActivity.class);
                         intent.putExtra(SelectionFromListActivity.LIST_TYPE_KEY, SelectionFromListActivity.LIST_TYPE_MAIN_ACTIVITY);
-                        startActivityForResult(intent, MAIN);
+                        startActivityForResult(intent, ROW_MAIN);
                         break;
-                    case 1:
+                    case ROW_SECONDARY:
                         intent = new Intent(ESApplication.getTheAppContext(), SelectionFromListActivity.class);
                         intent.putExtra(SelectionFromListActivity.LIST_TYPE_KEY, SelectionFromListActivity.LIST_TYPE_SECONDARY_ACTIVITIES);
                        // intent.putExtra(SelectionFromListActivity.PRESELECTED_LABELS_KEY, new String[]{"At home"});
-                        startActivityForResult(intent, SECONDARY);
+                        startActivityForResult(intent, ROW_SECONDARY);
                         break;
-                    case 2:
+                    case ROW_MOOD:
                         intent = new Intent(ESApplication.getTheAppContext(), SelectionFromListActivity.class);
                         intent.putExtra(SelectionFromListActivity.LIST_TYPE_KEY, SelectionFromListActivity.LIST_TYPE_MOODS);
-                        startActivityForResult(intent, MOOD);
+                        startActivityForResult(intent, ROW_MOOD);
                         break;
-                    case 3:
+                    case ROW_VALID:
                         Toast.makeText(getApplicationContext(), "Hello", Toast.LENGTH_LONG).show();
                         break;
                 }
@@ -256,10 +266,10 @@ public class FeedbackActivity extends BaseActivity {
                     //call setESActivityValues()
                     for (ESActivity minute : esActivityArr){
                         getESDatabaseAccessor().setESActivityValues(minute,
-                                                                    labelSource,
-                                                                    minute.get_mainActivityUserCorrection(),
-                                                                    minute.get_secondaryActivities(),
-                                                                    minute.get_moods());
+                                labelSource,
+                                _labelStruct._mainActivity,
+                                _labelStruct._secondaryActivities,
+                                _labelStruct._moods);
                     }
 
                     finish();
@@ -282,7 +292,7 @@ public class FeedbackActivity extends BaseActivity {
         String[] selected = data.getStringArrayExtra(SelectionFromListActivity.SELECTED_LABELS_OUTPUT_KEY);
         String[] responses = new String[selected.length];
 
-        if (requestCode==MAIN || requestCode==SECONDARY || requestCode==MOOD) {
+        if (requestCode== ROW_MAIN || requestCode== ROW_SECONDARY || requestCode== ROW_MOOD) {
             if (data == null) {
                 Log.e(LOG_TAG,"Output from selection had null data");
                 return;
@@ -297,38 +307,38 @@ public class FeedbackActivity extends BaseActivity {
             String newSelected = "";
             for (int i=0;i<selected.length;i++) {
                 Log.d(LOG_TAG,selected[i]);
-                if(userResponse[requestCode] == null){
-                    userResponse[requestCode] = "";
+                if(_presentedLabelStrings[requestCode] == null){
+                    _presentedLabelStrings[requestCode] = "";
                     newSelected = selected[i];
                 }
                 else
                     newSelected = newSelected + ", " + selected[i];
 
-                if (requestCode == MAIN) {
+                if (requestCode == ROW_MAIN) {
                     Log.d(LOG_TAG,"return from selecting main");
                     _labelStruct._mainActivity = selected[i];
                 }
-                else if (requestCode == SECONDARY) {
+                else if (requestCode == ROW_SECONDARY) {
                     Log.d(LOG_TAG,"return from selecting secondary");
                     responses[i] = selected[i];
                 }
-                else if (requestCode == MOOD) {
+                else if (requestCode == ROW_MOOD) {
                     Log.d(LOG_TAG, "return from selecting mood");
                    responses[i] = selected[i];
                 }
             }
 
             //update the string list of user responses displayed in feedback page
-            userResponse[requestCode] = userResponse[requestCode] + newSelected;
+            _presentedLabelStrings[requestCode] = newSelected;
 
-            if (requestCode == SECONDARY) {
+            if (requestCode == ROW_SECONDARY) {
                 _labelStruct._secondaryActivities = responses;
             }
-            else if (requestCode == MOOD) {
+            else if (requestCode == ROW_MOOD) {
                 _labelStruct._moods = responses;
             }
 
-            //Log.d(LOG_TAG, "updated response: " + userResponse[requestCode]);
+            //Log.d(LOG_TAG, "updated response: " + _presentedLabelStrings[requestCode]);
         }
     }
 }
