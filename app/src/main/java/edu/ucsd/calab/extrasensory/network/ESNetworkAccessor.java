@@ -627,11 +627,11 @@ public class ESNetworkAccessor {
                 }
                 conn.setConnectTimeout(CONNECT_TIMEOUT_MILLIS);
                 conn.setReadTimeout(READ_TIMEOUT_MILLIS);
-                conn.setDoOutput(true);
+                conn.setDoOutput(false);
                 conn.setDoInput(true); // Allow Inputs
                 conn.setUseCaches(false); // Don't use a Cached Copy
-                conn.setRequestMethod("POST");
-                conn.setRequestProperty("Connection", "Keep-Alive");
+                conn.setRequestMethod("GET");
+                //conn.setRequestProperty("Connection", "Keep-Alive");
 
                 conn.connect();
 
@@ -711,7 +711,7 @@ public class ESNetworkAccessor {
                     mainPredictionStr + "&" +
                     mainUserStr + "&" +
                     secondaryStr + "&" +
-                    moodStr + "&";
+                    moodStr;
 
             apiParams = apiParams.replaceAll(" ","_");
             return apiParams;
