@@ -57,7 +57,7 @@ public class FeedbackActivity extends BaseActivity {
     private static final String[] values = new String[] { "Main Activity", "Secondary Activities", "Mood", "Valid for" };
     private static String[] userResponse = new String[4];
 
-    private static ESLabelStruct labelStruct = new ESLabelStruct();
+    private ESLabelStruct _labelStruct = new ESLabelStruct();
     /**
      * This parameter type is to be used to transfer parameters to the feedback view,
      * that indicate what kind of feedback to perform and pass relevant data.
@@ -237,7 +237,7 @@ public class FeedbackActivity extends BaseActivity {
                 boolean initiatedByNotification = getIntent().hasExtra(KEY_INITIATED_BY_NOTIFICATION);
                 if(_parameters._feedbackType == FEEDBACK_TYPE_ACTIVE){
                     Log.d(LOG_TAG,"ACTIVE FEEDBACK");
-                    ((ESApplication)getApplication()).startActiveFeedback(labelStruct,  _parameters._continuousActivityToEdit.getDurationInMinutes(),initiatedByNotification);
+                    ((ESApplication)getApplication()).startActiveFeedback(_labelStruct,  _parameters._continuousActivityToEdit.getDurationInMinutes(),initiatedByNotification);
                     finish();
                     return;
                 }
@@ -305,7 +305,7 @@ public class FeedbackActivity extends BaseActivity {
 
                 if (requestCode == MAIN) {
                     Log.d(LOG_TAG,"return from selecting main");
-                    labelStruct._mainActivity = selected[i];
+                    _labelStruct._mainActivity = selected[i];
                 }
                 else if (requestCode == SECONDARY) {
                     Log.d(LOG_TAG,"return from selecting secondary");
@@ -321,10 +321,10 @@ public class FeedbackActivity extends BaseActivity {
             userResponse[requestCode] = userResponse[requestCode] + newSelected;
 
             if (requestCode == SECONDARY) {
-                labelStruct._secondaryActivities = responses;
+                _labelStruct._secondaryActivities = responses;
             }
             else if (requestCode == MOOD) {
-                labelStruct._moods = responses;
+                _labelStruct._moods = responses;
             }
 
             //Log.d(LOG_TAG, "updated response: " + userResponse[requestCode]);

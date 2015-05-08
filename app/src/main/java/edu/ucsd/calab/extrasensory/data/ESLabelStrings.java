@@ -54,7 +54,7 @@ public class ESLabelStrings {
         if (!_mainActivity2color.containsKey(mainActivity)) {
             return Color.WHITE;
         }
-        
+
         return _mainActivity2color.get(mainActivity).intValue();
     }
 
