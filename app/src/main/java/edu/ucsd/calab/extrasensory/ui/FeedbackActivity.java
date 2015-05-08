@@ -57,7 +57,6 @@ public class FeedbackActivity extends BaseActivity {
     private static final int ROW_VALID = 3;
 
     private static final String[] ROW_HEADERS = new String[] { "Main Activity", "Secondary Activities", "Mood", "Valid for" };
-    private String[] _presentedLabelStrings = new String[4];
 
     private ESLabelStruct _labelStruct = new ESLabelStruct();
     /**
@@ -172,8 +171,6 @@ public class FeedbackActivity extends BaseActivity {
             case FEEDBACK_TYPE_HISTORY_CONTINUOUS_ACTIVITY:
                 Log.i(LOG_TAG,"Opening feedback view for continuous activity from history");
                 Log.d(LOG_TAG,"Got continuous activity: " + _parameters._continuousActivityToEdit);
-                //TODO: read the expected parameters of the given continuous activity
-                //TODO: present pre-existing labels and the required form fields
                 break;
             default:
                 Log.e(LOG_TAG,"Got unsupported feedback type: " + _parameters._feedbackType);
@@ -182,13 +179,29 @@ public class FeedbackActivity extends BaseActivity {
 
         ListView listView = (ListView) findViewById(R.id.listview_activity);
 
+
         List<Map<String, String>> data = new ArrayList<Map<String, String>>();
-        for (int i = 0; i < ROW_HEADERS.length; i ++) {
-            Map<String, String> datum = new HashMap<String, String>(2);
-            datum.put(KEY_ROW_HEADER, ROW_HEADERS[i]);
-            datum.put(KEY_ROW_DETAIL, _presentedLabelStrings[i]);
-            data.add(datum);
-        }
+
+        HashMap<String,String> mainDatum = new HashMap<>(2);
+        mainDatum.put(KEY_ROW_HEADER,ROW_HEADERS[ROW_MAIN]);
+        mainDatum.put(KEY_ROW_DETAIL,_labelStruct._mainActivity);
+        data.add(mainDatum);
+
+        HashMap<String,String> secondaryDatum = new HashMap<>(2);
+        secondaryDatum.put(KEY_ROW_HEADER,ROW_HEADERS[ROW_SECONDARY]);
+        secondaryDatum.put(KEY_ROW_DETAIL,joinByComma(_labelStruct._secondaryActivities));
+        data.add(secondaryDatum);
+
+        HashMap<String,String> moodDatum = new HashMap<>(2);
+        moodDatum.put(KEY_ROW_HEADER,ROW_HEADERS[ROW_MOOD]);
+        moodDatum.put(KEY_ROW_DETAIL,joinByComma(_labelStruct._moods));
+        data.add(moodDatum);
+
+        HashMap<String,String> validDatum = new HashMap<>(2);
+        String validRowHeader = _parameters._feedbackType == FEEDBACK_TYPE_ACTIVE ? ROW_HEADERS[ROW_VALID] : "";
+        validDatum.put(KEY_ROW_HEADER,validRowHeader);
+        validDatum.put(KEY_ROW_DETAIL,"");
+        data.add(validDatum);
 
         SimpleAdapter adapter = new SimpleAdapter(this, data,
                 android.R.layout.simple_list_item_2,
@@ -289,56 +302,46 @@ public class FeedbackActivity extends BaseActivity {
             return;
         }
 
-        String[] selected = data.getStringArrayExtra(SelectionFromListActivity.SELECTED_LABELS_OUTPUT_KEY);
-        String[] responses = new String[selected.length];
-
-        if (requestCode== ROW_MAIN || requestCode== ROW_SECONDARY || requestCode== ROW_MOOD) {
-            if (data == null) {
-                Log.e(LOG_TAG,"Output from selection had null data");
-                return;
-            }
-            if (!data.hasExtra(SelectionFromListActivity.SELECTED_LABELS_OUTPUT_KEY)) {
-                Log.e(LOG_TAG,"Output from selection is missing the selected labels");
-                return;
-            }
-
-            Log.d(LOG_TAG,"selected: ");
-
-            String newSelected = "";
-            for (int i=0;i<selected.length;i++) {
-                Log.d(LOG_TAG,selected[i]);
-                if(_presentedLabelStrings[requestCode] == null){
-                    _presentedLabelStrings[requestCode] = "";
-                    newSelected = selected[i];
-                }
-                else
-                    newSelected = newSelected + ", " + selected[i];
-
-                if (requestCode == ROW_MAIN) {
-                    Log.d(LOG_TAG,"return from selecting main");
-                    _labelStruct._mainActivity = selected[i];
-                }
-                else if (requestCode == ROW_SECONDARY) {
-                    Log.d(LOG_TAG,"return from selecting secondary");
-                    responses[i] = selected[i];
-                }
-                else if (requestCode == ROW_MOOD) {
-                    Log.d(LOG_TAG, "return from selecting mood");
-                   responses[i] = selected[i];
-                }
-            }
-
-            //update the string list of user responses displayed in feedback page
-            _presentedLabelStrings[requestCode] = newSelected;
-
-            if (requestCode == ROW_SECONDARY) {
-                _labelStruct._secondaryActivities = responses;
-            }
-            else if (requestCode == ROW_MOOD) {
-                _labelStruct._moods = responses;
-            }
-
-            //Log.d(LOG_TAG, "updated response: " + _presentedLabelStrings[requestCode]);
+        if (data == null) {
+            Log.e(LOG_TAG,"Output from selection had null data");
+            return;
         }
+        if (!data.hasExtra(SelectionFromListActivity.SELECTED_LABELS_OUTPUT_KEY)) {
+            Log.e(LOG_TAG,"Output from selection is missing the selected labels");
+            return;
+        }
+
+        String[] selected = data.getStringArrayExtra(SelectionFromListActivity.SELECTED_LABELS_OUTPUT_KEY);
+        String presentableString = joinByComma(selected);
+        Log.d(LOG_TAG,"selected: " + presentableString);
+
+        switch (requestCode) {
+            case ROW_MAIN:
+                _labelStruct._mainActivity = selected[0];
+                break;
+            case ROW_SECONDARY:
+                _labelStruct._secondaryActivities = selected;
+                break;
+            case ROW_MOOD:
+                _labelStruct._moods = selected;
+                break;
+            case ROW_VALID:
+                //TODO: analyze selected string and save int numOfMinutesValid
+                break;
+        }
+
+    }
+
+    private static String joinByComma(String[] labels) {
+        if (labels == null || labels.length <= 0) {
+            return "";
+        }
+
+        String singleString = labels[0];
+        for (int i=1; i < labels.length; i ++) {
+            singleString += "," + labels[i];
+        }
+
+        return singleString;
     }
 }
