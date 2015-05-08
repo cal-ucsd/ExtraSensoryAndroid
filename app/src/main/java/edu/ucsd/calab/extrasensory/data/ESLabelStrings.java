@@ -1,6 +1,7 @@
 package edu.ucsd.calab.extrasensory.data;
 
 import android.content.Context;
+import android.graphics.Color;
 
 import java.lang.reflect.Array;
 import java.util.*;
@@ -25,7 +26,37 @@ public class ESLabelStrings {
     private static String[] _moods = null;
     private static String[] _homeSensingLabels = null;
     private static TreeMap<String,String[]> _secondaryActivitiesPerSubject = null;
+    private static HashMap<String,Integer> _mainActivity2color = null;
 
+
+    private static void initializeColorMap() {
+        String[] mainActivities = getMainActivities();
+        float maxHue = 250, minHue = 0;
+        int numColors = mainActivities.length;
+
+        _mainActivity2color = new HashMap<>(numColors);
+
+        float decrement = (maxHue - minHue) / (numColors - 1);
+        float[] hsv = new float[3];
+        hsv[1] = 1;
+        hsv[2] = 1;
+        for (int i = 0; i < numColors; i ++) {
+            hsv[0] = maxHue - i*decrement;
+            _mainActivity2color.put(mainActivities[i], Color.HSVToColor(hsv));
+        }
+    }
+
+    public static int getColorForMainActivity(String mainActivity) {
+        if (_mainActivity2color == null) {
+            initializeColorMap();
+        }
+
+        if (!_mainActivity2color.containsKey(mainActivity)) {
+            return Color.WHITE;
+        }
+        
+        return _mainActivity2color.get(mainActivity).intValue();
+    }
 
     public static String[] getMainActivities() {
         if (_mainActivities == null) {

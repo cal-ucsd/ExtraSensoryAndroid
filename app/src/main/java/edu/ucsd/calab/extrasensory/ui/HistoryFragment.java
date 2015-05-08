@@ -20,6 +20,7 @@ import java.util.Locale;
 import edu.ucsd.calab.extrasensory.R;
 import edu.ucsd.calab.extrasensory.data.ESContinuousActivity;
 import edu.ucsd.calab.extrasensory.data.ESDatabaseAccessor;
+import edu.ucsd.calab.extrasensory.data.ESLabelStrings;
 import edu.ucsd.calab.extrasensory.data.ESTimestamp;
 import edu.ucsd.calab.extrasensory.sensors.ESSensorManager;
 
@@ -167,6 +168,7 @@ public class HistoryFragment extends BaseTabFragment {
                 row.setTag(holder);
 
                 String activityLabel = "";
+                String mainActivityForColor = "";
                 String timeLabel = "";
                 String endTimeLabel = "";
                 Date date;
@@ -176,9 +178,11 @@ public class HistoryFragment extends BaseTabFragment {
 
                 if(activity.getMainActivityUserCorrection() != null){
                     activityLabel = activity.getMainActivityUserCorrection();
+                    mainActivityForColor = activityLabel;
                 }
                 else{
-                    activityLabel = activity.getMainActivityServerPrediction() + "?";
+                    mainActivityForColor = activity.getMainActivityServerPrediction();
+                    activityLabel = mainActivityForColor + "?";
                 }
                 //setting time label
                 date = activity.getStartTimestamp().getDateOfTimestamp();
@@ -192,7 +196,10 @@ public class HistoryFragment extends BaseTabFragment {
                 //setting activity label
                 holder.mainActivity.setText(activityLabel);
                 holder.time.setText(timeLabel);
+
+                row.setBackgroundColor(ESLabelStrings.getColorForMainActivity(mainActivityForColor));
             }
+
             return row;
         }
 
