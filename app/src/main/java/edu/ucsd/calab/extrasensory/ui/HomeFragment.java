@@ -70,58 +70,9 @@ public class HomeFragment extends BaseTabFragment {
 
 
 
-        Button selectMainButton = (Button) homeView.findViewById(R.id.select_main_button);
-        selectMainButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Log.d(LOG_TAG,"clicked select main");
-                Intent intent = new Intent(ESApplication.getTheAppContext(),SelectionFromListActivity.class);
-                intent.putExtra(SelectionFromListActivity.LIST_TYPE_KEY,SelectionFromListActivity.LIST_TYPE_MAIN_ACTIVITY);
-
-                startActivityForResult(intent,2);
-            }
-        });
-        Button selectSecondaryButton = (Button) homeView.findViewById(R.id.select_secondary_button);
-        selectSecondaryButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Log.d(LOG_TAG,"clicked select secondary");
-                Intent intent = new Intent(ESApplication.getTheAppContext(),SelectionFromListActivity.class);
-                intent.putExtra(SelectionFromListActivity.LIST_TYPE_KEY,SelectionFromListActivity.LIST_TYPE_SECONDARY_ACTIVITIES);
-                intent.putExtra(SelectionFromListActivity.PRESELECTED_LABELS_KEY,new String[]{"At home"});
-                startActivityForResult(intent,3);
-            }
-        });
-
         return homeView;
     }
 
-    @Override
-    public void onActivityResult (int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode,resultCode,data);
-        Log.d(LOG_TAG,"got activity result");
-        if (requestCode == 2) {
-            Log.d(LOG_TAG,"return from selcting main");
-        }
-        if (requestCode == 3) {
-            Log.d(LOG_TAG,"return from selecting secondary");
-        }
-        if (requestCode==2 || requestCode==3) {
-            if (data == null) {
-                Log.e(LOG_TAG,"Output from selection had null data");
-                return;
-            }
-            if (!data.hasExtra(SelectionFromListActivity.SELECTED_LABELS_OUTPUT_KEY)) {
-                Log.e(LOG_TAG,"Output from selection is missing the selected labels");
-                return;
-            }
-            String[] selected = data.getStringArrayExtra(SelectionFromListActivity.SELECTED_LABELS_OUTPUT_KEY);
-            Log.d(LOG_TAG,"selected: ");
-            for (int i=0;i<selected.length;i++) {
-                Log.d(LOG_TAG,selected[i]);
-            }
-        }
-    }
 
     private void presentNumStoredExamples() {
         int num = ESNetworkAccessor.getESNetworkAccessor().uploadQueueSize();
