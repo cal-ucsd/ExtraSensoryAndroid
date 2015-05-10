@@ -198,6 +198,7 @@ public class BaseActivity extends ActionBarActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 Intent intent = new Intent(getApplicationContext(),FeedbackActivity.class);
+                intent.putExtra(FeedbackActivity.KEY_INITIATED_BY_NOTIFICATION,true);
                 FeedbackActivity.setFeedbackParametersBeforeStartingFeedback(new FeedbackActivity.FeedbackParameters(entireRange));
                 startActivity(intent);
                 dialog.dismiss();
