@@ -546,9 +546,9 @@ public class ESDatabaseAccessor {
         String serverMain = cursor.getString(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESActivityEntry.COLUMN_NAME_MAIN_ACTIVITY_SERVER_PREDICTION));
         String userMain = cursor.getString(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESActivityEntry.COLUMN_NAME_MAIN_ACTIVITY_USER_CORRECTION));
         String secondaryCSV = cursor.getString(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESActivityEntry.COLUMN_NAME_SECONDARY_ACTIVITIES_CSV));
-        String[] secondaryActivities = parseCSV(secondaryCSV);
+        String[] secondaryActivities = (secondaryCSV==null || secondaryCSV.isEmpty()) ? new String[]{} : parseCSV(secondaryCSV);
         String moodCSV = cursor.getString(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESActivityEntry.COLUMN_NAME_MOODS_CSV));
-        String[] moods = parseCSV(moodCSV);
+        String[] moods = (moodCSV==null || moodCSV.isEmpty()) ? new String[]{} : parseCSV(moodCSV);
 
         return new ESActivity(timestamp,labelSource,serverMain,userMain,secondaryActivities,moods);
     }

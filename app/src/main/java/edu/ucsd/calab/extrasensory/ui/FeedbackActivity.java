@@ -1,6 +1,7 @@
 package edu.ucsd.calab.extrasensory.ui;
 
 import android.app.Activity;
+import android.app.SharedElementCallback;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -166,7 +167,6 @@ public class FeedbackActivity extends BaseActivity {
         switch (_parameters._feedbackType) {
             case FEEDBACK_TYPE_ACTIVE:
                 Log.i(LOG_TAG,"Opening active feedback view");
-                //TODO: present active feedback fields
                 break;
             case FEEDBACK_TYPE_HISTORY_CONTINUOUS_ACTIVITY:
                 Log.i(LOG_TAG,"Opening feedback view for continuous activity from history");
@@ -228,17 +228,19 @@ public class FeedbackActivity extends BaseActivity {
                     case ROW_MAIN:
                         intent = new Intent(ESApplication.getTheAppContext(), SelectionFromListActivity.class);
                         intent.putExtra(SelectionFromListActivity.LIST_TYPE_KEY, SelectionFromListActivity.LIST_TYPE_MAIN_ACTIVITY);
+                        intent.putExtra(SelectionFromListActivity.PRESELECTED_LABELS_KEY,new String[] {_labelStruct._mainActivity});
                         startActivityForResult(intent, ROW_MAIN);
                         break;
                     case ROW_SECONDARY:
                         intent = new Intent(ESApplication.getTheAppContext(), SelectionFromListActivity.class);
                         intent.putExtra(SelectionFromListActivity.LIST_TYPE_KEY, SelectionFromListActivity.LIST_TYPE_SECONDARY_ACTIVITIES);
-                       // intent.putExtra(SelectionFromListActivity.PRESELECTED_LABELS_KEY, new String[]{"At home"});
+                        intent.putExtra(SelectionFromListActivity.PRESELECTED_LABELS_KEY,_labelStruct._secondaryActivities);
                         startActivityForResult(intent, ROW_SECONDARY);
                         break;
                     case ROW_MOOD:
                         intent = new Intent(ESApplication.getTheAppContext(), SelectionFromListActivity.class);
                         intent.putExtra(SelectionFromListActivity.LIST_TYPE_KEY, SelectionFromListActivity.LIST_TYPE_MOODS);
+                        intent.putExtra(SelectionFromListActivity.PRESELECTED_LABELS_KEY,_labelStruct._moods);
                         startActivityForResult(intent, ROW_MOOD);
                         break;
                     case ROW_VALID:
