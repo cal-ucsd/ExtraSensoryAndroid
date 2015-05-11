@@ -126,8 +126,15 @@ public class ESNetworkAccessor {
         }
 
         public void removeFromQueue(ESTimestamp timestamp) {
+            // Remove from the queue:
             _timestampsQueue.remove(timestamp);
             _activitiesToSend.remove(timestamp);
+            // Delete the marking file:
+            File feedbackFile = new File(ESApplication.getFeedbackDir(),timestamp.toString() + FEEDBACK_FILE_EXTENSION);
+            if (feedbackFile.exists()) {
+                feedbackFile.delete();
+                Log.i(LOG_TAG,"Deleted feedback file: " + feedbackFile.getName());
+            }
             // Send notification to other components:
             Intent intent = new Intent(BROADCAST_FEEDBACK_QUEUE_SIZE_CHANGED);
             LocalBroadcastManager.getInstance(ESApplication.getTheAppContext()).sendBroadcast(intent);
@@ -139,7 +146,7 @@ public class ESNetworkAccessor {
                 str += _timestampsQueue.get(0);
             }
             for (int i=1;i < _timestampsQueue.size(); i ++) {
-                str += _timestampsQueue.get(i);
+                str += "," + _timestampsQueue.get(i);
             }
             str += "}";
 
