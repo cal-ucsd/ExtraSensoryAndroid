@@ -96,7 +96,7 @@ public class HistoryFragment extends BaseTabFragment {
                 Log.d(LOG_TAG, "HELLO: " + position);
                 Log.d(LOG_TAG, "HELLO: " + id);
                 Log.d(LOG_TAG, "HELLO: " + activityList[(int)id]);
-                FeedbackActivity.setFeedbackParametersBeforeStartingFeedback(new FeedbackActivity.FeedbackParameters(activityList[position-1]));
+                FeedbackActivity.setFeedbackParametersBeforeStartingFeedback(new FeedbackActivity.FeedbackParameters(activityList[position]));
                 startActivity(i);
             }
         });
