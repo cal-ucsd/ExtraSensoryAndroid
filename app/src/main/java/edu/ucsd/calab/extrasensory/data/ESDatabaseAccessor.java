@@ -116,7 +116,7 @@ public class ESDatabaseAccessor {
      *
      * @return an ESSettings object to represent the settings record
      */
-    private ESSettings createSettingsRecord() {
+    private synchronized ESSettings createSettingsRecord() {
         SQLiteDatabase db = _dbHelper.getWritableDatabase();
 
         String uuid = generateUUID();
@@ -144,7 +144,7 @@ public class ESDatabaseAccessor {
      * If it wasn't created yet, create this record and get it.
      * @return the settings of the application
      */
-    ESSettings getTheSettings() {
+    synchronized ESSettings getTheSettings() {
         // Get the records (there should be zero or one records):
         SQLiteDatabase db = _dbHelper.getReadableDatabase();
 
@@ -180,7 +180,7 @@ public class ESDatabaseAccessor {
         return settings;
     }
 
-    ESSettings setSettings(int maxStoredExamples,int notificationInterval) {
+    synchronized ESSettings setSettings(int maxStoredExamples,int notificationInterval) {
         SQLiteDatabase db = _dbHelper.getWritableDatabase();
 
         ContentValues values = new ContentValues();
@@ -200,7 +200,7 @@ public class ESDatabaseAccessor {
         return getTheSettings();
     }
 
-    ESSettings setSettings(boolean locationBubbleUsed) {
+    synchronized ESSettings setSettings(boolean locationBubbleUsed) {
         SQLiteDatabase db = _dbHelper.getWritableDatabase();
 
         ContentValues values = new ContentValues();
@@ -219,7 +219,7 @@ public class ESDatabaseAccessor {
         return getTheSettings();
     }
 
-    ESSettings setSettings(double locationBubbleCenterLat, double locationBubbleCenterLong) {
+    synchronized ESSettings setSettings(double locationBubbleCenterLat, double locationBubbleCenterLong) {
         SQLiteDatabase db = _dbHelper.getWritableDatabase();
 
         ContentValues values = new ContentValues();
@@ -239,7 +239,7 @@ public class ESDatabaseAccessor {
         return getTheSettings();
     }
 
-    ESSettings setSettings(Location locationBubbleCenter) {
+    synchronized ESSettings setSettings(Location locationBubbleCenter) {
         double locationBubbleCenterLat = locationBubbleCenter == null ? LOCATION_BUBBLE_CENTER_LAT_DEFAULT : locationBubbleCenter.getLatitude();
         double locationBubbleCenterLong = locationBubbleCenter == null ? LOCATION_BUBBLE_CENTER_LONG_DEFAULT : locationBubbleCenter.getLongitude();
 
@@ -256,7 +256,7 @@ public class ESDatabaseAccessor {
      * @param cursor A cursor, assumed currently pointing at the record of ESSettings.
      * @return The ESSettings object
      */
-    private ESSettings extractSettingsFromCurrentRecord(Cursor cursor) {
+    private synchronized ESSettings extractSettingsFromCurrentRecord(Cursor cursor) {
         if (cursor == null) {
             Log.e(LOG_TAG,"Given null cursor");
             return null;
@@ -286,7 +286,7 @@ public class ESDatabaseAccessor {
      *
      * @return A new activity instance, with "now"'s timestamp and default values for all the properties.
      */
-    public ESActivity createNewActivity() {
+    public synchronized ESActivity createNewActivity() {
         ESTimestamp timestamp = new ESTimestamp();
         // Make sure there is not already an existing record for this timestamp:
         ESActivity existingActivity = getESActivity(timestamp);
@@ -323,7 +323,7 @@ public class ESDatabaseAccessor {
      * @param timestamp The timestamp for the activity instance.
      * @return The desired activity, or null if there is no record for the timestamp.
      */
-    public ESActivity getESActivity(ESTimestamp timestamp) {
+    public synchronized ESActivity getESActivity(ESTimestamp timestamp) {
         SQLiteDatabase db = _dbHelper.getReadableDatabase();
 
         String[] projection = {
@@ -363,7 +363,7 @@ public class ESDatabaseAccessor {
      * @param activity The ESActivity to set the prediction for
      * @param mainActivityServerPrediction The server prediction to assign to the activity
      */
-    public void setESActivityServerPrediction(ESActivity activity,String mainActivityServerPrediction) {
+    public synchronized void setESActivityServerPrediction(ESActivity activity,String mainActivityServerPrediction) {
         setESActivityValuesAndPossiblySendFeedback(activity,
                 activity.get_labelSource(),
                 mainActivityServerPrediction,
@@ -384,7 +384,7 @@ public class ESDatabaseAccessor {
      * @param secondaryActivities The array of secondary activities to assign to the activity
      * @param moods The array of moods to assign to the activity
      */
-    public void setESActivityValues(ESActivity activity,
+    public synchronized void setESActivityValues(ESActivity activity,
                                     ESActivity.ESLabelSource labelSource,String mainActivityUserCorrection,
                                     String[] secondaryActivities,String[] moods) {
         setESActivityValuesAndPossiblySendFeedback(activity,labelSource,activity.get_mainActivityServerPrediction(),mainActivityUserCorrection,
@@ -405,7 +405,7 @@ public class ESDatabaseAccessor {
      * @param moods The array of moods to assign to the activity
      * @param sendFeedback Should we send feedback update with this activity's labels?
      */
-    public void setESActivityValuesAndPossiblySendFeedback(ESActivity activity,ESActivity.ESLabelSource labelSource,
+    public synchronized void setESActivityValuesAndPossiblySendFeedback(ESActivity activity,ESActivity.ESLabelSource labelSource,
                                                            String mainActivityServerPrediction,String mainActivityUserCorrection,
                                                            String[] secondaryActivities,String[] moods,
                                                            boolean sendFeedback) {
@@ -458,7 +458,7 @@ public class ESDatabaseAccessor {
      * @param toTimestamp The latest time in the desired range
      * @return An array of continuous activities from the desired time range, in ascending order of time
      */
-    public ESContinuousActivity[] getContinuousActivitiesFromTimeRange(ESTimestamp fromTimestamp,ESTimestamp toTimestamp) {
+    public synchronized ESContinuousActivity[] getContinuousActivitiesFromTimeRange(ESTimestamp fromTimestamp,ESTimestamp toTimestamp) {
         ESActivity[] minuteActivities = getActivitiesFromTimeRange(fromTimestamp,toTimestamp);
         return ESContinuousActivity.mergeContinuousActivities(minuteActivities);
     }
@@ -472,7 +472,7 @@ public class ESDatabaseAccessor {
      * @param toTimestamp The last timestamp in the desired time range
      * @return A single continuous activity object, representing all the activities in the desired time range
      */
-    public ESContinuousActivity getSingleContinuousActivityFromTimeRange(ESTimestamp fromTimestamp,ESTimestamp toTimestamp) {
+    public synchronized ESContinuousActivity getSingleContinuousActivityFromTimeRange(ESTimestamp fromTimestamp,ESTimestamp toTimestamp) {
         ESActivity[] minuteActivities = getActivitiesFromTimeRange(fromTimestamp,toTimestamp);
         return new ESContinuousActivity(minuteActivities);
     }
@@ -486,7 +486,7 @@ public class ESDatabaseAccessor {
      * @param toTimestamp The latest time in the desired range
      * @return An array of the desired activities, sorted in ascending order of time.
      */
-    private ESActivity[] getActivitiesFromTimeRange(ESTimestamp fromTimestamp,ESTimestamp toTimestamp) {
+    private synchronized ESActivity[] getActivitiesFromTimeRange(ESTimestamp fromTimestamp,ESTimestamp toTimestamp) {
         if (fromTimestamp.isLaterThan(toTimestamp)) {
             // Then there should be no records in the range
             return new ESActivity[0];
@@ -532,7 +532,7 @@ public class ESDatabaseAccessor {
      * @param cursor A cursor, currently pointing at the desired record.
      * @return An ESActivity object for the current record pointed to by the cursor.
      */
-    private ESActivity extractActivityFromCurrentRecord(Cursor cursor) {
+    private synchronized ESActivity extractActivityFromCurrentRecord(Cursor cursor) {
         if (cursor == null) {
             String msg = "null cursor given";
             Log.e(LOG_TAG, msg);
@@ -560,7 +560,7 @@ public class ESDatabaseAccessor {
      * Then delete these orphan records.
      * @param fromTimestamp The earliest time in the desired range to check
      */
-    public void clearOrphanRecords(ESTimestamp fromTimestamp) {
+    public synchronized void clearOrphanRecords(ESTimestamp fromTimestamp) {
         SQLiteDatabase db = _dbHelper.getWritableDatabase();
 
         String[] projection = {
@@ -606,7 +606,7 @@ public class ESDatabaseAccessor {
      * @param startFrom The earliest timestamp to check from
      * @return The latest verified activity, or null if no such activity was found in the desired time range.
      */
-    public ESActivity getLatestVerifiedActivity(ESTimestamp startFrom) {
+    public synchronized ESActivity getLatestVerifiedActivity(ESTimestamp startFrom) {
         ESActivity[] recentActivities = getActivitiesFromTimeRange(startFrom,new ESTimestamp());
         for (int i = recentActivities.length - 1; i >= 0; i --) {
             if (recentActivities[i].hasUserProvidedLabels()) {
