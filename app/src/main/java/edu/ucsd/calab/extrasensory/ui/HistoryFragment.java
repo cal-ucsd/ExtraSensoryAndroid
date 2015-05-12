@@ -138,7 +138,7 @@ public class HistoryFragment extends BaseTabFragment {
          * @param values The ESContinuousActivity[] with the values we want to display
          */
         public HistoryAdapter(Context context, int layoutResourceId, ESContinuousActivity[] values) {
-            super(context, R.layout.history_rowlayout,R.id.firstLine, values);
+            super(context, R.layout.history_rowlayout,R.id.text_time_in_history_row, values);
             this._layoutResourceId = layoutResourceId;
             this.context = context;
             this._values = values;
@@ -151,8 +151,8 @@ public class HistoryFragment extends BaseTabFragment {
 
             //linking labels to xml view
             holder = new ESContinuousActivityHolder();
-            holder.time = (TextView)row.findViewById(R.id.firstLine);
-            holder.mainActivity = (TextView)row.findViewById(R.id.secondLine);
+            holder.time = (TextView)row.findViewById(R.id.text_time_in_history_row);
+            holder.mainActivity = (TextView)row.findViewById(R.id.text_main_activity_in_history_row);
             row.setTag(holder);
 
             String activityLabel = "";
