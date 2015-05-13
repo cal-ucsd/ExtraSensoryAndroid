@@ -83,7 +83,7 @@ public class HistoryFragment extends BaseTabFragment {
         // Get the list view and set it using this adapter
         ListView listView = (ListView) getView().findViewById(R.id.listview);
         if (listView.getAdapter() == null) {
-            HistoryAdapter histAdapter = new HistoryAdapter(getActivity().getBaseContext(), R.layout.history_rowlayout, activityList);
+            HistoryAdapter histAdapter = new HistoryAdapter(getActivity().getBaseContext(), R.layout.history_rowlayout, activityList,this);
             listView.setAdapter(histAdapter);
         }
         else {
@@ -123,31 +123,32 @@ public class HistoryFragment extends BaseTabFragment {
         calculateAndPresentDaysHistory();
     }
 
+    private void itemClicked(ESContinuousActivity continuousActivity) {
+        Intent intent = new Intent(getActivity(),FeedbackActivity.class);
+        FeedbackActivity.setFeedbackParametersBeforeStartingFeedback(new FeedbackActivity.FeedbackParameters(continuousActivity));
+        startActivity(intent);
+    }
+
     /**
      * Created by Jennifer on 2/18/2015.
      */
 
     private static class HistoryAdapter extends ArrayAdapter {
 
-        // This variable gives context as to what is calling the inflater and where it needs
-        // to inflate the view
-        private final Context context;
-        //linked list of ESContinuousActivities that need to be shown
-        //private ESContinuousActivity[] _values;
         private ArrayList<ESContinuousActivity> _items;
-        int _layoutResourceId;
+        private HistoryFragment _handler;
 
         /**
          * Constructor for History Adapter
          * @param context context from activity
          * @param layoutResourceId The xml rowlayout
          * @param items The list of ESContinuousActivity with the values we want to display
+         * @param handler The HistoryFragment that uses this adapter
          */
-        public HistoryAdapter(Context context, int layoutResourceId, ArrayList<ESContinuousActivity> items) {
-            super(context, R.layout.history_rowlayout,R.id.text_time_in_history_row, items);
-            this._layoutResourceId = layoutResourceId;
-            this.context = context;
+        public HistoryAdapter(Context context, int layoutResourceId, ArrayList<ESContinuousActivity> items,HistoryFragment handler) {
+            super(context,layoutResourceId,R.id.text_main_activity_in_history_row,items);
             this._items = items;
+            this._handler = handler;
         }
 
         @Override
@@ -168,7 +169,7 @@ public class HistoryFragment extends BaseTabFragment {
             Date date;
 
             //get one activity from the array
-            ESContinuousActivity activity = _items.get(position);
+            final ESContinuousActivity activity = _items.get(position);
 
             if(activity.getMainActivityUserCorrection() != null){
                 activityLabel = activity.getMainActivityUserCorrection();
@@ -191,9 +192,60 @@ public class HistoryFragment extends BaseTabFragment {
             holder.mainActivity.setText(activityLabel);
             holder.time.setText(timeLabel);
 
+            // Setting the details label:
+            TextView detailsText = (TextView)row.findViewById(R.id.text_details_in_history_row);
+            detailsText.setText(getDetailsString(activity));
+
             row.setBackgroundColor(ESLabelStrings.getColorForMainActivity(mainActivityForColor));
 
+            // Setting the click listener:
+            row.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Log.i(LOG_TAG,"row clicked");
+                    _handler.itemClicked(activity);
+                }
+            });
+
+            // Setting the gesture detections:
+            row.setOnTouchListener(new OnSwipeTouchListener(getContext()) {
+                @Override
+                public boolean onSwipeRight() {
+                    Log.i(LOG_TAG,"Swiped row to the right");
+                    return true;
+                }
+
+                @Override
+                public boolean onSwipeLeft() {
+                    Log.i(LOG_TAG,"Swiped row to the left");
+                    return true;
+                }
+            });
+
             return row;
+        }
+
+        private String getDetailsString(ESContinuousActivity continuousActivity) {
+            String details = "";
+
+            String[] moods = continuousActivity.getMoods();
+            if (moods != null && moods.length > 0) {
+                details += moods[0];
+                for (int i=1; i<moods.length; i++) {
+                    details += ", " + moods[i];
+                }
+            }
+
+            String[] sec = continuousActivity.getSecondaryActivities();
+            if (sec != null && sec.length > 0) {
+                details += " (" + sec[0];
+                for (int i=1; i<sec.length; i++) {
+                    details += ", " + sec[i];
+                }
+                details += ")";
+            }
+
+            return details;
         }
 
         public void resetItems(ArrayList<ESContinuousActivity> items) {
