@@ -13,6 +13,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
@@ -44,8 +45,8 @@ public class HistoryFragment extends BaseTabFragment {
     }
 
     @Override
-    public void onActivityCreated(Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
+    public void onStart() {
+        super.onStart();
         ESDatabaseAccessor.getESDatabaseAccessor().clearOrphanRecords(new ESTimestamp(0));
         calculateAndPresentDaysHistory();
     }
@@ -72,11 +73,12 @@ public class HistoryFragment extends BaseTabFragment {
 
         Log.d(LOG_TAG,"getting activities from " + startTime.infoString() + " to " + endTime.infoString());
 
-        final ESContinuousActivity [] activityList = ESDatabaseAccessor.getESDatabaseAccessor().getContinuousActivitiesFromTimeRange(startTime, endTime);
-        Log.d(LOG_TAG,"==== Got " + activityList.length + " cont activities: ");
-        for (int i= 0; i < activityList.length; i++) {
-            Log.d(LOG_TAG, activityList[i].toString());
+        final ESContinuousActivity [] activityArray = ESDatabaseAccessor.getESDatabaseAccessor().getContinuousActivitiesFromTimeRange(startTime, endTime);
+        Log.d(LOG_TAG,"==== Got " + activityArray.length + " cont activities: ");
+        for (int i= 0; i < activityArray.length; i++) {
+            Log.d(LOG_TAG, activityArray[i].toString());
         }
+        ArrayList<ESContinuousActivity> activityList = getArrayList(activityArray);
 
         // Get the list view and set it using this adapter
         ListView listView = (ListView) getView().findViewById(R.id.listview);
@@ -95,21 +97,24 @@ public class HistoryFragment extends BaseTabFragment {
                 Intent i = new Intent(getActivity(), FeedbackActivity.class);
                 Log.d(LOG_TAG, "HELLO: " + position);
                 Log.d(LOG_TAG, "HELLO: " + id);
-                Log.d(LOG_TAG, "HELLO: " + activityList[(int)id]);
-                FeedbackActivity.setFeedbackParametersBeforeStartingFeedback(new FeedbackActivity.FeedbackParameters(activityList[position]));
+                Log.d(LOG_TAG, "HELLO: " + activityArray[(int)id]);
+                FeedbackActivity.setFeedbackParametersBeforeStartingFeedback(new FeedbackActivity.FeedbackParameters(activityArray[position]));
                 startActivity(i);
             }
         });
 
     }
 
- /*   @Override
-    public void onListItemClick(ListView l, View v, int position, long id) {
-        // Launching new Activity on selecting single List Item
-        Intent i = new Intent(getActivity(), FeedbackActivity.class);
-        startActivity(i);
-
-    }*/
+    private ArrayList<ESContinuousActivity> getArrayList(ESContinuousActivity[] items) {
+        if (items == null) {
+            return new ArrayList<>(0);
+        }
+        ArrayList<ESContinuousActivity> arrayList = new ArrayList<>(items.length);
+        for (int i=0; i<items.length; i++) {
+            arrayList.add(items[i]);
+        }
+        return arrayList;
+    }
 
     @Override
     protected void reactToRecordsUpdatedEvent() {
@@ -128,20 +133,21 @@ public class HistoryFragment extends BaseTabFragment {
         // to inflate the view
         private final Context context;
         //linked list of ESContinuousActivities that need to be shown
-        private ESContinuousActivity[] _values;
+        //private ESContinuousActivity[] _values;
+        private ArrayList<ESContinuousActivity> _items;
         int _layoutResourceId;
 
         /**
          * Constructor for History Adapter
          * @param context context from activity
          * @param layoutResourceId The xml rowlayout
-         * @param values The ESContinuousActivity[] with the values we want to display
+         * @param items The list of ESContinuousActivity with the values we want to display
          */
-        public HistoryAdapter(Context context, int layoutResourceId, ESContinuousActivity[] values) {
-            super(context, R.layout.history_rowlayout,R.id.text_time_in_history_row, values);
+        public HistoryAdapter(Context context, int layoutResourceId, ArrayList<ESContinuousActivity> items) {
+            super(context, R.layout.history_rowlayout,R.id.text_time_in_history_row, items);
             this._layoutResourceId = layoutResourceId;
             this.context = context;
-            this._values = values;
+            this._items = items;
         }
 
         @Override
@@ -162,7 +168,7 @@ public class HistoryFragment extends BaseTabFragment {
             Date date;
 
             //get one activity from the array
-            ESContinuousActivity activity = _values[position];
+            ESContinuousActivity activity = _items.get(position);
 
             if(activity.getMainActivityUserCorrection() != null){
                 activityLabel = activity.getMainActivityUserCorrection();
@@ -190,8 +196,9 @@ public class HistoryFragment extends BaseTabFragment {
             return row;
         }
 
-        public void resetItems(ESContinuousActivity[] values) {
-            this._values = values;
+        public void resetItems(ArrayList<ESContinuousActivity> items) {
+            this._items.clear();
+            this._items.addAll(items);
             notifyDataSetChanged();
         }
 

@@ -6,24 +6,32 @@
     android:id="@+id/relativeView">
 
     <TextView
+        android:id="@+id/text_details_in_history_row"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:textSize="12sp"
+        android:text="detail" />
+
+    <TextView
         android:id="@+id/text_time_in_history_row"
         android:layout_width="150dp"
-        android:layout_height="fill_parent"
-        android:layout_alignParentBottom="true"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/text_details_in_history_row"
+        android:layout_alignParentTop="true"
         android:layout_alignWithParentIfMissing="true"
         android:layout_marginRight="6dip"
         android:focusable="false"
         android:clickable="false"
-        android:gravity="center_vertical"
+        android:gravity="top"
         android:text="Time"
-        android:textSize="16sp" />
+        android:textSize="14sp" />
 
     <TextView
         android:id="@+id/text_main_activity_in_history_row"
         android:layout_width="wrap_content"
-        android:layout_height="fill_parent"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentRight="true"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
         android:layout_toRightOf="@id/text_time_in_history_row"
         android:focusable="false"
         android:clickable="false"
@@ -31,6 +39,17 @@
         android:singleLine="true"
         android:gravity="center_vertical"
         android:text="Activity"
-        android:textSize="16sp" />
+        android:textSize="14sp" />
 
+<!--
+    <TextView
+        android:id="@+id/text_accessory_in_history_row"
+        android:layout_width="100dip"
+        android:layout_height="wrap_content"
+        android:background="#cccccc"
+        android:text="split"
+        android:clickable="true"
+        android:layout_toRightOf="@id/text_main_activity_in_history_row"
+        android:layout_alignParentRight="true"/>
+-->
 </RelativeLayout>
