@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent" >
+
+    <TextView
+        android:id="@+id/feedback_dialog_text"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="25sp" />
+
+    <Button
+        android:id="@+id/feedback_dialogButtonOK"
+        android:layout_width="200px"
+        android:layout_height="wrap_content"
+        android:text=" OK "
+        android:layout_marginTop="5dp"
+        android:layout_marginRight="5dp"
+        android:layout_centerInParent="true"
+        android:layout_below="@+id/feedback_dialog_text"
+        />
+
+</RelativeLayout>

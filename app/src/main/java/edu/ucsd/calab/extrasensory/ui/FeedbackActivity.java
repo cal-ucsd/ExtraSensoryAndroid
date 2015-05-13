@@ -1,6 +1,7 @@
 package edu.ucsd.calab.extrasensory.ui;
 
 import android.app.Activity;
+import android.app.Dialog;
 import android.app.SharedElementCallback;
 import android.content.Context;
 import android.content.Intent;
@@ -10,9 +11,11 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.AdapterView;
 import android.widget.SimpleAdapter;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -121,6 +124,7 @@ public class FeedbackActivity extends BaseActivity {
             _labelStruct._mainActivity = _parameters._continuousActivityToEdit.mostUpToDateMainActivity();
             _labelStruct._secondaryActivities = _parameters._continuousActivityToEdit.getSecondaryActivities();
             _labelStruct._moods = _parameters._continuousActivityToEdit.getMoods();
+           // _labelStruct._validFor = _parameters._continuousActivityToEdit.getDurationInMinutes();
         }
 
         feedbackFlag = false;
@@ -137,7 +141,7 @@ public class FeedbackActivity extends BaseActivity {
 
     @Override
     protected void onDestroy() {
-        Log.d(LOG_TAG,"activity being destroyed");
+        Log.d(LOG_TAG, "activity being destroyed");
         super.onDestroy();
     }
 
@@ -244,7 +248,11 @@ public class FeedbackActivity extends BaseActivity {
                         startActivityForResult(intent, ROW_MOOD);
                         break;
                     case ROW_VALID:
-                        Toast.makeText(getApplicationContext(), "Hello", Toast.LENGTH_LONG).show();
+                        //Toast.makeText(getApplicationContext(), "Hello", Toast.LENGTH_LONG).show();
+                       /* intent = new Intent(ESApplication.getTheAppContext(), SelectionFromListActivity.class);
+                        intent.putExtra(SelectionFromListActivity.LIST_TYPE_KEY, SelectionFromListActivity.LIST_TYPE_VALID_FOR);
+                        intent.putExtra(SelectionFromListActivity.PRESELECTED_LABELS_KEY,_labelStruct._validFor);
+                        startActivityForResult(intent, ROW_VALID);*/
                         break;
                 }
             }
@@ -260,6 +268,31 @@ public class FeedbackActivity extends BaseActivity {
             @Override
             public void onClick(View arg0) {
                 boolean initiatedByNotification = getIntent().hasExtra(KEY_INITIATED_BY_NOTIFICATION);
+
+                //user must enter main activity before submitting feedback
+                if(_labelStruct._mainActivity == null){
+                    // custom dialog
+                    final Dialog dialog = new Dialog(context);
+                    dialog.setContentView(R.layout.activity_feedback_dialog);
+                    dialog.setTitle("ExtraSensory");
+
+                    // set the custom dialog components - text, image and button
+                    TextView text = (TextView) dialog.findViewById(R.id.feedback_dialog_text);
+                    text.setText("Feedback must have a Main Activity.");
+
+                    Button dialogButton = (Button) dialog.findViewById(R.id.feedback_dialogButtonOK);
+                    // if button is clicked, close the custom dialog
+                    dialogButton.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            dialog.dismiss();
+                        }
+                    });
+
+                    dialog.show();
+                    return;
+                }
+
                 if(_parameters._feedbackType == FEEDBACK_TYPE_ACTIVE){
                     Log.d(LOG_TAG,"ACTIVE FEEDBACK");
                     int validForHowManyMinutes = 1;//TODO: need to analyze this value from the user input to validFor
@@ -329,6 +362,8 @@ public class FeedbackActivity extends BaseActivity {
                 break;
             case ROW_VALID:
                 //TODO: analyze selected string and save int numOfMinutesValid
+                _labelStruct._validFor = selected[0];
+
                 break;
         }
 
