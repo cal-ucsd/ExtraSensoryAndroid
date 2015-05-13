@@ -57,16 +57,17 @@ public class SelectionFromListActivity extends BaseActivity {
     private static final String SELECTED_LABELS_INDEX_TITLE = "Selected";
     private static final String FREQUENT_LABELS_HEADER = "Frequently used";
     private static final String FREQUENT_LABELS_INDEX_TITLE = "Frequent";
-    private static final String MAIN_ACTIVITY_HEADER = "Main activity";
-    private static final String SECONDARY_ACTIVITIES_HEADER = "Secondary activities";
+    private static final String MAIN_ACTIVITY_HEADER = "Main Activity";
+    private static final String SECONDARY_ACTIVITIES_HEADER = "Secondary Activities";
     private static final String MOODS_HEADER = "Mood";
+    private static final String VALID_FOR_HEADER = "Valid For";
     private static final String ALL_LABELS = "All labels";
 
     private static final int LIST_TYPE_MISSING = -1;
-    public static final int LIST_TYPE_MAIN_ACTIVITY = 1;
-    public static final int LIST_TYPE_SECONDARY_ACTIVITIES = 2;
-    public static final int LIST_TYPE_MOODS = 3;
-    public static final int LIST_TYPE_VALID_FOR = 4;
+    public static final int LIST_TYPE_MAIN_ACTIVITY = 0;
+    public static final int LIST_TYPE_SECONDARY_ACTIVITIES = 1;
+    public static final int LIST_TYPE_MOODS = 2;
+    public static final int LIST_TYPE_VALID_FOR = 3;
 
     private static String[] getValidForValues() {
         return new String[]{"1 minute","2 minutes","5 minutes","10 minutes","15 minutes","20 minutes","25 minutes","30 minutes"};
@@ -134,16 +135,20 @@ public class SelectionFromListActivity extends BaseActivity {
                 _labelsPerSubject = ESLabelStrings.getSecondaryActivitiesPerSubject();
                 _allowMultiSelection = true;
                 _useIndex = true;
+                _allLabelsSectionHeader = SECONDARY_ACTIVITIES_HEADER;
                 break;
             case LIST_TYPE_MOODS:
                 _labelChoices = ESLabelStrings.getMoods();
                 _allowMultiSelection = true;
                 _useIndex = true;
+                _allLabelsSectionHeader = MOODS_HEADER;
                 break;
             case LIST_TYPE_VALID_FOR:
                 _labelChoices = getValidForValues();
                 _allowMultiSelection = false;
                 _useIndex = false;
+                _allLabelsSectionHeader = VALID_FOR_HEADER;
+                break;
             default:
                 Log.e(LOG_TAG,"Unsupported list type received: " + listType);
                 finish();
