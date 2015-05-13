@@ -2,7 +2,6 @@ package edu.ucsd.calab.extrasensory.ui;
 
 import android.app.Activity;
 import android.app.Dialog;
-import android.app.SharedElementCallback;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -11,7 +10,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.AdapterView;
 import android.widget.SimpleAdapter;
@@ -49,8 +47,6 @@ public class FeedbackActivity extends BaseActivity {
 
     Button button;
 
-    private static final String TEXT1 = "text1";
-    private static final String TEXT2 = "text2";
     private static final String KEY_ROW_HEADER = "row header";
     private static final String KEY_ROW_DETAIL = "row detail";
 
@@ -204,7 +200,7 @@ public class FeedbackActivity extends BaseActivity {
         HashMap<String,String> validDatum = new HashMap<>(2);
         String validRowHeader = _parameters._feedbackType == FEEDBACK_TYPE_ACTIVE ? ROW_HEADERS[ROW_VALID] : "";
         validDatum.put(KEY_ROW_HEADER,validRowHeader);
-        validDatum.put(KEY_ROW_DETAIL,"");
+        validDatum.put(KEY_ROW_DETAIL,_labelStruct._validFor);
         data.add(validDatum);
 
         SimpleAdapter adapter = new SimpleAdapter(this, data,
@@ -249,10 +245,10 @@ public class FeedbackActivity extends BaseActivity {
                         break;
                     case ROW_VALID:
                         //Toast.makeText(getApplicationContext(), "Hello", Toast.LENGTH_LONG).show();
-                       /* intent = new Intent(ESApplication.getTheAppContext(), SelectionFromListActivity.class);
+                        intent = new Intent(ESApplication.getTheAppContext(), SelectionFromListActivity.class);
                         intent.putExtra(SelectionFromListActivity.LIST_TYPE_KEY, SelectionFromListActivity.LIST_TYPE_VALID_FOR);
-                        intent.putExtra(SelectionFromListActivity.PRESELECTED_LABELS_KEY,_labelStruct._validFor);
-                        startActivityForResult(intent, ROW_VALID);*/
+                        intent.putExtra(SelectionFromListActivity.PRESELECTED_LABELS_KEY,new String[] {_labelStruct._validFor});
+                        startActivityForResult(intent, ROW_VALID);
                         break;
                 }
             }
