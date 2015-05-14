@@ -12,6 +12,12 @@ import android.util.Log;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import edu.ucsd.calab.extrasensory.ESApplication;
@@ -36,7 +42,11 @@ public class ESDatabaseAccessor {
     private static final String LOCATION_BUBBLE_LOCATION_PROVIDER = "BubbleCenter";
 
     public static final String BROADCAST_DATABASE_RECORDS_UPDATED = "edu.ucsd.calab.extrasensory.broadcast.database_records_updated";
-
+    public static enum ESLabelType {
+        ES_LABEL_TYPE_MAIN,
+        ES_LABEL_TYPE_SECONDARY,
+        ES_LABEL_TYPE_MOOD
+    }
 
     private static ESDatabaseAccessor _theSingleAccessor;
 
@@ -551,6 +561,94 @@ public class ESDatabaseAccessor {
         String[] moods = (moodCSV==null || moodCSV.isEmpty()) ? new String[]{} : parseCSV(moodCSV);
 
         return new ESActivity(timestamp,labelSource,serverMain,userMain,secondaryActivities,moods);
+    }
+
+    /**
+     * Get an array of the labels sorted in descending order of frequency of usage,
+     * including only the labels that were actually used by the user.
+     *
+     * @param fromTime The earliest timepoint to count from, or null to count from all the history.
+     * @param labelType either main, secondary or mood
+     * @return The labels used in the time period, in descending order of frequency.
+     */
+    public synchronized String[] getMostFrequentlyUsedLabels(ESTimestamp fromTime,ESLabelType labelType) {
+        // Get a label->counts map:
+        Map<String,Integer> countsMap = getLabelCounts(fromTime, labelType);
+        // Sort the label-count pairs according to count value:
+        List<Map.Entry<String,Integer>> entryList = new LinkedList<>(countsMap.entrySet());
+        Collections.sort(entryList,new Comparator<Map.Entry<String, Integer>>() {
+            @Override
+            public int compare(Map.Entry<String, Integer> lhs, Map.Entry<String, Integer> rhs) {
+                // Make sure it's descending order:
+                return rhs.getValue().compareTo(lhs.getValue());
+            }
+        });
+
+        // Organize the array of sorted labels:
+        String[] sortedLabels = new String[entryList.size()];
+        for (int i=0; i<entryList.size(); i++) {
+            Map.Entry<String,Integer> entry = entryList.get(i);
+            Log.d(LOG_TAG,String.format("Frequently used. label: %s. Count: %d.",entry.getKey(),entry.getValue()));
+            sortedLabels[i] = entry.getKey();
+        }
+
+        return sortedLabels;
+    }
+
+    /**
+     * Get counts of user-provided labels.
+     * For each label, how many times (how many minute activities) was this label reported.
+     * @param fromTime The earliest timepoint to count from, or null to count from all the history.
+     * @param labelType either main, secondary or mood
+     * @return A map from label to count. Containing only the labels with non-zero counts.
+     */
+    public synchronized Map<String,Integer> getLabelCounts(ESTimestamp fromTime,ESLabelType labelType) {
+        if (fromTime == null) {
+            fromTime = new ESTimestamp(0);
+        }
+        ESActivity[] activities = getActivitiesFromTimeRange(fromTime,new ESTimestamp());
+        HashMap<String,Integer> countsMap = new HashMap<>(10);
+
+        switch (labelType) {
+            case ES_LABEL_TYPE_MAIN:
+                for (ESActivity activity : activities) {
+                    String mainActivity = activity.get_mainActivityUserCorrection();
+                    if (mainActivity != null) {
+                        increaseLabelCount(countsMap,mainActivity);
+                    }
+                }
+                break;
+            case ES_LABEL_TYPE_SECONDARY:
+                for (ESActivity activity : activities) {
+                    String[] secondaries = activity.get_secondaryActivities();
+                    if (secondaries != null) {
+                        for (String secondary : secondaries) {
+                            increaseLabelCount(countsMap,secondary);
+                        }
+                    }
+                }
+                break;
+            case ES_LABEL_TYPE_MOOD:
+                for (ESActivity activity : activities) {
+                    String[] moods = activity.get_moods();
+                    if (moods != null) {
+                        for (String mood : moods) {
+                            increaseLabelCount(countsMap,mood);
+                        }
+                    }
+                }
+                break;
+        }
+
+        return countsMap;
+    }
+
+    private void increaseLabelCount(HashMap<String,Integer> countsMap,String label) {
+        if (!countsMap.containsKey(label)) {
+            countsMap.put(label,0);
+        }
+
+        countsMap.put(label,countsMap.get(label) + 1);
     }
 
     /**
