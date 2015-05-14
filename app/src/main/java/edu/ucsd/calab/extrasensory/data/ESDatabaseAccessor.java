@@ -564,6 +564,22 @@ public class ESDatabaseAccessor {
     }
 
     /**
+     * Split a continuous activity to separate continuous activity structures,
+     * each representing just a single minute-activity.
+     * @param continuousActivity The continuous activity to split
+     * @return An array of continuous activities, each representing a single minute-activity
+     */
+    public ESContinuousActivity[] splitToSeparateContinuousActivities(ESContinuousActivity continuousActivity) {
+        ESActivity[] minuteActivities = continuousActivity.getMinuteActivities();
+        ESContinuousActivity[] splitActivities = new ESContinuousActivity[minuteActivities.length];
+        for (int i=0; i<minuteActivities.length; i++) {
+            splitActivities[i] = new ESContinuousActivity(new ESActivity[]{minuteActivities[i]});
+        }
+
+        return splitActivities;
+    }
+
+    /**
      * Get an array of the labels sorted in descending order of frequency of usage,
      * including only the labels that were actually used by the user.
      *

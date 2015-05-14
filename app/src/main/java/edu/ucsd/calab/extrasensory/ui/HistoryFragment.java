@@ -14,16 +14,15 @@ import android.widget.TextView;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
 import edu.ucsd.calab.extrasensory.R;
+import edu.ucsd.calab.extrasensory.data.ESActivity;
 import edu.ucsd.calab.extrasensory.data.ESContinuousActivity;
 import edu.ucsd.calab.extrasensory.data.ESDatabaseAccessor;
 import edu.ucsd.calab.extrasensory.data.ESLabelStrings;
 import edu.ucsd.calab.extrasensory.data.ESTimestamp;
-import edu.ucsd.calab.extrasensory.sensors.ESSensorManager;
 
 /**
  * Fragment to display the history of activities (one day at a time)
@@ -63,17 +62,23 @@ public class HistoryFragment extends BaseTabFragment {
         System.out.println("startDATE IS " + df.format(d));
         */
 
-        ESTimestamp endTime = new ESTimestamp(startTime,1);
+        ESTimestamp endTime = new ESTimestamp(startTime, 1);
         SimpleDateFormat dateFormat = new SimpleDateFormat("EE MMM dd", Locale.US);
+        String headerText = "Today- " + dateFormat.format(startTime.getDateOfTimestamp());
+
+        Log.d(LOG_TAG, "getting activities from " + startTime.infoString() + " to " + endTime.infoString());
+
+        ESContinuousActivity[] activityArray = ESDatabaseAccessor.getESDatabaseAccessor().getContinuousActivitiesFromTimeRange(startTime, endTime);
+        presentSpecificHistoryContent(headerText,activityArray);
+    }
+
+    private void presentSpecificHistoryContent(String headerText,final ESContinuousActivity[] activityArray) {
 
         //Set day title
         View header = getView().findViewById(R.id.history_header);
-        TextView headerLabel = (TextView)header.findViewById(R.id.txtHeader);
-        headerLabel.setText("Today- " + dateFormat.format(startTime.getDateOfTimestamp()));
+        TextView headerLabel = (TextView) header.findViewById(R.id.txtHeader);
+        headerLabel.setText(headerText);
 
-        Log.d(LOG_TAG,"getting activities from " + startTime.infoString() + " to " + endTime.infoString());
-
-        final ESContinuousActivity [] activityArray = ESDatabaseAccessor.getESDatabaseAccessor().getContinuousActivitiesFromTimeRange(startTime, endTime);
         Log.d(LOG_TAG,"==== Got " + activityArray.length + " cont activities: ");
         for (int i= 0; i < activityArray.length; i++) {
             Log.d(LOG_TAG, activityArray[i].toString());
@@ -123,10 +128,26 @@ public class HistoryFragment extends BaseTabFragment {
         calculateAndPresentDaysHistory();
     }
 
-    private void itemClicked(ESContinuousActivity continuousActivity) {
+    private void rowClicked(ESContinuousActivity continuousActivity) {
         Intent intent = new Intent(getActivity(),FeedbackActivity.class);
         FeedbackActivity.setFeedbackParametersBeforeStartingFeedback(new FeedbackActivity.FeedbackParameters(continuousActivity));
         startActivity(intent);
+    }
+
+    private void rowSwipedRight(ESContinuousActivity continuousActivity) {
+        //TODO: mark for merge
+    }
+
+    private void rowSwipedLeft(ESContinuousActivity continuousActivity) {
+        Date startTime = continuousActivity.getStartTimestamp().getDateOfTimestamp();
+        Date endTime = continuousActivity.getEndTimestamp().getDateOfTimestamp();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("EE hh:mm", Locale.US);
+        String headerText = String.format("%s - %s",dateFormat.format(startTime),dateFormat.format(endTime));
+
+        // Split to atomic (minute) activities:
+        ESContinuousActivity[] splitActivities = ESDatabaseAccessor.getESDatabaseAccessor().splitToSeparateContinuousActivities(continuousActivity);
+
+        presentSpecificHistoryContent(headerText,splitActivities);
     }
 
     /**
@@ -203,7 +224,7 @@ public class HistoryFragment extends BaseTabFragment {
                 @Override
                 public void onClick(View v) {
                     Log.i(LOG_TAG,"row clicked");
-                    _handler.itemClicked(activity);
+                    _handler.rowClicked(activity);
                 }
             });
 
@@ -212,12 +233,14 @@ public class HistoryFragment extends BaseTabFragment {
                 @Override
                 public boolean onSwipeRight() {
                     Log.i(LOG_TAG,"Swiped row to the right");
+                    _handler.rowSwipedRight(activity);
                     return true;
                 }
 
                 @Override
                 public boolean onSwipeLeft() {
                     Log.i(LOG_TAG,"Swiped row to the left");
+                    _handler.rowSwipedLeft(activity);
                     return true;
                 }
             });
