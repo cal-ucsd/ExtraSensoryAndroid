@@ -571,7 +571,7 @@ public class ESDatabaseAccessor {
      * @param labelType either main, secondary or mood
      * @return The labels used in the time period, in descending order of frequency.
      */
-    public synchronized String[] getMostFrequentlyUsedLabels(ESTimestamp fromTime,ESLabelType labelType) {
+    public synchronized String[] getFrequentlyUsedLabels(ESTimestamp fromTime,ESLabelType labelType) {
         // Get a label->counts map:
         Map<String,Integer> countsMap = getLabelCounts(fromTime, labelType);
         // Sort the label-count pairs according to count value:
