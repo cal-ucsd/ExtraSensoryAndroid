@@ -150,7 +150,11 @@ public class HistoryFragment extends BaseTabFragment {
     @Override
     protected void reactToRecordsUpdatedEvent() {
         super.reactToRecordsUpdatedEvent();
-        Log.d(LOG_TAG,"reacting to records-update");
+        Log.v(LOG_TAG,"reacting to records-update");
+        if (_presentingSplitContinuousActivity) {
+            Log.v(LOG_TAG,"Since presenting split continuous activity, not refreshing the history page.");
+            return;
+        }
         calculateAndPresentDaysHistory();
     }
 
