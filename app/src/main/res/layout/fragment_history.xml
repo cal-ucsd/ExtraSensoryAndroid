@@ -17,13 +17,13 @@
         android:id="@+id/history_header">
 
         <Button
-            android:id="@+id/button_previous"
+            android:id="@+id/button_previous_day_in_history_header"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/previous_history"
             style="?android:attr/borderlessButtonStyle" />
 
-        <TextView android:id="@+id/txtHeader"
+        <TextView android:id="@+id/text_history_header_title"
             android:layout_width="200dip"
             android:layout_height="fill_parent"
             android:gravity="center"
@@ -35,7 +35,7 @@
             android:text="Date Header Here"/>
 
         <Button
-            android:id="@+id/button_next"
+            android:id="@+id/button_next_day_in_history_header"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/next_history"
@@ -44,7 +44,7 @@
     </LinearLayout>
 
     <ListView
-        android:id="@+id/listview"
+        android:id="@+id/listview_history_items"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="10"/>

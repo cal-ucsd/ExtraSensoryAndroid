@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -80,7 +81,7 @@ public class HistoryFragment extends BaseTabFragment {
         Log.d(LOG_TAG, "getting activities from " + focusDayStartTime.infoString() + " to " + focusDayEndTime.infoString());
 
         ESContinuousActivity[] activityArray = ESDatabaseAccessor.getESDatabaseAccessor().
-                getContinuousActivitiesFromTimeRange(focusDayStartTime,focusDayEndTime);
+                getContinuousActivitiesFromTimeRange(focusDayStartTime, focusDayEndTime);
         presentSpecificHistoryContent(headerText,activityArray);
     }
 
@@ -88,8 +89,26 @@ public class HistoryFragment extends BaseTabFragment {
 
         //Set day title
         View header = getView().findViewById(R.id.history_header);
-        TextView headerLabel = (TextView) header.findViewById(R.id.txtHeader);
+        TextView headerLabel = (TextView) header.findViewById(R.id.text_history_header_title);
         headerLabel.setText(headerText);
+
+        // Adjust the day-navigation buttons:
+        Button prevButton = (Button) header.findViewById(R.id.button_previous_day_in_history_header);
+        prevButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                _dayRelativeToToday --;
+                calculateAndPresentDaysHistory();
+            }
+        });
+        Button nextButton = (Button) header.findViewById(R.id.button_next_day_in_history_header);
+        nextButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                _dayRelativeToToday ++;
+                calculateAndPresentDaysHistory();
+            }
+        });
 
         Log.d(LOG_TAG,"==== Got " + activityArray.length + " cont activities: ");
         for (int i= 0; i < activityArray.length; i++) {
@@ -98,7 +117,7 @@ public class HistoryFragment extends BaseTabFragment {
         ArrayList<ESContinuousActivity> activityList = getArrayList(activityArray);
 
         // Get the list view and set it using this adapter
-        ListView listView = (ListView) getView().findViewById(R.id.listview);
+        ListView listView = (ListView) getView().findViewById(R.id.listview_history_items);
         if (listView.getAdapter() == null) {
             HistoryAdapter histAdapter = new HistoryAdapter(getActivity().getBaseContext(), R.layout.history_rowlayout, activityList,this);
             listView.setAdapter(histAdapter);
@@ -107,20 +126,6 @@ public class HistoryFragment extends BaseTabFragment {
             ((HistoryAdapter)listView.getAdapter()).resetItems(activityList);
         }
 
-/*
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override public void onItemClick(AdapterView<?> parent, View view,
-                                    int position, long id) {
-                // Launching new Activity on selecting single List Item
-                Intent i = new Intent(getActivity(), FeedbackActivity.class);
-                Log.d(LOG_TAG, "HELLO: " + position);
-                Log.d(LOG_TAG, "HELLO: " + id);
-                Log.d(LOG_TAG, "HELLO: " + activityArray[(int)id]);
-                FeedbackActivity.setFeedbackParametersBeforeStartingFeedback(new FeedbackActivity.FeedbackParameters(activityArray[position]));
-                startActivity(i);
-            }
-        });
-*/
     }
 
     private ArrayList<ESContinuousActivity> getArrayList(ESContinuousActivity[] items) {
@@ -222,8 +227,6 @@ public class HistoryFragment extends BaseTabFragment {
                 timeLabel = timeLabel + " - " + endTimeLabel;
             }
 
-            // System.out.println("adapter adding activity: " + activityLabel);
-
             //setting activity label
             holder.mainActivity.setText(activityLabel);
             holder.time.setText(timeLabel);
@@ -234,31 +237,34 @@ public class HistoryFragment extends BaseTabFragment {
 
             row.setBackgroundColor(ESLabelStrings.getColorForMainActivity(mainActivityForColor));
 
-            // Setting the click listener:
-            row.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Log.i(LOG_TAG,"row clicked");
-                    _handler.rowClicked(continuousActivity);
-                }
-            });
+            // If allowed to edit activities, define the listener for click and swipes:
+            if (_handler.allowedToEditDaysActivities()) {
+                // Setting the click listener:
+                row.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Log.i(LOG_TAG, "row clicked");
+                        _handler.rowClicked(continuousActivity);
+                    }
+                });
 
-            // Setting the gesture detections:
-            row.setOnTouchListener(new OnSwipeTouchListener(getContext()) {
-                @Override
-                public boolean onSwipeRight() {
-                    Log.i(LOG_TAG,"Swiped row to the right");
-                    _handler.rowSwipedRight(continuousActivity);
-                    return true;
-                }
+                // Setting the gesture detections:
+                row.setOnTouchListener(new OnSwipeTouchListener(getContext()) {
+                    @Override
+                    public boolean onSwipeRight() {
+                        Log.i(LOG_TAG, "Swiped row to the right");
+                        _handler.rowSwipedRight(continuousActivity);
+                        return true;
+                    }
 
-                @Override
-                public boolean onSwipeLeft() {
-                    Log.i(LOG_TAG,"Swiped row to the left");
-                    _handler.rowSwipedLeft(continuousActivity);
-                    return true;
-                }
-            });
+                    @Override
+                    public boolean onSwipeLeft() {
+                        Log.i(LOG_TAG, "Swiped row to the left");
+                        _handler.rowSwipedLeft(continuousActivity);
+                        return true;
+                    }
+                });
+            }
 
             return row;
         }
