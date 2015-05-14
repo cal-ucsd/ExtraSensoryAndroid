@@ -33,6 +33,7 @@ public class HistoryFragment extends BaseTabFragment {
     private static final String LOG_TAG = "[ESHistoryFragment]";
 
     private int _dayRelativeToToday = 0;
+    private boolean _presentingSplitContinuousActivity = false;
 
     public HistoryFragment() {
         // Required empty public constructor
@@ -51,6 +52,7 @@ public class HistoryFragment extends BaseTabFragment {
         super.onStart();
         ESDatabaseAccessor.getESDatabaseAccessor().clearOrphanRecords(new ESTimestamp(0));
         _dayRelativeToToday = 0;
+        _presentingSplitContinuousActivity = false;
         calculateAndPresentDaysHistory();
     }
 
@@ -62,7 +64,9 @@ public class HistoryFragment extends BaseTabFragment {
     /**
      * Calculate the history of a single day and present it as a list of continuous activities
      */
-    private void calculateAndPresentDaysHistory() {
+    private synchronized void calculateAndPresentDaysHistory() {
+        _presentingSplitContinuousActivity = false;
+
         //getting today's activities
         ESTimestamp todayStartTime = ESTimestamp.getStartOfTodayTimestamp();
         ESTimestamp focusDayStartTime = new ESTimestamp(todayStartTime,_dayRelativeToToday);
@@ -97,7 +101,9 @@ public class HistoryFragment extends BaseTabFragment {
         prevButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                _dayRelativeToToday --;
+                if (!_presentingSplitContinuousActivity) {
+                    _dayRelativeToToday--;
+                }
                 calculateAndPresentDaysHistory();
             }
         });
@@ -105,7 +111,9 @@ public class HistoryFragment extends BaseTabFragment {
         nextButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                _dayRelativeToToday ++;
+                if (!_presentingSplitContinuousActivity) {
+                    _dayRelativeToToday++;
+                }
                 calculateAndPresentDaysHistory();
             }
         });
@@ -156,7 +164,10 @@ public class HistoryFragment extends BaseTabFragment {
         //TODO: mark for merge
     }
 
-    private void rowSwipedLeft(ESContinuousActivity continuousActivity) {
+    private synchronized void rowSwipedLeft(ESContinuousActivity continuousActivity) {
+        // Split the chosen continuous activity and present it as separate minute activities:
+        _presentingSplitContinuousActivity = true;
+
         Date startTime = continuousActivity.getStartTimestamp().getDateOfTimestamp();
         Date endTime = continuousActivity.getEndTimestamp().getDateOfTimestamp();
         SimpleDateFormat dateFormat = new SimpleDateFormat("EE hh:mm", Locale.US);
@@ -264,6 +275,11 @@ public class HistoryFragment extends BaseTabFragment {
                         return true;
                     }
                 });
+            }
+            else {
+                // Make sure this row has no response to click or swipes:
+                row.setOnClickListener(null);
+                row.setOnTouchListener(null);
             }
 
             return row;
