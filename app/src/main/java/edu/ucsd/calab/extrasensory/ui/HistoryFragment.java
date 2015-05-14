@@ -190,20 +190,20 @@ public class HistoryFragment extends BaseTabFragment {
             Date date;
 
             //get one activity from the array
-            final ESContinuousActivity activity = _items.get(position);
+            final ESContinuousActivity continuousActivity = _items.get(position);
 
-            if(activity.getMainActivityUserCorrection() != null){
-                activityLabel = activity.getMainActivityUserCorrection();
+            if(continuousActivity.getMainActivityUserCorrection() != null){
+                activityLabel = continuousActivity.getMainActivityUserCorrection();
                 mainActivityForColor = activityLabel;
             }
             else{
-                mainActivityForColor = activity.getMainActivityServerPrediction();
+                mainActivityForColor = continuousActivity.getMainActivityServerPrediction();
                 activityLabel = mainActivityForColor + "?";
             }
             //setting time label
-            date = activity.getStartTimestamp().getDateOfTimestamp();
+            date = continuousActivity.getStartTimestamp().getDateOfTimestamp();
             timeLabel = new SimpleDateFormat("hh:mm a").format(date);
-            date = activity.getEndTimestamp().getDateOfTimestamp();
+            date = continuousActivity.getEndTimestamp().getDateOfTimestamp();
             endTimeLabel = new SimpleDateFormat("hh:mm a").format(date);
             timeLabel = timeLabel + " - " + endTimeLabel;
 
@@ -215,7 +215,7 @@ public class HistoryFragment extends BaseTabFragment {
 
             // Setting the details label:
             TextView detailsText = (TextView)row.findViewById(R.id.text_details_in_history_row);
-            detailsText.setText(getDetailsString(activity));
+            detailsText.setText(getDetailsString(continuousActivity));
 
             row.setBackgroundColor(ESLabelStrings.getColorForMainActivity(mainActivityForColor));
 
@@ -224,7 +224,7 @@ public class HistoryFragment extends BaseTabFragment {
                 @Override
                 public void onClick(View v) {
                     Log.i(LOG_TAG,"row clicked");
-                    _handler.rowClicked(activity);
+                    _handler.rowClicked(continuousActivity);
                 }
             });
 
@@ -233,14 +233,14 @@ public class HistoryFragment extends BaseTabFragment {
                 @Override
                 public boolean onSwipeRight() {
                     Log.i(LOG_TAG,"Swiped row to the right");
-                    _handler.rowSwipedRight(activity);
+                    _handler.rowSwipedRight(continuousActivity);
                     return true;
                 }
 
                 @Override
                 public boolean onSwipeLeft() {
                     Log.i(LOG_TAG,"Swiped row to the left");
-                    _handler.rowSwipedLeft(activity);
+                    _handler.rowSwipedLeft(continuousActivity);
                     return true;
                 }
             });
