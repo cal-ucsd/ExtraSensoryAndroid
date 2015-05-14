@@ -14,6 +14,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
@@ -245,7 +246,7 @@ public class ESApplication extends Application {
 
         Log.i(LOG_TAG,"Scheduling the recording sessions with interval of " + RECORDING_SESSIONS_INTERVAL_MILLIS/1000 + " seconds.");
         _alarmManager.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
-                millisWaitBeforeStart,
+                SystemClock.elapsedRealtime() + millisWaitBeforeStart,
                 RECORDING_SESSIONS_INTERVAL_MILLIS,
                 pendingIntent);
     }
@@ -264,7 +265,7 @@ public class ESApplication extends Application {
         long notificationIntervalMillis = 1000*notificationIntervalSeconds;
         Log.i(LOG_TAG,"Scheduling the notification schedule with interval " + notificationIntervalSeconds + " seconds.");
         _alarmManager.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
-                notificationIntervalMillis,
+                SystemClock.elapsedRealtime() + notificationIntervalMillis,
                 notificationIntervalMillis,
                 pendingIntent);
     }
@@ -337,6 +338,13 @@ public class ESApplication extends Application {
         Date now = new Date();
         Date recentTimeAgo = new Date(now.getTime() - RECENT_TIME_PERIOD_IN_MILLIS);
         ESTimestamp lookBackFrom = new ESTimestamp(recentTimeAgo);
+
+        // check if there are currently valid predetermined labels:
+        ESTimestamp oneMinuteFromNow = new ESTimestamp(new ESTimestamp().get_secondsSinceEpoch() + 60);
+        if (_predeterminedLabels._validUntil.isLaterThan(oneMinuteFromNow)) {
+            Log.i(LOG_TAG,"We already have valid labels provided by the user for the near future. So no need to nag user now.");
+            return;
+        }
 
         ESActivity latestVerifiedActivity = ESDatabaseAccessor.getESDatabaseAccessor().getLatestVerifiedActivity(lookBackFrom);
 
