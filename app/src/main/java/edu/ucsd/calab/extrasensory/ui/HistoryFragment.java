@@ -31,6 +31,8 @@ public class HistoryFragment extends BaseTabFragment {
 
     private static final String LOG_TAG = "[ESHistoryFragment]";
 
+    private int _dayRelativeToToday = 0;
+
     public HistoryFragment() {
         // Required empty public constructor
     }
@@ -47,7 +49,13 @@ public class HistoryFragment extends BaseTabFragment {
     public void onStart() {
         super.onStart();
         ESDatabaseAccessor.getESDatabaseAccessor().clearOrphanRecords(new ESTimestamp(0));
+        _dayRelativeToToday = 0;
         calculateAndPresentDaysHistory();
+    }
+
+    private boolean allowedToEditDaysActivities() {
+        // (allowed to edit only from today and yesterday):
+        return _dayRelativeToToday >= -1;
     }
 
     /**
@@ -55,24 +63,28 @@ public class HistoryFragment extends BaseTabFragment {
      */
     private void calculateAndPresentDaysHistory() {
         //getting today's activities
-        ESTimestamp startTime = ESTimestamp.getStartOfTodayTimestamp();
+        ESTimestamp todayStartTime = ESTimestamp.getStartOfTodayTimestamp();
+        ESTimestamp focusDayStartTime = new ESTimestamp(todayStartTime,_dayRelativeToToday);
+        ESTimestamp focusDayEndTime = new ESTimestamp(focusDayStartTime, 1);
 
-       /* for debug and check timestamp
-        DateFormat df = new SimpleDateFormat("dd/MM/yy HH:mm:ss");
-        System.out.println("startDATE IS " + df.format(d));
-        */
-
-        ESTimestamp endTime = new ESTimestamp(startTime, 1);
         SimpleDateFormat dateFormat = new SimpleDateFormat("EE MMM dd", Locale.US);
-        String headerText = "Today- " + dateFormat.format(startTime.getDateOfTimestamp());
+        String headerText = dateFormat.format(focusDayStartTime.getDateOfTimestamp());
+        if (_dayRelativeToToday == 0) {
+            // Then it's today:
+            headerText = "Today- " + headerText;
+        }
+        if (!allowedToEditDaysActivities()) {
+            headerText += " (view only)";
+        }
 
-        Log.d(LOG_TAG, "getting activities from " + startTime.infoString() + " to " + endTime.infoString());
+        Log.d(LOG_TAG, "getting activities from " + focusDayStartTime.infoString() + " to " + focusDayEndTime.infoString());
 
-        ESContinuousActivity[] activityArray = ESDatabaseAccessor.getESDatabaseAccessor().getContinuousActivitiesFromTimeRange(startTime, endTime);
+        ESContinuousActivity[] activityArray = ESDatabaseAccessor.getESDatabaseAccessor().
+                getContinuousActivitiesFromTimeRange(focusDayStartTime,focusDayEndTime);
         presentSpecificHistoryContent(headerText,activityArray);
     }
 
-    private void presentSpecificHistoryContent(String headerText,final ESContinuousActivity[] activityArray) {
+    private void presentSpecificHistoryContent(String headerText,ESContinuousActivity[] activityArray) {
 
         //Set day title
         View header = getView().findViewById(R.id.history_header);
@@ -95,6 +107,7 @@ public class HistoryFragment extends BaseTabFragment {
             ((HistoryAdapter)listView.getAdapter()).resetItems(activityList);
         }
 
+/*
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override public void onItemClick(AdapterView<?> parent, View view,
                                     int position, long id) {
@@ -107,7 +120,7 @@ public class HistoryFragment extends BaseTabFragment {
                 startActivity(i);
             }
         });
-
+*/
     }
 
     private ArrayList<ESContinuousActivity> getArrayList(ESContinuousActivity[] items) {
@@ -205,7 +218,9 @@ public class HistoryFragment extends BaseTabFragment {
             timeLabel = new SimpleDateFormat("hh:mm a").format(date);
             date = continuousActivity.getEndTimestamp().getDateOfTimestamp();
             endTimeLabel = new SimpleDateFormat("hh:mm a").format(date);
-            timeLabel = timeLabel + " - " + endTimeLabel;
+            if (!endTimeLabel.equals(timeLabel)) {
+                timeLabel = timeLabel + " - " + endTimeLabel;
+            }
 
             // System.out.println("adapter adding activity: " + activityLabel);
 
