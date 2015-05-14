@@ -166,6 +166,14 @@ public class SelectionFromListActivity extends BaseActivity {
             _selectedLabels = new HashSet<>(10);
         }
 
+        if (inputParameters.hasExtra(FREQUENTLY_USED_LABELS_KEY)) {
+            String[] frequentLabels = inputParameters.getStringArrayExtra(FREQUENTLY_USED_LABELS_KEY);
+            _frequentlyUsedLabels = new ArrayList<>(frequentLabels.length);
+            for (int i=0; i < frequentLabels.length; i++) {
+                _frequentlyUsedLabels.add(frequentLabels[i]);
+            }
+        }
+
         _choicesListView = (ListView)findViewById(R.id.listview_selection_choices_list);
         _sideIndex = (LinearLayout)findViewById(R.id.linearlayout_selection_side_index);
 
