@@ -207,13 +207,6 @@ public class SelectionFromListActivity extends BaseActivity {
         }
 
         addLabelsSection(itemsList,_labelChoices,_allLabelsSectionHeader,ALL_LABELS);
-/*
-        for (int i=0; i < _labelChoices.length; i ++) {
-            itemsList.add(new ChoiceItem(_labelChoices[i]));
-        }
-*/
-
-
         setAdapterChoices(itemsList);
     }
 

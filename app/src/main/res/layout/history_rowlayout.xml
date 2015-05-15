@@ -5,21 +5,17 @@
     android:padding="6dip"
     android:id="@+id/relativeView">
 
-<!--
-    <TextView
-        android:id="@+id/text_accessory_in_history_row"
-        android:layout_width="30dp"
-        android:layout_height="fill_parent"
-        android:background="#dddddd"
-        android:text="split merge"
-        android:clickable="true"
+    <ImageView
+        android:id="@+id/image_mark_for_merge_in_history"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_alignParentRight="true"/>
--->
 
     <TextView
         android:id="@+id/text_details_in_history_row"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
         android:layout_alignParentBottom="true"
         android:textSize="12sp"
         android:text="detail" />

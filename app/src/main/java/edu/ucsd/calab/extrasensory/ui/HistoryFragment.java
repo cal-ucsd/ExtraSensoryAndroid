@@ -1,15 +1,17 @@
 package edu.ucsd.calab.extrasensory.ui;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -31,9 +33,19 @@ import edu.ucsd.calab.extrasensory.data.ESTimestamp;
 public class HistoryFragment extends BaseTabFragment {
 
     private static final String LOG_TAG = "[ESHistoryFragment]";
+    private static final String INVALID_MERGE_ZONE_ALERT_TEXT = "The marked events contain more than one labeled event. Can't merge them to a single event.";
+    private static final String ALERT_BUTTON_TEXT_OK = "O.K.";
 
+    private ESContinuousActivity[] _activityArray = null;
+    private String _headerText = null;
     private int _dayRelativeToToday = 0;
     private boolean _presentingSplitContinuousActivity = false;
+    private ESTimestamp _markZoneStartTimestamp = null;
+    private ESTimestamp _markZoneEndTimestamp = null;
+    private void clearMergeMarkZone() {
+        _markZoneStartTimestamp = null;
+        _markZoneEndTimestamp = null;
+    }
 
     public HistoryFragment() {
         // Required empty public constructor
@@ -53,6 +65,7 @@ public class HistoryFragment extends BaseTabFragment {
         ESDatabaseAccessor.getESDatabaseAccessor().clearOrphanRecords(new ESTimestamp(0));
         _dayRelativeToToday = 0;
         _presentingSplitContinuousActivity = false;
+        clearMergeMarkZone();
         calculateAndPresentDaysHistory();
     }
 
@@ -73,28 +86,28 @@ public class HistoryFragment extends BaseTabFragment {
         ESTimestamp focusDayEndTime = new ESTimestamp(focusDayStartTime, 1);
 
         SimpleDateFormat dateFormat = new SimpleDateFormat("EE MMM dd", Locale.US);
-        String headerText = dateFormat.format(focusDayStartTime.getDateOfTimestamp());
+        _headerText = dateFormat.format(focusDayStartTime.getDateOfTimestamp());
         if (_dayRelativeToToday == 0) {
             // Then it's today:
-            headerText = "Today- " + headerText;
+            _headerText = "Today- " + _headerText;
         }
         if (!allowedToEditDaysActivities()) {
-            headerText += " (view only)";
+            _headerText += " (view only)";
         }
 
         Log.d(LOG_TAG, "getting activities from " + focusDayStartTime.infoString() + " to " + focusDayEndTime.infoString());
 
-        ESContinuousActivity[] activityArray = ESDatabaseAccessor.getESDatabaseAccessor().
+        _activityArray = ESDatabaseAccessor.getESDatabaseAccessor().
                 getContinuousActivitiesFromTimeRange(focusDayStartTime, focusDayEndTime);
-        presentSpecificHistoryContent(headerText,activityArray);
+        presentHistoryContent();
     }
 
-    private void presentSpecificHistoryContent(String headerText,ESContinuousActivity[] activityArray) {
+    private void presentHistoryContent() {
 
         //Set day title
         View header = getView().findViewById(R.id.history_header);
         TextView headerLabel = (TextView) header.findViewById(R.id.text_history_header_title);
-        headerLabel.setText(headerText);
+        headerLabel.setText(_headerText);
 
         // Adjust the day-navigation buttons:
         Button prevButton = (Button) header.findViewById(R.id.button_previous_day_in_history_header);
@@ -104,6 +117,7 @@ public class HistoryFragment extends BaseTabFragment {
                 if (!_presentingSplitContinuousActivity) {
                     _dayRelativeToToday--;
                 }
+                clearMergeMarkZone();
                 calculateAndPresentDaysHistory();
             }
         });
@@ -114,15 +128,16 @@ public class HistoryFragment extends BaseTabFragment {
                 if (!_presentingSplitContinuousActivity) {
                     _dayRelativeToToday++;
                 }
+                clearMergeMarkZone();
                 calculateAndPresentDaysHistory();
             }
         });
 
-        Log.d(LOG_TAG,"==== Got " + activityArray.length + " cont activities: ");
-        for (int i= 0; i < activityArray.length; i++) {
-            Log.d(LOG_TAG, activityArray[i].toString());
+        Log.d(LOG_TAG,"==== Got " + _activityArray.length + " cont activities: ");
+        for (int i= 0; i < _activityArray.length; i++) {
+            Log.d(LOG_TAG, _activityArray[i].toString());
         }
-        ArrayList<ESContinuousActivity> activityList = getArrayList(activityArray);
+        ArrayList<ESContinuousActivity> activityList = getArrayList(_activityArray);
 
         // Get the list view and set it using this adapter
         ListView listView = (ListView) getView().findViewById(R.id.listview_history_items);
@@ -158,14 +173,131 @@ public class HistoryFragment extends BaseTabFragment {
         calculateAndPresentDaysHistory();
     }
 
+    private boolean isActivityInTheMergeMarkZone(ESContinuousActivity continuousActivity) {
+        if (_markZoneStartTimestamp == null || _markZoneEndTimestamp == null) {
+            return false;
+        }
+
+        ESTimestamp timestamp = continuousActivity.getStartTimestamp();
+        if (timestamp.isEarlierThan(_markZoneStartTimestamp)) {
+            return false;
+        }
+
+        if (timestamp.isLaterThan(_markZoneEndTimestamp)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private synchronized boolean isMarkZoneValidForMerging() {
+        // Just as sanity check, make sure there is a mark zone:
+        if (_markZoneStartTimestamp == null || _markZoneEndTimestamp == null) {
+            return false;
+        }
+
+        boolean foundUserProvidedLabels = false;
+        for (ESContinuousActivity continuousActivity : _activityArray) {
+            if (continuousActivity.getStartTimestamp().isEarlierThan(_markZoneStartTimestamp)) {
+                continue;
+            }
+            if (continuousActivity.getStartTimestamp().isLaterThan(_markZoneEndTimestamp)) {
+                // Then there's no use continuing on the list, we passed the mark zone safely:
+                break;
+            }
+
+            if (continuousActivity.hasUserProvidedLabels()) {
+                // did we already find another activity with user-labels?
+                if (foundUserProvidedLabels) {
+                    // Then this zone is not valid. We have 2 different activities with user labels:
+                    return false;
+                }
+                foundUserProvidedLabels = true;
+            }
+        }
+        // If reached here safely, we haven't found 2 different activities with user labels
+        return true;
+    }
+
+    private void alertUserOfInvalidMergeMarkZone() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        builder.setIcon(R.drawable.ic_launcher).setMessage(INVALID_MERGE_ZONE_ALERT_TEXT);
+        builder.setPositiveButton(ALERT_BUTTON_TEXT_OK,new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+                clearMergeMarkZone();
+                presentHistoryContent();
+            }
+        });
+        builder.create().show();
+    }
+
     private void rowClicked(ESContinuousActivity continuousActivity) {
+        ESContinuousActivity continuousActivityForFeedback = continuousActivity;
+
+        // See if this row is in the mark zone:
+        if (isActivityInTheMergeMarkZone(continuousActivity)) {
+            // Then the feedback should be done over the whole time range of the marked zone
+            // First check the validity of the time zone for merging:
+            if (!isMarkZoneValidForMerging()) {
+                // Then the mark zone is not valid. We should alert the user and clear the zone:
+                Log.i(LOG_TAG,"Clicked a row in an invalid merge zone.");
+                alertUserOfInvalidMergeMarkZone();
+                return;
+            }
+
+            // Mark zone is safe for merging,
+            // so we should go to feedback for a single continuous activity for the whole marked time range:
+            continuousActivityForFeedback = ESDatabaseAccessor.getESDatabaseAccessor().
+                    getSingleContinuousActivityFromTimeRange(_markZoneStartTimestamp, _markZoneEndTimestamp);
+        }
+
         Intent intent = new Intent(getActivity(),FeedbackActivity.class);
-        FeedbackActivity.setFeedbackParametersBeforeStartingFeedback(new FeedbackActivity.FeedbackParameters(continuousActivity));
+        FeedbackActivity.setFeedbackParametersBeforeStartingFeedback(new FeedbackActivity.FeedbackParameters(continuousActivityForFeedback));
         startActivity(intent);
     }
 
     private void rowSwipedRight(ESContinuousActivity continuousActivity) {
-        //TODO: mark for merge
+        // Are we presenting a split continuous activity?
+        if (_presentingSplitContinuousActivity) {
+            // Then ignore this gesture:
+            Log.v(LOG_TAG+"[swipe-right]","In split-activities mode. Ignoring swipe to the right.");
+            return;
+        }
+
+        // Is this continuous activity already in the mark zone?
+        if (isActivityInTheMergeMarkZone(continuousActivity)) {
+            // Then this gesture should cause clearing the mark zone:
+            Log.v(LOG_TAG + "[swipe-right]", "Row already in marked zone. Clearing mark zone.");
+            clearMergeMarkZone();
+            presentHistoryContent();
+            return;
+        }
+
+        ESTimestamp timestamp = continuousActivity.getStartTimestamp();
+
+        // Is there no mark zone currently?
+        if (_markZoneStartTimestamp == null || _markZoneEndTimestamp == null) {
+            // Then this marked activity is starting a new mark zone:
+            Log.v(LOG_TAG+"[swipe-right]","No mark zone. Starting new mark zone with this one row.");
+            _markZoneStartTimestamp = timestamp;
+            _markZoneEndTimestamp = timestamp;
+        }
+        else if (timestamp.isEarlierThan(_markZoneStartTimestamp)) {
+            Log.v(LOG_TAG+"[swipe-right]","Row earlier than mark zone. Expanding zone to earlier.");
+            _markZoneStartTimestamp = timestamp;
+        }
+        else if (timestamp.isLaterThan(_markZoneEndTimestamp)) {
+            Log.v(LOG_TAG+"[swipe-right]","Row later than mark zone. Expanding zone to later.");
+            _markZoneEndTimestamp = timestamp;
+        }
+        else {
+            // We should have covered all the cases.
+            Log.e(LOG_TAG,"Swipe right failed to fit any case.");
+        }
+
+        presentHistoryContent();
     }
 
     private synchronized void rowSwipedLeft(ESContinuousActivity continuousActivity) {
@@ -175,12 +307,13 @@ public class HistoryFragment extends BaseTabFragment {
         Date startTime = continuousActivity.getStartTimestamp().getDateOfTimestamp();
         Date endTime = continuousActivity.getEndTimestamp().getDateOfTimestamp();
         SimpleDateFormat dateFormat = new SimpleDateFormat("EE hh:mm", Locale.US);
-        String headerText = String.format("%s - %s",dateFormat.format(startTime),dateFormat.format(endTime));
+        _headerText = String.format("%s - %s",dateFormat.format(startTime),dateFormat.format(endTime));
 
         // Split to atomic (minute) activities:
         ESContinuousActivity[] splitActivities = ESDatabaseAccessor.getESDatabaseAccessor().splitToSeparateContinuousActivities(continuousActivity);
-
-        presentSpecificHistoryContent(headerText,splitActivities);
+        _activityArray = splitActivities;
+        clearMergeMarkZone();
+        presentHistoryContent();
     }
 
     /**
@@ -251,6 +384,15 @@ public class HistoryFragment extends BaseTabFragment {
             detailsText.setText(getDetailsString(continuousActivity));
 
             row.setBackgroundColor(ESLabelStrings.getColorForMainActivity(mainActivityForColor));
+
+            // Is this row marked for merging?
+            ImageView chckmarkView = (ImageView)row.findViewById(R.id.image_mark_for_merge_in_history);
+            if (_handler.isActivityInTheMergeMarkZone(continuousActivity)) {
+                chckmarkView.setImageResource(R.drawable.checkmark_in_circle);
+            }
+            else {
+                chckmarkView.setImageBitmap(null);
+            }
 
             // If allowed to edit activities, define the listener for click and swipes:
             if (_handler.allowedToEditDaysActivities()) {

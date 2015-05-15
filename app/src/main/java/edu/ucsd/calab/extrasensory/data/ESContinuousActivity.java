@@ -133,6 +133,20 @@ public class ESContinuousActivity {
     }
 
     /**
+     * Does this continuous activity contain user provided labels in any of its minute activities
+     * @return
+     */
+    public boolean hasUserProvidedLabels() {
+        for (ESActivity activity : _minuteActivities) {
+            if (activity.hasUserProvidedLabels()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Get the array of secondary activity labels associated with this continuous activity.
      * The order of the secondary activities is arbitrary.
      *
@@ -143,7 +157,14 @@ public class ESContinuousActivity {
             return null;
         }
 
-        return _minuteActivities[0].get_secondaryActivities();
+        // Search for an activity with user-provided labels:
+        for (ESActivity activity : _minuteActivities) {
+            if (activity.hasUserProvidedLabels()) {
+                return activity.get_secondaryActivities();
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -157,7 +178,14 @@ public class ESContinuousActivity {
             return null;
         }
 
-        return _minuteActivities[0].get_moods();
+        for (ESActivity activity : _minuteActivities) {
+            // Search for activity with user-provided labels:
+            if (activity.hasUserProvidedLabels()) {
+                return activity.get_moods();
+            }
+        }
+
+        return null;
     }
 
     /**
