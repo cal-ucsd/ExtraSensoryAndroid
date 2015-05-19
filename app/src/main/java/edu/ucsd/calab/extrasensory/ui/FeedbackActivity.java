@@ -25,7 +25,9 @@ import edu.ucsd.calab.extrasensory.ESApplication;
 import edu.ucsd.calab.extrasensory.R;
 import edu.ucsd.calab.extrasensory.data.ESActivity;
 import edu.ucsd.calab.extrasensory.data.ESContinuousActivity;
+import edu.ucsd.calab.extrasensory.data.ESDatabaseAccessor;
 import edu.ucsd.calab.extrasensory.data.ESLabelStruct;
+import edu.ucsd.calab.extrasensory.data.ESTimestamp;
 
 import static edu.ucsd.calab.extrasensory.data.ESDatabaseAccessor.getESDatabaseAccessor;
 
@@ -224,6 +226,8 @@ public class FeedbackActivity extends BaseActivity {
             public void onItemClick(AdapterView<?> parent, View view,
                                     int position, long id) {
                 // "position" is the position/row of the item that you have clicked
+                String[] frequentLabels;
+
                 Intent intent = null;
                 switch (position) {
                     case ROW_MAIN:
@@ -236,12 +240,16 @@ public class FeedbackActivity extends BaseActivity {
                         intent = new Intent(ESApplication.getTheAppContext(), SelectionFromListActivity.class);
                         intent.putExtra(SelectionFromListActivity.LIST_TYPE_KEY, SelectionFromListActivity.LIST_TYPE_SECONDARY_ACTIVITIES);
                         intent.putExtra(SelectionFromListActivity.PRESELECTED_LABELS_KEY,_labelStruct._secondaryActivities);
+                        frequentLabels = ESDatabaseAccessor.getESDatabaseAccessor().getFrequentlyUsedLabels(null , ESDatabaseAccessor.ESLabelType.ES_LABEL_TYPE_SECONDARY);
+                        intent.putExtra(SelectionFromListActivity.FREQUENTLY_USED_LABELS_KEY,frequentLabels);
                         startActivityForResult(intent, ROW_SECONDARY);
                         break;
                     case ROW_MOOD:
                         intent = new Intent(ESApplication.getTheAppContext(), SelectionFromListActivity.class);
                         intent.putExtra(SelectionFromListActivity.LIST_TYPE_KEY, SelectionFromListActivity.LIST_TYPE_MOODS);
                         intent.putExtra(SelectionFromListActivity.PRESELECTED_LABELS_KEY,_labelStruct._moods);
+                        frequentLabels = ESDatabaseAccessor.getESDatabaseAccessor().getFrequentlyUsedLabels(null , ESDatabaseAccessor.ESLabelType.ES_LABEL_TYPE_MOOD);
+                        intent.putExtra(SelectionFromListActivity.FREQUENTLY_USED_LABELS_KEY,frequentLabels);
                         startActivityForResult(intent, ROW_MOOD);
                         break;
                     case ROW_VALID:

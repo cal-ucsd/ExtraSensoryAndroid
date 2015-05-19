@@ -23,6 +23,7 @@ import java.util.Map;
 
 import edu.ucsd.calab.extrasensory.ESApplication;
 import edu.ucsd.calab.extrasensory.R;
+import edu.ucsd.calab.extrasensory.data.ESDatabaseAccessor;
 import edu.ucsd.calab.extrasensory.data.ESLabelStrings;
 
 /**
@@ -120,7 +121,6 @@ public class SelectionFromListActivity extends BaseActivity {
         }
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-
         // Set the view according to the parameters:
         int listType = inputParameters.getIntExtra(LIST_TYPE_KEY,LIST_TYPE_MISSING);
         switch (listType) {
@@ -155,10 +155,11 @@ public class SelectionFromListActivity extends BaseActivity {
                 return;
         }
 
-        if (inputParameters.hasExtra(PRESELECTED_LABELS_KEY)) {
+        if (inputParameters.hasExtra(PRESELECTED_LABELS_KEY) && (inputParameters.getStringArrayExtra(PRESELECTED_LABELS_KEY) != null)) {
             String[] preselected = inputParameters.getStringArrayExtra(PRESELECTED_LABELS_KEY);
             _selectedLabels = new HashSet<>(preselected.length);
-            for (int i=0; i < preselected.length; i ++) {
+
+            for (int i = 0; i < preselected.length; i++) {
                 _selectedLabels.add(preselected[i]);
             }
         }
@@ -166,7 +167,7 @@ public class SelectionFromListActivity extends BaseActivity {
             _selectedLabels = new HashSet<>(10);
         }
 
-        if (inputParameters.hasExtra(FREQUENTLY_USED_LABELS_KEY)) {
+        if (inputParameters.hasExtra(FREQUENTLY_USED_LABELS_KEY) && (inputParameters.getStringArrayExtra(FREQUENTLY_USED_LABELS_KEY) != null)) {
             String[] frequentLabels = inputParameters.getStringArrayExtra(FREQUENTLY_USED_LABELS_KEY);
             _frequentlyUsedLabels = new ArrayList<>(frequentLabels.length);
             for (int i=0; i < frequentLabels.length; i++) {
