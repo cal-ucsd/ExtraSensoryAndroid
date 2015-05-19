@@ -59,6 +59,7 @@ public class FeedbackActivity extends BaseActivity {
     private static final String[] ROW_HEADERS = new String[] { "Main Activity", "Secondary Activities", "Mood", "Valid for" };
 
     private ESLabelStruct _labelStruct = new ESLabelStruct();
+    private String validFor = "";
     /**
      * This parameter type is to be used to transfer parameters to the feedback view,
      * that indicate what kind of feedback to perform and pass relevant data.
@@ -200,7 +201,7 @@ public class FeedbackActivity extends BaseActivity {
         HashMap<String,String> validDatum = new HashMap<>(2);
         String validRowHeader = _parameters._feedbackType == FEEDBACK_TYPE_ACTIVE ? ROW_HEADERS[ROW_VALID] : "";
         validDatum.put(KEY_ROW_HEADER,validRowHeader);
-        validDatum.put(KEY_ROW_DETAIL,_labelStruct._validFor);
+        validDatum.put(KEY_ROW_DETAIL, validFor);
         data.add(validDatum);
 
         SimpleAdapter adapter = new SimpleAdapter(this, data,
@@ -247,7 +248,7 @@ public class FeedbackActivity extends BaseActivity {
                         //Toast.makeText(getApplicationContext(), "Hello", Toast.LENGTH_LONG).show();
                         intent = new Intent(ESApplication.getTheAppContext(), SelectionFromListActivity.class);
                         intent.putExtra(SelectionFromListActivity.LIST_TYPE_KEY, SelectionFromListActivity.LIST_TYPE_VALID_FOR);
-                        intent.putExtra(SelectionFromListActivity.PRESELECTED_LABELS_KEY,new String[] {_labelStruct._validFor});
+                        intent.putExtra(SelectionFromListActivity.PRESELECTED_LABELS_KEY,new String[] {validFor});
                         startActivityForResult(intent, ROW_VALID);
                         break;
                 }
@@ -358,7 +359,7 @@ public class FeedbackActivity extends BaseActivity {
                 break;
             case ROW_VALID:
                 //TODO: analyze selected string and save int numOfMinutesValid
-                _labelStruct._validFor = selected[0];
+                validFor = selected[0];
 
                 break;
         }

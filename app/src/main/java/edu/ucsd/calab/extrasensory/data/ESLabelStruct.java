@@ -15,7 +15,6 @@ public class ESLabelStruct {
     public String _mainActivity = null;
     public String[] _secondaryActivities = new String[0];
     public String[] _moods = new String[0];
-    public String _validFor = null;
 
     public ESLabelStruct() {}
 
@@ -26,7 +25,6 @@ public class ESLabelStruct {
         }
 
         this._mainActivity = other._mainActivity;
-        this._validFor = other._validFor;
         if (other._secondaryActivities != null) {
             this._secondaryActivities = Arrays.copyOf(other._secondaryActivities, other._secondaryActivities.length);
         }
