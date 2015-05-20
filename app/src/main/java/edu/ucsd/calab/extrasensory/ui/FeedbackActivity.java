@@ -14,7 +14,6 @@ import android.widget.ListView;
 import android.widget.AdapterView;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -29,7 +28,6 @@ import edu.ucsd.calab.extrasensory.data.ESActivity;
 import edu.ucsd.calab.extrasensory.data.ESContinuousActivity;
 import edu.ucsd.calab.extrasensory.data.ESDatabaseAccessor;
 import edu.ucsd.calab.extrasensory.data.ESLabelStruct;
-import edu.ucsd.calab.extrasensory.data.ESTimestamp;
 
 import static edu.ucsd.calab.extrasensory.data.ESDatabaseAccessor.getESDatabaseAccessor;
 
@@ -64,7 +62,7 @@ public class FeedbackActivity extends BaseActivity {
 
     private ESLabelStruct _labelStruct = new ESLabelStruct();
     private String validFor = "";
-    private int validForHowManyMinutes = 0;
+    private int _validForHowManyMinutes = 0;
     private String historyValidFor = "";
     /**
      * This parameter type is to be used to transfer parameters to the feedback view,
@@ -310,14 +308,11 @@ public class FeedbackActivity extends BaseActivity {
 
                 if(_parameters._feedbackType == FEEDBACK_TYPE_ACTIVE){
                     Log.d(LOG_TAG,"ACTIVE FEEDBACK");
-                    //TODO: need to analyze this value from the user input to validFor
-                    ((ESApplication)getApplication()).startActiveFeedback(_labelStruct, validForHowManyMinutes, initiatedByNotification);
+                    ((ESApplication)getApplication()).startActiveFeedback(_labelStruct, _validForHowManyMinutes, initiatedByNotification);
                     finish();
                     return;
                 }
 
-                //TODO: if this is feedback for continuous activity: go over the minute-activities and for each activity
-                // update the activity's labels through the DBAccessor
                 else if(_parameters._feedbackType == FEEDBACK_TYPE_HISTORY_CONTINUOUS_ACTIVITY) {
                     Log.d(LOG_TAG,"HISTORY CONTINUOUS ACTIVITY");
                     ESContinuousActivity esContAct =_parameters._continuousActivityToEdit;
@@ -376,11 +371,10 @@ public class FeedbackActivity extends BaseActivity {
                 _labelStruct._moods = selected;
                 break;
             case ROW_VALID:
-                //TODO: analyze selected string and save int numOfMinutesValid
                 //_parameters._feedbackType == FEEDBACK_TYPE_ACTIVE){
                 validFor = selected[0];
                 String[] splited = validFor.split("\\s+");
-                validForHowManyMinutes = Integer.parseInt(splited[0]);
+                _validForHowManyMinutes = Integer.parseInt(splited[0]);
 
                 break;
         }
