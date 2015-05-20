@@ -16,7 +16,9 @@ import android.widget.SimpleAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -62,6 +64,8 @@ public class FeedbackActivity extends BaseActivity {
 
     private ESLabelStruct _labelStruct = new ESLabelStruct();
     private String validFor = "";
+    private int validForHowManyMinutes = 0;
+    private String historyValidFor = "";
     /**
      * This parameter type is to be used to transfer parameters to the feedback view,
      * that indicate what kind of feedback to perform and pass relevant data.
@@ -123,7 +127,12 @@ public class FeedbackActivity extends BaseActivity {
             _labelStruct._mainActivity = _parameters._continuousActivityToEdit.mostUpToDateMainActivity();
             _labelStruct._secondaryActivities = _parameters._continuousActivityToEdit.getSecondaryActivities();
             _labelStruct._moods = _parameters._continuousActivityToEdit.getMoods();
-           // _labelStruct._validFor = _parameters._continuousActivityToEdit.getDurationInMinutes();
+
+            Date start = _parameters._continuousActivityToEdit.getStartTimestamp().getDateOfTimestamp();
+            Date end = _parameters._continuousActivityToEdit.getEndTimestamp().getDateOfTimestamp();
+            String timeLabelStart = new SimpleDateFormat("EEE, dd MMM, hh:mm a").format(start);
+            String timeLabelEnd = new SimpleDateFormat("hh:mm a").format(end);
+            historyValidFor = timeLabelStart + " - " + timeLabelEnd;
         }
 
         feedbackFlag = false;
@@ -201,7 +210,8 @@ public class FeedbackActivity extends BaseActivity {
         data.add(moodDatum);
 
         HashMap<String,String> validDatum = new HashMap<>(2);
-        String validRowHeader = _parameters._feedbackType == FEEDBACK_TYPE_ACTIVE ? ROW_HEADERS[ROW_VALID] : "";
+
+        String validRowHeader = _parameters._feedbackType == FEEDBACK_TYPE_ACTIVE ? ROW_HEADERS[ROW_VALID] : historyValidFor;
         validDatum.put(KEY_ROW_HEADER,validRowHeader);
         validDatum.put(KEY_ROW_DETAIL, validFor);
         data.add(validDatum);
@@ -241,7 +251,7 @@ public class FeedbackActivity extends BaseActivity {
                         intent.putExtra(SelectionFromListActivity.LIST_TYPE_KEY, SelectionFromListActivity.LIST_TYPE_SECONDARY_ACTIVITIES);
                         intent.putExtra(SelectionFromListActivity.PRESELECTED_LABELS_KEY,_labelStruct._secondaryActivities);
                         frequentLabels = ESDatabaseAccessor.getESDatabaseAccessor().getFrequentlyUsedLabels(null , ESDatabaseAccessor.ESLabelType.ES_LABEL_TYPE_SECONDARY);
-                        intent.putExtra(SelectionFromListActivity.FREQUENTLY_USED_LABELS_KEY,frequentLabels);
+                        intent.putExtra(SelectionFromListActivity.FREQUENTLY_USED_LABELS_KEY, frequentLabels);
                         startActivityForResult(intent, ROW_SECONDARY);
                         break;
                     case ROW_MOOD:
@@ -300,8 +310,8 @@ public class FeedbackActivity extends BaseActivity {
 
                 if(_parameters._feedbackType == FEEDBACK_TYPE_ACTIVE){
                     Log.d(LOG_TAG,"ACTIVE FEEDBACK");
-                    int validForHowManyMinutes = 1;//TODO: need to analyze this value from the user input to validFor
-                    ((ESApplication)getApplication()).startActiveFeedback(_labelStruct,validForHowManyMinutes,initiatedByNotification);
+                    //TODO: need to analyze this value from the user input to validFor
+                    ((ESApplication)getApplication()).startActiveFeedback(_labelStruct, validForHowManyMinutes, initiatedByNotification);
                     finish();
                     return;
                 }
@@ -367,7 +377,10 @@ public class FeedbackActivity extends BaseActivity {
                 break;
             case ROW_VALID:
                 //TODO: analyze selected string and save int numOfMinutesValid
+                //_parameters._feedbackType == FEEDBACK_TYPE_ACTIVE){
                 validFor = selected[0];
+                String[] splited = validFor.split("\\s+");
+                validForHowManyMinutes = Integer.parseInt(splited[0]);
 
                 break;
         }
