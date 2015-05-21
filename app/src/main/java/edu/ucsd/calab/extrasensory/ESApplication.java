@@ -361,22 +361,11 @@ public class ESApplication extends Application {
             }
 
             // Then we're in the background and we need to raise user's attention with notification:
-            NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
-            builder.setSmallIcon(R.drawable.ic_launcher);
-            builder.setContentTitle(NOTIFICATION_TITLE);
-            builder.setContentText(NOTIFICATION_TEXT_NO_VERIFIED);
-            builder.setLights(Color.BLUE,500,500);
-            builder.setVibrate(new long[]{500,500,500,500,500,500});
-            builder.setVisibility(Notification.VISIBILITY_PUBLIC);
-            builder.setPriority(Notification.PRIORITY_MAX);
-            builder.setCategory(Notification.CATEGORY_CALL);
-
             Intent defaultActionIntent = new Intent(this, FeedbackActivity.class);
             defaultActionIntent.putExtra(FeedbackActivity.KEY_INITIATED_BY_NOTIFICATION,true);
             PendingIntent defaultActionPendingIntent = PendingIntent.getActivity(this, 0, defaultActionIntent, 0);
-            builder.setContentIntent(defaultActionPendingIntent);
 
-            Notification notification = builder.build();
+            Notification notification = createNotification(NOTIFICATION_TEXT_NO_VERIFIED,defaultActionPendingIntent);
             Log.d(LOG_TAG,"Created notification: " + notification);
             Log.d(LOG_TAG,String.format("Notification. light: %d. vibrate len: %d",notification.ledARGB,notification.vibrate==null?0:notification.vibrate.length));
             NotificationManager notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
@@ -405,23 +394,28 @@ public class ESApplication extends Application {
             }
 
             // Then we're in the background and we need to raise user's attention with notification:
-            NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
-            builder.setSmallIcon(R.drawable.ic_launcher);
-            builder.setContentTitle(NOTIFICATION_TITLE);
-            builder.setContentText(question);
-            builder.setPriority(Notification.PRIORITY_HIGH);
-            builder.setCategory(Notification.CATEGORY_ALARM);
-
             intent.setClass(this,MainActivity.class);
-
             PendingIntent defaultActionPendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
-            builder.setContentIntent(defaultActionPendingIntent);
 
-            Notification notification = builder.build();
+            Notification notification = createNotification(question,defaultActionPendingIntent);
             Log.d(LOG_TAG,"Created notification: " + notification);
             NotificationManager notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
             notificationManager.notify(NOTIFICATION_ID,notification);
         }
+    }
+
+    private Notification createNotification(String contentText,PendingIntent contentIntent) {
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
+        builder.setSmallIcon(R.drawable.ic_launcher);
+        builder.setContentTitle(NOTIFICATION_TITLE);
+        builder.setContentText(contentText);
+        builder.setPriority(Notification.PRIORITY_HIGH);
+        builder.setCategory(Notification.CATEGORY_ALARM);
+        builder.setContentIntent(contentIntent);
+
+        Notification notification = builder.build();
+
+        return notification;
     }
 
     private static String getAlertQuestion(ESActivity latestVerifiedActivity,int minutesPassed) {
