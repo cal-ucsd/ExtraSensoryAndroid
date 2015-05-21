@@ -13,6 +13,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.support.v4.app.NotificationCompat;
@@ -364,8 +365,11 @@ public class ESApplication extends Application {
             builder.setSmallIcon(R.drawable.ic_launcher);
             builder.setContentTitle(NOTIFICATION_TITLE);
             builder.setContentText(NOTIFICATION_TEXT_NO_VERIFIED);
-            builder.setPriority(Notification.PRIORITY_HIGH);
-            builder.setCategory(Notification.CATEGORY_ALARM);
+            builder.setLights(Color.BLUE,500,500);
+            builder.setVibrate(new long[]{500,500,500,500,500,500});
+            builder.setVisibility(Notification.VISIBILITY_PUBLIC);
+            builder.setPriority(Notification.PRIORITY_MAX);
+            builder.setCategory(Notification.CATEGORY_CALL);
 
             Intent defaultActionIntent = new Intent(this, FeedbackActivity.class);
             defaultActionIntent.putExtra(FeedbackActivity.KEY_INITIATED_BY_NOTIFICATION,true);
@@ -374,6 +378,7 @@ public class ESApplication extends Application {
 
             Notification notification = builder.build();
             Log.d(LOG_TAG,"Created notification: " + notification);
+            Log.d(LOG_TAG,String.format("Notification. light: %d. vibrate len: %d",notification.ledARGB,notification.vibrate==null?0:notification.vibrate.length));
             NotificationManager notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
             notificationManager.notify(NOTIFICATION_ID,notification);
         }
