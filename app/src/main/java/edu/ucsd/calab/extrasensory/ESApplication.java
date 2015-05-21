@@ -16,6 +16,7 @@ import android.content.IntentFilter;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.provider.Settings;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
@@ -404,18 +405,37 @@ public class ESApplication extends Application {
         }
     }
 
-    private Notification createNotification(String contentText,PendingIntent contentIntent) {
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
+    private static Notification createNotification(String contentText,PendingIntent contentIntent) {
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(getTheAppContext());
         builder.setSmallIcon(R.drawable.ic_launcher);
         builder.setContentTitle(NOTIFICATION_TITLE);
         builder.setContentText(contentText);
         builder.setPriority(Notification.PRIORITY_HIGH);
-        builder.setCategory(Notification.CATEGORY_ALARM);
+        builder.setCategory(Notification.CATEGORY_EVENT);
+        builder.setVibrate(getNotificationVibratePattern());
+        builder.setLights(Color.argb(255, 200, 0, 255), 200, 200);
+        builder.setSound(Settings.System.DEFAULT_RINGTONE_URI);
         builder.setContentIntent(contentIntent);
 
         Notification notification = builder.build();
 
         return notification;
+    }
+
+    private static long[] getNotificationVibratePattern() {
+        long beatDur = 100; // Milliseconds
+        int[] patternOneCycle = new int[]{1,1,1,1,1,5,1,5};
+        int numCycles = 4;
+
+        long[] vibPattern = new long[numCycles*patternOneCycle.length];
+        for (int cycle = 0; cycle < numCycles; cycle ++) {
+            for (int i = 0; i < patternOneCycle.length; i ++) {
+                int pos = cycle*patternOneCycle.length + i;
+                vibPattern[pos] = beatDur * patternOneCycle[i];
+            }
+        }
+
+        return vibPattern;
     }
 
     private static String getAlertQuestion(ESActivity latestVerifiedActivity,int minutesPassed) {
@@ -506,6 +526,8 @@ public class ESApplication extends Application {
             if (!isAppInForeground()) {
                 // Then probably the app just now moved to the background, when this activity was stopped:
                 Log.i(LOG_TAG_LIFE_CYCLE,String.format("App switched to background (%s just stopped)",activityName));
+//                Notification notification = createNotification("bella",PendingIntent.getActivity(getTheAppContext(),13,new Intent("testing.calab.ucsd.edu"),0));
+//                ((NotificationManager)getTheAppContext().getSystemService(Context.NOTIFICATION_SERVICE)).notify(NOTIFICATION_ID,notification);
             }
         }
 
