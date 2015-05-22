@@ -14,6 +14,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
+import android.media.RingtoneManager;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.provider.Settings;
@@ -112,6 +113,27 @@ public class ESApplication extends Application {
 
     static PredeterminedLabels _predeterminedLabels = new PredeterminedLabels();
 
+    public static class DataForAlertForPastFeedback {
+        private ESActivity _latestVerifiedActivity;
+        private ESTimestamp _untilTimestamp;
+        private String _question;
+
+        private DataForAlertForPastFeedback(ESActivity latestVerifiedActivity,ESTimestamp untilTimestamp,String question) {
+            _latestVerifiedActivity = latestVerifiedActivity;
+            _untilTimestamp = untilTimestamp;
+            _question = question;
+        }
+        public ESActivity get_latestVerifiedActivity() {
+            return _latestVerifiedActivity;
+        }
+        public ESTimestamp get_untilTimestamp() {
+            return _untilTimestamp;
+        }
+        public String get_question() {
+            return _question;
+        }
+    }
+
     public static File getZipDir() {
         return getTheAppContext().getDir(ZIP_DIR_NAME, Context.MODE_PRIVATE);
     }
@@ -128,6 +150,14 @@ public class ESApplication extends Application {
     private AlarmManager _alarmManager;
     private boolean _userSelectedDataCollectionOn = true;
     private ESLifeCycleCallback _lifeCycleMonitor = new ESLifeCycleCallback();
+    private DataForAlertForPastFeedback _dataForAlertForPastFeedback;
+
+    public DataForAlertForPastFeedback get_dataForAlertForPastFeedback() {
+        return _dataForAlertForPastFeedback;
+    }
+    public void clearDataForAlertForPastFeedback() {
+        _dataForAlertForPastFeedback = null;
+    }
 
     private BroadcastReceiver _broadcastReceiver = new BroadcastReceiver() {
         @Override
@@ -380,11 +410,14 @@ public class ESApplication extends Application {
             int minutesPassed = (int)(millisPassed / ESApplication.MILLISECONDS_IN_MINUTE);
             String question = getAlertQuestion(latestVerifiedActivity,minutesPassed);
 
+            // Prepare the data required for the relevant alert dialog:
+            _dataForAlertForPastFeedback = new DataForAlertForPastFeedback(latestVerifiedActivity,nowTimestamp,question);
+
             // Prepare an intent to be used either inside notification or now in a broadcast.
             Intent intent = new Intent();
-            intent.putExtra(MainActivity.KEY_LAST_VERIFIED_TIMESTAMP,latestVerifiedActivity.get_timestamp().get_secondsSinceEpoch());
-            intent.putExtra(MainActivity.KEY_UNTIL_TIMESTAMP,nowTimestamp.get_secondsSinceEpoch());
-            intent.putExtra(MainActivity.KEY_ALERT_QUESTION,question);
+//            intent.putExtra(MainActivity.KEY_LAST_VERIFIED_TIMESTAMP,latestVerifiedActivity.get_timestamp().get_secondsSinceEpoch());
+//            intent.putExtra(MainActivity.KEY_UNTIL_TIMESTAMP,nowTimestamp.get_secondsSinceEpoch());
+//            intent.putExtra(MainActivity.KEY_ALERT_QUESTION,question);
 
             if (isAppInForeground()) {
                 // No need to use notification. Send broadcast to display an alert dialog:
@@ -412,9 +445,10 @@ public class ESApplication extends Application {
         builder.setContentText(contentText);
         builder.setPriority(Notification.PRIORITY_HIGH);
         builder.setCategory(Notification.CATEGORY_EVENT);
+        builder.setAutoCancel(true);
         builder.setVibrate(getNotificationVibratePattern());
         builder.setLights(Color.argb(255, 200, 0, 255), 200, 200);
-        builder.setSound(Settings.System.DEFAULT_RINGTONE_URI);
+        builder.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION));
         builder.setContentIntent(contentIntent);
 
         Notification notification = builder.build();

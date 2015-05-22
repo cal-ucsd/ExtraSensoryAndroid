@@ -72,14 +72,8 @@ public class MainActivity extends BaseActivity {
     @Override
     protected void onStart() {
         super.onStart();
-
-        // Was this activity started by a notification:
-        Intent startingIntent = getIntent();
-        if (startingIntent.hasExtra(KEY_LAST_VERIFIED_TIMESTAMP)) {
-            // Then this was started from notification, and we need to display the relevant alert:
-            displayAlertForPastFeedback(startingIntent);
-        }
-
+        Log.d(LOG_TAG,"onStart");
+        displayPastFeedbackAlertIfNeeded(false);
         checkGooglePlay();
     }
 
