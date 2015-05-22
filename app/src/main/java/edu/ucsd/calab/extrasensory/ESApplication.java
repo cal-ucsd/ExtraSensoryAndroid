@@ -474,7 +474,7 @@ public class ESApplication extends Application {
 
         String[] secondaries = latestVerifiedActivity.get_secondaryActivities();
         if (secondaries != null && secondaries.length > 0) {
-            question += "(" + secondaries[0];
+            question += " (" + secondaries[0];
             for (int i = 1; i < secondaries.length; i ++) {
                 question += ", " + secondaries[i];
             }
