@@ -61,9 +61,9 @@ public class FeedbackActivity extends BaseActivity {
     private static final String[] ROW_HEADERS = new String[] { "Main Activity", "Secondary Activities", "Mood", "Valid for" };
 
     private ESLabelStruct _labelStruct = new ESLabelStruct();
-    private String validFor = "";
+    private String _validFor = "";
     private int _validForHowManyMinutes = 0;
-    private String historyValidFor = "";
+    private String _historyValidFor = "";
     /**
      * This parameter type is to be used to transfer parameters to the feedback view,
      * that indicate what kind of feedback to perform and pass relevant data.
@@ -130,7 +130,7 @@ public class FeedbackActivity extends BaseActivity {
             Date end = _parameters._continuousActivityToEdit.getEndTimestamp().getDateOfTimestamp();
             String timeLabelStart = new SimpleDateFormat("EEE, dd MMM, hh:mm a").format(start);
             String timeLabelEnd = new SimpleDateFormat("hh:mm a").format(end);
-            historyValidFor = timeLabelStart + " - " + timeLabelEnd;
+            _historyValidFor = timeLabelStart + " - " + timeLabelEnd;
         }
 
         feedbackFlag = false;
@@ -209,9 +209,9 @@ public class FeedbackActivity extends BaseActivity {
 
         HashMap<String,String> validDatum = new HashMap<>(2);
 
-        String validRowHeader = _parameters._feedbackType == FEEDBACK_TYPE_ACTIVE ? ROW_HEADERS[ROW_VALID] : historyValidFor;
+        String validRowHeader = _parameters._feedbackType == FEEDBACK_TYPE_ACTIVE ? ROW_HEADERS[ROW_VALID] : _historyValidFor;
         validDatum.put(KEY_ROW_HEADER,validRowHeader);
-        validDatum.put(KEY_ROW_DETAIL, validFor);
+        validDatum.put(KEY_ROW_DETAIL, _validFor);
         data.add(validDatum);
 
         SimpleAdapter adapter = new SimpleAdapter(this, data,
@@ -262,9 +262,13 @@ public class FeedbackActivity extends BaseActivity {
                         break;
                     case ROW_VALID:
                         //Toast.makeText(getApplicationContext(), "Hello", Toast.LENGTH_LONG).show();
+                        if (_parameters._feedbackType == FEEDBACK_TYPE_HISTORY_CONTINUOUS_ACTIVITY) {
+                            // Then don't react to selecting this field.
+                            break;
+                        }
                         intent = new Intent(ESApplication.getTheAppContext(), SelectionFromListActivity.class);
                         intent.putExtra(SelectionFromListActivity.LIST_TYPE_KEY, SelectionFromListActivity.LIST_TYPE_VALID_FOR);
-                        intent.putExtra(SelectionFromListActivity.PRESELECTED_LABELS_KEY,new String[] {validFor});
+                        intent.putExtra(SelectionFromListActivity.PRESELECTED_LABELS_KEY,new String[] {_validFor});
                         startActivityForResult(intent, ROW_VALID);
                         break;
                 }
@@ -372,8 +376,8 @@ public class FeedbackActivity extends BaseActivity {
                 break;
             case ROW_VALID:
                 //_parameters._feedbackType == FEEDBACK_TYPE_ACTIVE){
-                validFor = selected[0];
-                String[] splited = validFor.split("\\s+");
+                _validFor = selected[0];
+                String[] splited = _validFor.split("\\s+");
                 _validForHowManyMinutes = Integer.parseInt(splited[0]);
 
                 break;
