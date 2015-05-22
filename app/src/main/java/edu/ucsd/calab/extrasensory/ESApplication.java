@@ -415,9 +415,6 @@ public class ESApplication extends Application {
 
             // Prepare an intent to be used either inside notification or now in a broadcast.
             Intent intent = new Intent();
-//            intent.putExtra(MainActivity.KEY_LAST_VERIFIED_TIMESTAMP,latestVerifiedActivity.get_timestamp().get_secondsSinceEpoch());
-//            intent.putExtra(MainActivity.KEY_UNTIL_TIMESTAMP,nowTimestamp.get_secondsSinceEpoch());
-//            intent.putExtra(MainActivity.KEY_ALERT_QUESTION,question);
 
             if (isAppInForeground()) {
                 // No need to use notification. Send broadcast to display an alert dialog:
