@@ -49,6 +49,7 @@ public class SelectionFromListActivity extends BaseActivity {
     private static final String LOG_TAG = "[SelectionFromListActivity]";
 
     public static final String LIST_TYPE_KEY = "edu.ucsd.calab.extrasensory.key.list_type";
+    public static final String ADD_DONT_REMEMBER_LABEL_KEY = "edu.ucsd.calab.extrasensory.key.add_dont_remember";
     public static final String PRESELECTED_LABELS_KEY = "edu.ucsd.calab.extrasensory.key.preselected_labels";
     public static final String FREQUENTLY_USED_LABELS_KEY = "edu.ucsd.calab.extrasensory.key.frequently_used_labels";
 
@@ -63,6 +64,7 @@ public class SelectionFromListActivity extends BaseActivity {
     private static final String MOODS_HEADER = "Mood";
     private static final String VALID_FOR_HEADER = "Valid For";
     private static final String ALL_LABELS = "All labels";
+    private static final String DONT_REMEMBER = "don't remember";
 
     private static final int LIST_TYPE_MISSING = -1;
     public static final int LIST_TYPE_MAIN_ACTIVITY = 0;
@@ -126,6 +128,15 @@ public class SelectionFromListActivity extends BaseActivity {
         switch (listType) {
             case LIST_TYPE_MAIN_ACTIVITY:
                 _labelChoices = ESLabelStrings.getMainActivities();
+                if (inputParameters.hasExtra(ADD_DONT_REMEMBER_LABEL_KEY)) {
+                    // Add another pseudo-label "don't remember":
+                    String[] newArray = new String[_labelChoices.length + 1];
+                    for (int i=0; i < _labelChoices.length; i++) {
+                        newArray[i] = _labelChoices[i];
+                    }
+                    newArray[_labelChoices.length] = DONT_REMEMBER;
+                    _labelChoices = newArray;
+                }
                 _allowMultiSelection = false;
                 _useIndex = false;
                 _allLabelsSectionHeader = MAIN_ACTIVITY_HEADER;

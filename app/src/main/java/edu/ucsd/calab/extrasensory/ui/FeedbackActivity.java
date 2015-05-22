@@ -241,6 +241,9 @@ public class FeedbackActivity extends BaseActivity {
                     case ROW_MAIN:
                         intent = new Intent(ESApplication.getTheAppContext(), SelectionFromListActivity.class);
                         intent.putExtra(SelectionFromListActivity.LIST_TYPE_KEY, SelectionFromListActivity.LIST_TYPE_MAIN_ACTIVITY);
+                        if (_parameters._feedbackType == FEEDBACK_TYPE_HISTORY_CONTINUOUS_ACTIVITY) {
+                            intent.putExtra(SelectionFromListActivity.ADD_DONT_REMEMBER_LABEL_KEY,true);
+                        }
                         intent.putExtra(SelectionFromListActivity.PRESELECTED_LABELS_KEY,new String[] {_labelStruct._mainActivity});
                         startActivityForResult(intent, ROW_MAIN);
                         break;
