@@ -275,22 +275,23 @@ public class HistoryFragment extends BaseTabFragment {
             return;
         }
 
-        ESTimestamp timestamp = continuousActivity.getStartTimestamp();
+        ESTimestamp swipedStartTimestamp = continuousActivity.getStartTimestamp();
+        ESTimestamp swipedEndTimestamp = continuousActivity.getEndTimestamp();
 
         // Is there no mark zone currently?
         if (_markZoneStartTimestamp == null || _markZoneEndTimestamp == null) {
             // Then this marked activity is starting a new mark zone:
             Log.v(LOG_TAG+"[swipe-right]","No mark zone. Starting new mark zone with this one row.");
-            _markZoneStartTimestamp = timestamp;
-            _markZoneEndTimestamp = timestamp;
+            _markZoneStartTimestamp = swipedStartTimestamp;
+            _markZoneEndTimestamp = swipedEndTimestamp;
         }
-        else if (timestamp.isEarlierThan(_markZoneStartTimestamp)) {
+        else if (swipedStartTimestamp.isEarlierThan(_markZoneStartTimestamp)) {
             Log.v(LOG_TAG+"[swipe-right]","Row earlier than mark zone. Expanding zone to earlier.");
-            _markZoneStartTimestamp = timestamp;
+            _markZoneStartTimestamp = swipedStartTimestamp;
         }
-        else if (timestamp.isLaterThan(_markZoneEndTimestamp)) {
+        else if (swipedEndTimestamp.isLaterThan(_markZoneEndTimestamp)) {
             Log.v(LOG_TAG+"[swipe-right]","Row later than mark zone. Expanding zone to later.");
-            _markZoneEndTimestamp = timestamp;
+            _markZoneEndTimestamp = swipedEndTimestamp;
         }
         else {
             // We should have covered all the cases.

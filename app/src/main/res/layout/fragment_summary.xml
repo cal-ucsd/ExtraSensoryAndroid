@@ -5,8 +5,8 @@
     android:background="#aa00ff"
     tools:context="edu.ucsd.calab.extrasensory.ui.SummaryFragment">
 
-    <!-- TODO: Update blank fragment layout -->
-    <TextView android:layout_width="match_parent" android:layout_height="match_parent"
-        android:text="Summary fragment" />
-
+    <ListView
+        android:id="@+id/list_summary_items"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"></ListView>
 </FrameLayout>
