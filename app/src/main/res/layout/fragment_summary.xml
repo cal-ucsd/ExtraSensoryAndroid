@@ -2,11 +2,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#aa00ff"
     tools:context="edu.ucsd.calab.extrasensory.ui.SummaryFragment">
 
     <ListView
-        android:id="@+id/list_summary_items"
+        android:id="@+id/listview_summary_items"
         android:layout_width="match_parent"
         android:layout_height="match_parent"></ListView>
 </FrameLayout>
