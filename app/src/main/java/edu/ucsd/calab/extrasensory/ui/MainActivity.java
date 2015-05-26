@@ -135,6 +135,20 @@ public class MainActivity extends BaseActivity {
                 startActivity(intent);
                 break;
             case R.id.action_active_feedback:
+                // Check should we collect data now:
+                if (!getTheESApplication().shouldDataCollectionBeOn()) {
+                    Log.i(LOG_TAG,"Active feedback pressed, but data-collection is off");
+                    AlertDialog.Builder builder = new AlertDialog.Builder(this).
+                            setIcon(R.drawable.ic_launcher).setMessage(R.string.alert_for_active_feedback_while_data_collection_off).
+                            setTitle("ExtraSensory").setNegativeButton(R.string.ok_button_text,new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    });
+                    builder.create().show();
+                    break;
+                }
                 intent = new Intent(getApplicationContext(),FeedbackActivity.class);
                 FeedbackActivity.setFeedbackParametersBeforeStartingFeedback(new FeedbackActivity.FeedbackParameters());
                 startActivity(intent);

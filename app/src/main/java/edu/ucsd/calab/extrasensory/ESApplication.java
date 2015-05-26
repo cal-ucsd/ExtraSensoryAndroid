@@ -204,7 +204,7 @@ public class ESApplication extends Application {
         startNotificationSchedule();
     }
 
-    private boolean shouldDataCollectionBeOn() {
+    public boolean shouldDataCollectionBeOn() {
         if (!_userSelectedDataCollectionOn) {
             // Then user doesn't allow data collection right now:
             return false;
