@@ -90,6 +90,9 @@ public class SelectionFromListActivity extends BaseActivity {
         public void onClick(View view) {
             TextView textView = (TextView)view.findViewById(R.id.text_label_name_in_selection_choice);
             String clickedLabel = textView.getText().toString();
+            int currentPositionBeforeChanging = _choicesListView.getFirstVisiblePosition();
+            int numSelectedBeforeChanging = _selectedLabels.size();
+
             if (_selectedLabels.contains(clickedLabel)) {
                 // Then this click was to de-select this label:
                 _selectedLabels.remove(clickedLabel);
@@ -106,6 +109,26 @@ public class SelectionFromListActivity extends BaseActivity {
 
             // After re-arranging the selected labels, refresh the list:
             refreshListContent();
+
+            // Did we have rows added/removed from the list:
+            if (_useIndex) {
+                int numSelectedNow = _selectedLabels.size();
+                int numRowsAdded = 0;
+                if (numSelectedBeforeChanging == 0) {
+                    // Then we started without "selected" section and now we have this section, with one item:
+                    numRowsAdded = 2;
+                }
+                else if (numSelectedNow == 0) {
+                    // Then we started with "selected" section with one item, and now we have none:
+                    numRowsAdded = -2;
+                }
+                else {
+                    // Then we had a "selected" section and we still have it now:
+                    numRowsAdded = numSelectedNow - numSelectedBeforeChanging;
+                }
+                // Jump ahead from previous position according to how many rows were added/removed:
+                _choicesListView.setSelection(currentPositionBeforeChanging + numRowsAdded);
+            }
         }
     };
 
