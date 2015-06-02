@@ -46,5 +46,8 @@
     <string name="https_off">off</string>
     <string name="alert_for_active_feedback_while_data_collection_off">Data collection is off now. Can\'t do active feedback.</string>
     <string name="ok_button_text">O.K.</string>
+    <string name="home_sensing_off">no</string>
+    <string name="home_sensing_on">yes</string>
+    <string name="use_home_sensing">Home sensing:</string>
 
 </resources>
