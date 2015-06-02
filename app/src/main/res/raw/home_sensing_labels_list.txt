@@ -2,6 +2,7 @@ Household - shower
 Household - toilet
 Household - eating
 Household - cooking
+Household - hot beverage
 Household - exercise
 Household - after exercise
 Household - no one home
