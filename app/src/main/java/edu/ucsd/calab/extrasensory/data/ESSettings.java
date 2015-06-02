@@ -19,14 +19,17 @@ public class ESSettings {
     private String _uuid;
     private int _maxStoredExamples;
     private int _notificationIntervalInSeconds;
+    private boolean _homeSensing;
     private boolean _locationBubbleUsed;
     private Location _locationBubbleCenter;
 
     ESSettings(String uuid,int maxStoredExamples,int notificationIntervalInSeconds,
+               boolean homeSensing,
                boolean locationBubbleUsed, Location locationBubbleCenter) {
         _uuid = uuid;
         _maxStoredExamples = maxStoredExamples;
         _notificationIntervalInSeconds = notificationIntervalInSeconds;
+        _homeSensing = homeSensing;
         _locationBubbleUsed = locationBubbleUsed;
         _locationBubbleCenter = locationBubbleCenter;
     }
@@ -69,6 +72,12 @@ public class ESSettings {
     }
 
     /**
+     * Does the user participate in home sensing?
+     * @return
+     */
+    public static boolean isHomeSensingRelevant() { return getTheSettings()._homeSensing; }
+
+    /**
      * Should we use a location bubble?
      * @return
      */
@@ -104,6 +113,18 @@ public class ESSettings {
         ((ESApplication)ESApplication.getTheAppContext()).checkShouldWeCollectDataAndManageAppropriately();
     }
 
+    /**
+     * Set is the user participating in home sensing
+     * @param homeSensingUsed
+     */
+    public static void setHomeSensingUsed(boolean homeSensingUsed) {
+        _settings = getTheDBAccessor().setSettingsHomeSensing(homeSensingUsed);
+    }
+
+    /**
+     * Set should we use a location bubble
+     * @param useLocationBubble
+     */
     public static void setLocationBubbleUsed(boolean useLocationBubble) {
         _settings = getTheDBAccessor().setSettings(useLocationBubble);
     }

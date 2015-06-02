@@ -29,29 +29,7 @@ public class SettingsActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_setting);
 
-/*
-        SeekBar maxStorageSeekBar = (SeekBar)findViewById(R.id.max_storage_seek_bar);
-        maxStorageSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                int newMaxStorageValue = Math.max(2,progress);
-                ESSettings.setMaxStoredExamples(newMaxStorageValue);
-                Log.d(LOG_TAG,"Max storage changed to " + newMaxStorageValue);
-                displayMaxStorageValue(newMaxStorageValue);
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-
-            }
-        });
-*/
-
+        // Notification interval:
         SeekBar notificationIntervalSeekBar = (SeekBar)findViewById(R.id.notification_interval_seek_bar);
         notificationIntervalSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
@@ -74,6 +52,45 @@ public class SettingsActivity extends BaseActivity {
             }
         });
 
+        // Secure communication:
+        RadioGroup useHttpsRG = (RadioGroup)findViewById(R.id.radio_group_use_https);
+        useHttpsRG.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                switch (checkedId) {
+                    case R.id.radio_https_on:
+                        ESNetworkAccessor.getESNetworkAccessor().set_useHttps(true);
+                        break;
+                    case R.id.radio_https_off:
+                        ESNetworkAccessor.getESNetworkAccessor().set_useHttps(false);
+                        break;
+                    default:
+                        Log.e(LOG_TAG,"got unexpected id for radio group of Https");
+                }
+            }
+        });
+
+
+        // Home sensing:
+        RadioGroup useHomeSensingRG = (RadioGroup)findViewById(R.id.radio_group_home_sensing);
+        useHomeSensingRG.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                switch (checkedId) {
+                    case R.id.radio_home_sensing_on:
+                        ESSettings.setHomeSensingUsed(true);
+                        break;
+                    case R.id.radio_home_sensing_off:
+                        ESSettings.setHomeSensingUsed(false);
+                        break;
+                    default:
+                        Log.e(LOG_TAG,"got unexpected id for radio group of home sensing");
+                }
+            }
+        });
+
+
+        // Location bubble:
         RadioGroup locationUsedRG = (RadioGroup)findViewById(R.id.radio_group_location_bubble);
         final EditText latitudeEdit = (EditText)findViewById(R.id.edit_location_bubble_latitude);
         final EditText longitudeEdit = (EditText)findViewById(R.id.edit_location_bubble_longitude);
@@ -129,22 +146,6 @@ public class SettingsActivity extends BaseActivity {
             }
         });
 
-        RadioGroup useHttpsRG = (RadioGroup)findViewById(R.id.radio_group_use_https);
-        useHttpsRG.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(RadioGroup group, int checkedId) {
-                switch (checkedId) {
-                    case R.id.radio_https_on:
-                        ESNetworkAccessor.getESNetworkAccessor().set_useHttps(true);
-                        break;
-                    case R.id.radio_https_off:
-                        ESNetworkAccessor.getESNetworkAccessor().set_useHttps(false);
-                        break;
-                    default:
-                        Log.e(LOG_TAG,"got unexpected id for radio group of Https");
-                }
-            }
-        });
 
         setDisplayedContent();
     }
@@ -164,6 +165,26 @@ public class SettingsActivity extends BaseActivity {
         displayNotificationIntervalValue(intervalMinutes);
         SeekBar intervalSeekBar = (SeekBar)findViewById(R.id.notification_interval_seek_bar);
         intervalSeekBar.setProgress(intervalMinutes);
+
+        // Secure communication:
+        boolean useHttps = ESNetworkAccessor.getESNetworkAccessor().get_useHttps();
+        RadioGroup useHttpsRG = (RadioGroup)findViewById(R.id.radio_group_use_https);
+        if (useHttps) {
+            useHttpsRG.check(R.id.radio_https_on);
+        }
+        else {
+            useHttpsRG.check(R.id.radio_https_off);
+        }
+
+        // Home sensing:
+        boolean useHomeSensing = ESSettings.isHomeSensingRelevant();
+        RadioGroup useHomeSensingRG = (RadioGroup)findViewById(R.id.radio_group_home_sensing);
+        if (useHomeSensing) {
+            useHomeSensingRG.check(R.id.radio_home_sensing_on);
+        }
+        else {
+            useHomeSensingRG.check(R.id.radio_home_sensing_off);
+        }
 
         // Location bubble:
         Location bubbleCenter = ESSettings.locationBubbleCenter();
@@ -189,15 +210,6 @@ public class SettingsActivity extends BaseActivity {
             latitudeEdit.setEnabled(false);
             longitudeEdit.setEnabled(false);
             updateLatLongButton.setEnabled(false);
-        }
-
-        boolean useHttps = ESNetworkAccessor.getESNetworkAccessor().get_useHttps();
-        RadioGroup useHttpsRG = (RadioGroup)findViewById(R.id.radio_group_use_https);
-        if (useHttps) {
-            useHttpsRG.check(R.id.radio_https_on);
-        }
-        else {
-            useHttpsRG.check(R.id.radio_https_off);
         }
 
         // Set the UUID:
