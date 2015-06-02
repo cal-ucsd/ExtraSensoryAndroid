@@ -25,6 +25,7 @@ import edu.ucsd.calab.extrasensory.ESApplication;
 import edu.ucsd.calab.extrasensory.R;
 import edu.ucsd.calab.extrasensory.data.ESDatabaseAccessor;
 import edu.ucsd.calab.extrasensory.data.ESLabelStrings;
+import edu.ucsd.calab.extrasensory.data.ESSettings;
 
 /**
  * This class manages selecting labels from a list.
@@ -65,6 +66,7 @@ public class SelectionFromListActivity extends BaseActivity {
     private static final String VALID_FOR_HEADER = "Valid For";
     private static final String ALL_LABELS = "All labels";
     private static final String DONT_REMEMBER = "don't remember";
+    private static final String HOME_SENSING_HEADER = "Household";
 
     private static final int LIST_TYPE_MISSING = -1;
     public static final int LIST_TYPE_MAIN_ACTIVITY = 0;
@@ -167,6 +169,9 @@ public class SelectionFromListActivity extends BaseActivity {
             case LIST_TYPE_SECONDARY_ACTIVITIES:
                 _labelChoices = ESLabelStrings.getSecondaryActivities();
                 _labelsPerSubject = ESLabelStrings.getSecondaryActivitiesPerSubject();
+                if (ESSettings.isHomeSensingRelevant()) {
+                    _labelsPerSubject.put(HOME_SENSING_HEADER,ESLabelStrings.getHomeSensingLabels());
+                }
                 _allowMultiSelection = true;
                 _useIndex = true;
                 _allLabelsSectionHeader = SECONDARY_ACTIVITIES_HEADER;
