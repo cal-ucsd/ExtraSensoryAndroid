@@ -65,7 +65,7 @@ public class SelectionFromListActivity extends BaseActivity {
     private static final String MOODS_HEADER = "Mood";
     private static final String VALID_FOR_HEADER = "Valid For";
     private static final String ALL_LABELS = "All labels";
-    private static final String DONT_REMEMBER = "don't remember";
+    public static final String DONT_REMEMBER = "don't remember";
     private static final String HOME_SENSING_HEADER = "Household";
 
     private static final int LIST_TYPE_MISSING = -1;

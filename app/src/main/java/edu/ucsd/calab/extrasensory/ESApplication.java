@@ -38,6 +38,7 @@ import edu.ucsd.calab.extrasensory.network.ESNetworkAccessor;
 import edu.ucsd.calab.extrasensory.sensors.ESSensorManager;
 import edu.ucsd.calab.extrasensory.ui.FeedbackActivity;
 import edu.ucsd.calab.extrasensory.ui.MainActivity;
+import edu.ucsd.calab.extrasensory.ui.SelectionFromListActivity;
 
 /**
  * This class serves as a central location to manage various aspects of the application,
@@ -380,7 +381,7 @@ public class ESApplication extends Application {
 
         ESActivity latestVerifiedActivity = ESDatabaseAccessor.getESDatabaseAccessor().getLatestVerifiedActivity(lookBackFrom);
 
-        if (latestVerifiedActivity == null) {
+        if (latestVerifiedActivity == null || SelectionFromListActivity.DONT_REMEMBER.equals(latestVerifiedActivity.get_mainActivityUserCorrection())) {
             // Then there hasn't been a verified activity in a long time. Need to call for active feedback
             Log.i(LOG_TAG,"Notification: Latest activity was too long ago. Need to prompt for active feedback.");
             if (isAppInForeground()) {
