@@ -14,8 +14,10 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
+import android.media.RingtoneManager;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.provider.Settings;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
@@ -36,6 +38,7 @@ import edu.ucsd.calab.extrasensory.network.ESNetworkAccessor;
 import edu.ucsd.calab.extrasensory.sensors.ESSensorManager;
 import edu.ucsd.calab.extrasensory.ui.FeedbackActivity;
 import edu.ucsd.calab.extrasensory.ui.MainActivity;
+import edu.ucsd.calab.extrasensory.ui.SelectionFromListActivity;
 
 /**
  * This class serves as a central location to manage various aspects of the application,
@@ -111,6 +114,27 @@ public class ESApplication extends Application {
 
     static PredeterminedLabels _predeterminedLabels = new PredeterminedLabels();
 
+    public static class DataForAlertForPastFeedback {
+        private ESActivity _latestVerifiedActivity;
+        private ESTimestamp _untilTimestamp;
+        private String _question;
+
+        private DataForAlertForPastFeedback(ESActivity latestVerifiedActivity,ESTimestamp untilTimestamp,String question) {
+            _latestVerifiedActivity = latestVerifiedActivity;
+            _untilTimestamp = untilTimestamp;
+            _question = question;
+        }
+        public ESActivity get_latestVerifiedActivity() {
+            return _latestVerifiedActivity;
+        }
+        public ESTimestamp get_untilTimestamp() {
+            return _untilTimestamp;
+        }
+        public String get_question() {
+            return _question;
+        }
+    }
+
     public static File getZipDir() {
         return getTheAppContext().getDir(ZIP_DIR_NAME, Context.MODE_PRIVATE);
     }
@@ -127,6 +151,14 @@ public class ESApplication extends Application {
     private AlarmManager _alarmManager;
     private boolean _userSelectedDataCollectionOn = true;
     private ESLifeCycleCallback _lifeCycleMonitor = new ESLifeCycleCallback();
+    private DataForAlertForPastFeedback _dataForAlertForPastFeedback;
+
+    public DataForAlertForPastFeedback get_dataForAlertForPastFeedback() {
+        return _dataForAlertForPastFeedback;
+    }
+    public void clearDataForAlertForPastFeedback() {
+        _dataForAlertForPastFeedback = null;
+    }
 
     private BroadcastReceiver _broadcastReceiver = new BroadcastReceiver() {
         @Override
@@ -173,7 +205,7 @@ public class ESApplication extends Application {
         startNotificationSchedule();
     }
 
-    private boolean shouldDataCollectionBeOn() {
+    public boolean shouldDataCollectionBeOn() {
         if (!_userSelectedDataCollectionOn) {
             // Then user doesn't allow data collection right now:
             return false;
@@ -350,7 +382,7 @@ public class ESApplication extends Application {
 
         ESActivity latestVerifiedActivity = ESDatabaseAccessor.getESDatabaseAccessor().getLatestVerifiedActivity(lookBackFrom);
 
-        if (latestVerifiedActivity == null) {
+        if (latestVerifiedActivity == null || SelectionFromListActivity.DONT_REMEMBER.equals(latestVerifiedActivity.get_mainActivityUserCorrection())) {
             // Then there hasn't been a verified activity in a long time. Need to call for active feedback
             Log.i(LOG_TAG,"Notification: Latest activity was too long ago. Need to prompt for active feedback.");
             if (isAppInForeground()) {
@@ -380,11 +412,11 @@ public class ESApplication extends Application {
             int minutesPassed = (int)(millisPassed / ESApplication.MILLISECONDS_IN_MINUTE);
             String question = getAlertQuestion(latestVerifiedActivity,minutesPassed);
 
+            // Prepare the data required for the relevant alert dialog:
+            _dataForAlertForPastFeedback = new DataForAlertForPastFeedback(latestVerifiedActivity,nowTimestamp,question);
+
             // Prepare an intent to be used either inside notification or now in a broadcast.
             Intent intent = new Intent();
-            intent.putExtra(MainActivity.KEY_LAST_VERIFIED_TIMESTAMP,latestVerifiedActivity.get_timestamp().get_secondsSinceEpoch());
-            intent.putExtra(MainActivity.KEY_UNTIL_TIMESTAMP,nowTimestamp.get_secondsSinceEpoch());
-            intent.putExtra(MainActivity.KEY_ALERT_QUESTION,question);
 
             if (isAppInForeground()) {
                 // No need to use notification. Send broadcast to display an alert dialog:
@@ -405,13 +437,17 @@ public class ESApplication extends Application {
         }
     }
 
-    private Notification createNotification(String contentText,PendingIntent contentIntent) {
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
+    private static Notification createNotification(String contentText,PendingIntent contentIntent) {
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(getTheAppContext());
         builder.setSmallIcon(R.drawable.ic_launcher);
         builder.setContentTitle(NOTIFICATION_TITLE);
         builder.setContentText(contentText);
         builder.setPriority(Notification.PRIORITY_HIGH);
-        builder.setCategory(Notification.CATEGORY_ALARM);
+        builder.setCategory(Notification.CATEGORY_EVENT);
+        builder.setAutoCancel(true);
+        builder.setVibrate(getNotificationVibratePattern());
+        builder.setLights(Color.argb(255, 200, 0, 255), 200, 200);
+        builder.setSound(Settings.System.DEFAULT_RINGTONE_URI);
         builder.setContentIntent(contentIntent);
 
         Notification notification = builder.build();
@@ -419,12 +455,28 @@ public class ESApplication extends Application {
         return notification;
     }
 
+    private static long[] getNotificationVibratePattern() {
+        long beatDur = 100; // Milliseconds
+        int[] patternOneCycle = new int[]{1,1,1,1,1,5,1,5};
+        int numCycles = 4;
+
+        long[] vibPattern = new long[numCycles*patternOneCycle.length];
+        for (int cycle = 0; cycle < numCycles; cycle ++) {
+            for (int i = 0; i < patternOneCycle.length; i ++) {
+                int pos = cycle*patternOneCycle.length + i;
+                vibPattern[pos] = beatDur * patternOneCycle[i];
+            }
+        }
+
+        return vibPattern;
+    }
+
     private static String getAlertQuestion(ESActivity latestVerifiedActivity,int minutesPassed) {
         String question = "In the past " + minutesPassed + " minutes were still " + latestVerifiedActivity.get_mainActivityUserCorrection();
 
         String[] secondaries = latestVerifiedActivity.get_secondaryActivities();
         if (secondaries != null && secondaries.length > 0) {
-            question += "(" + secondaries[0];
+            question += " (" + secondaries[0];
             for (int i = 1; i < secondaries.length; i ++) {
                 question += ", " + secondaries[i];
             }
@@ -507,6 +559,8 @@ public class ESApplication extends Application {
             if (!isAppInForeground()) {
                 // Then probably the app just now moved to the background, when this activity was stopped:
                 Log.i(LOG_TAG_LIFE_CYCLE,String.format("App switched to background (%s just stopped)",activityName));
+//                Notification notification = createNotification("bella",PendingIntent.getActivity(getTheAppContext(),13,new Intent("testing.calab.ucsd.edu"),0));
+//                ((NotificationManager)getTheAppContext().getSystemService(Context.NOTIFICATION_SERVICE)).notify(NOTIFICATION_ID,notification);
             }
         }
 

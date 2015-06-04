@@ -34,12 +34,6 @@ import edu.ucsd.calab.extrasensory.sensors.ESSensorManager;
  */
 public class BaseActivity extends ActionBarActivity {
 
-    public static final String KEY_LAST_VERIFIED_TIMESTAMP = "edu.ucsd.calab.extrasensory.extra_key.last_verified_timestamp";
-    public static final String KEY_UNTIL_TIMESTAMP = "edu.ucsd.calab.extrasensory.extra_key.until_timestamp";
-    public static final String KEY_ALERT_QUESTION = "edu.ucsd.calab.extrasensory.extra_key.alert_question";
-    public static final int LAST_VERIFIED_TIMESTAMP_DEFAULT = -1;
-    public static final int UNTIL_TIMESTAMP_DEFAULT = -1;
-
     private static final String LOG_TAG = "[BaseActivity]";
     private static final String ALERT_BUTTON_TEXT_YES = "Yes";
     private static final String ALERT_BUTTON_TEXT_NOT_NOW = "Not now";
@@ -51,7 +45,7 @@ public class BaseActivity extends ActionBarActivity {
     protected Menu _optionsMenu = null;
     private AlertDialog _theOnlyDialog = null;
 
-    private ESApplication getTheESApplication() {
+    protected ESApplication getTheESApplication() {
         return (ESApplication)getApplication();
     }
 
@@ -74,8 +68,8 @@ public class BaseActivity extends ActionBarActivity {
                 return;
             }
             if (ESApplication.ACTION_ALERT_PAST_FEEDBACK.equals(intent.getAction())) {
-                Log.v(LOG_TAG,"Caught 'display alert for past feedback' broadcast");
-                displayAlertForPastFeedback(intent);
+                Log.v(LOG_TAG, "Caught 'display alert for past feedback' broadcast");
+                displayPastFeedbackAlertIfNeeded(true);
                 return;
             }
         }
@@ -153,30 +147,37 @@ public class BaseActivity extends ActionBarActivity {
         _theOnlyDialog.show();
     }
 
-    public void displayAlertForPastFeedback(Intent intent) {
-        int lastVerifiedTimestampSeconds = intent.getIntExtra(KEY_LAST_VERIFIED_TIMESTAMP, LAST_VERIFIED_TIMESTAMP_DEFAULT);
-        int untilTimestampSeconds = intent.getIntExtra(KEY_UNTIL_TIMESTAMP, UNTIL_TIMESTAMP_DEFAULT);
-        String question = intent.getStringExtra(KEY_ALERT_QUESTION);
-        if (lastVerifiedTimestampSeconds == LAST_VERIFIED_TIMESTAMP_DEFAULT || untilTimestampSeconds == UNTIL_TIMESTAMP_DEFAULT || question == null) {
-            Log.e(LOG_TAG,"Activity started from notification, but missing info.");
+    protected void displayPastFeedbackAlertIfNeeded(boolean askedByBroadcast) {
+        ESApplication.DataForAlertForPastFeedback dataForAlertForPastFeedback = getTheESApplication().get_dataForAlertForPastFeedback();
+        getTheESApplication().clearDataForAlertForPastFeedback();
+        if (dataForAlertForPastFeedback == null) {
+            if (askedByBroadcast) {
+                Log.e(LOG_TAG,"Asked by broadcast to display alert, but missing data for it");
+            }
+            else {
+                Log.v(LOG_TAG,"No data for alert, so not displaying alert");
+            }
         }
         else {
-            displayAlertForPastFeedback(lastVerifiedTimestampSeconds,untilTimestampSeconds,question);
+            displayAlertForPastFeedback(dataForAlertForPastFeedback);
         }
-
     }
 
-    private void displayAlertForPastFeedback(int fromVerifiedActivityTimestampSeconds,int toTimestampSeconds,String question) {
-        ESTimestamp fromTimestamp = new ESTimestamp(fromVerifiedActivityTimestampSeconds);
-        ESTimestamp toTimestamp = new ESTimestamp(toTimestampSeconds);
+    //    private void displayAlertForPastFeedback(int fromVerifiedActivityTimestampSeconds,int toTimestampSeconds,String question) {
+    private void displayAlertForPastFeedback(ESApplication.DataForAlertForPastFeedback dataForAlertForPastFeedback) {
+//        ESTimestamp fromTimestamp = new ESTimestamp(fromVerifiedActivityTimestampSeconds);
+//        ESTimestamp toTimestamp = new ESTimestamp(toTimestampSeconds);
 
-        final ESActivity latestVerifiedActivity = ESDatabaseAccessor.getESDatabaseAccessor().getESActivity(fromTimestamp);
+//        final ESActivity latestVerifiedActivity = ESDatabaseAccessor.getESDatabaseAccessor().getESActivity(fromTimestamp);
+        final ESActivity latestVerifiedActivity = dataForAlertForPastFeedback.get_latestVerifiedActivity();
+        String question = dataForAlertForPastFeedback.get_question();
+        ESTimestamp toTimestamp = dataForAlertForPastFeedback.get_untilTimestamp();
         if (latestVerifiedActivity == null) {
-            Log.e(LOG_TAG,"Got request for alert, but with timestamp that has no activity: " + fromVerifiedActivityTimestampSeconds);
+            Log.e(LOG_TAG,"Got request for alert, but with null verified activity");
             return;
         }
-        final ESContinuousActivity entireRange = ESDatabaseAccessor.getESDatabaseAccessor().getSingleContinuousActivityFromTimeRange(fromTimestamp,toTimestamp);
-
+//        final ESContinuousActivity entireRange = ESDatabaseAccessor.getESDatabaseAccessor().getSingleContinuousActivityFromTimeRange(fromTimestamp,toTimestamp);
+        final ESContinuousActivity entireRange = ESDatabaseAccessor.getESDatabaseAccessor().getSingleContinuousActivityFromTimeRange(latestVerifiedActivity.get_timestamp(),toTimestamp);
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setIcon(R.drawable.ic_launcher).setMessage(question);
         builder.setPositiveButton(ALERT_BUTTON_TEXT_CORRECT,new DialogInterface.OnClickListener() {

@@ -25,6 +25,7 @@ import edu.ucsd.calab.extrasensory.ESApplication;
 import edu.ucsd.calab.extrasensory.R;
 import edu.ucsd.calab.extrasensory.data.ESDatabaseAccessor;
 import edu.ucsd.calab.extrasensory.data.ESLabelStrings;
+import edu.ucsd.calab.extrasensory.data.ESSettings;
 
 /**
  * This class manages selecting labels from a list.
@@ -49,6 +50,7 @@ public class SelectionFromListActivity extends BaseActivity {
     private static final String LOG_TAG = "[SelectionFromListActivity]";
 
     public static final String LIST_TYPE_KEY = "edu.ucsd.calab.extrasensory.key.list_type";
+    public static final String ADD_DONT_REMEMBER_LABEL_KEY = "edu.ucsd.calab.extrasensory.key.add_dont_remember";
     public static final String PRESELECTED_LABELS_KEY = "edu.ucsd.calab.extrasensory.key.preselected_labels";
     public static final String FREQUENTLY_USED_LABELS_KEY = "edu.ucsd.calab.extrasensory.key.frequently_used_labels";
 
@@ -63,6 +65,8 @@ public class SelectionFromListActivity extends BaseActivity {
     private static final String MOODS_HEADER = "Mood";
     private static final String VALID_FOR_HEADER = "Valid For";
     private static final String ALL_LABELS = "All labels";
+    public static final String DONT_REMEMBER = "don't remember";
+    private static final String HOME_SENSING_HEADER = "Household";
 
     private static final int LIST_TYPE_MISSING = -1;
     public static final int LIST_TYPE_MAIN_ACTIVITY = 0;
@@ -88,6 +92,9 @@ public class SelectionFromListActivity extends BaseActivity {
         public void onClick(View view) {
             TextView textView = (TextView)view.findViewById(R.id.text_label_name_in_selection_choice);
             String clickedLabel = textView.getText().toString();
+            int currentPositionBeforeChanging = _choicesListView.getFirstVisiblePosition();
+            int numSelectedBeforeChanging = _selectedLabels.size();
+
             if (_selectedLabels.contains(clickedLabel)) {
                 // Then this click was to de-select this label:
                 _selectedLabels.remove(clickedLabel);
@@ -104,6 +111,26 @@ public class SelectionFromListActivity extends BaseActivity {
 
             // After re-arranging the selected labels, refresh the list:
             refreshListContent();
+
+            // Did we have rows added/removed from the list:
+            if (_useIndex) {
+                int numSelectedNow = _selectedLabels.size();
+                int numRowsAdded = 0;
+                if (numSelectedBeforeChanging == 0) {
+                    // Then we started without "selected" section and now we have this section, with one item:
+                    numRowsAdded = 2;
+                }
+                else if (numSelectedNow == 0) {
+                    // Then we started with "selected" section with one item, and now we have none:
+                    numRowsAdded = -2;
+                }
+                else {
+                    // Then we had a "selected" section and we still have it now:
+                    numRowsAdded = numSelectedNow - numSelectedBeforeChanging;
+                }
+                // Jump ahead from previous position according to how many rows were added/removed:
+                _choicesListView.setSelection(currentPositionBeforeChanging + numRowsAdded);
+            }
         }
     };
 
@@ -126,6 +153,15 @@ public class SelectionFromListActivity extends BaseActivity {
         switch (listType) {
             case LIST_TYPE_MAIN_ACTIVITY:
                 _labelChoices = ESLabelStrings.getMainActivities();
+                if (inputParameters.hasExtra(ADD_DONT_REMEMBER_LABEL_KEY)) {
+                    // Add another pseudo-label "don't remember":
+                    String[] newArray = new String[_labelChoices.length + 1];
+                    for (int i=0; i < _labelChoices.length; i++) {
+                        newArray[i] = _labelChoices[i];
+                    }
+                    newArray[_labelChoices.length] = DONT_REMEMBER;
+                    _labelChoices = newArray;
+                }
                 _allowMultiSelection = false;
                 _useIndex = false;
                 _allLabelsSectionHeader = MAIN_ACTIVITY_HEADER;
@@ -133,6 +169,9 @@ public class SelectionFromListActivity extends BaseActivity {
             case LIST_TYPE_SECONDARY_ACTIVITIES:
                 _labelChoices = ESLabelStrings.getSecondaryActivities();
                 _labelsPerSubject = ESLabelStrings.getSecondaryActivitiesPerSubject();
+                if (ESSettings.isHomeSensingRelevant()) {
+                    _labelsPerSubject.put(HOME_SENSING_HEADER,ESLabelStrings.getHomeSensingLabels());
+                }
                 _allowMultiSelection = true;
                 _useIndex = true;
                 _allLabelsSectionHeader = SECONDARY_ACTIVITIES_HEADER;
