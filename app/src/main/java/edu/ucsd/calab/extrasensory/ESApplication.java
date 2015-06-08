@@ -446,7 +446,7 @@ public class ESApplication extends Application {
         builder.setAutoCancel(true);
         builder.setVibrate(getNotificationVibratePattern());
         builder.setLights(Color.argb(255, 200, 0, 255), 200, 200);
-        builder.setSound(Settings.System.DEFAULT_RINGTONE_URI);
+        builder.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION));
         builder.setContentIntent(contentIntent);
 
         Notification notification = builder.build();
