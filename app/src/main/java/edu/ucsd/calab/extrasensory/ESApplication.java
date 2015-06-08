@@ -226,6 +226,7 @@ public class ESApplication extends Application {
         }
     }
 
+    // TODO Change to true when using emulator
     public static boolean debugMode() { return false; }
 
     @Override
