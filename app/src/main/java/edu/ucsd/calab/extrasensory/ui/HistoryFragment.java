@@ -35,11 +35,13 @@ public class HistoryFragment extends BaseTabFragment {
     private static final String LOG_TAG = "[ESHistoryFragment]";
     private static final String INVALID_MERGE_ZONE_ALERT_TEXT = "The marked events contain more than one labeled event. Can't merge them to a single event.";
     private static final String ALERT_BUTTON_TEXT_OK = "O.K.";
+    private static final int FEEDBACK_FROM_HISTORY_REQUEST_CODE = 3;
 
     private ESContinuousActivity[] _activityArray = null;
     private String _headerText = null;
     private int _dayRelativeToToday = 0;
     private boolean _presentingSplitContinuousActivity = false;
+    private boolean _justGotBackFromFeedback = false;
     private ESTimestamp _markZoneStartTimestamp = null;
     private ESTimestamp _markZoneEndTimestamp = null;
     private void clearMergeMarkZone() {
@@ -63,10 +65,25 @@ public class HistoryFragment extends BaseTabFragment {
     public void onStart() {
         super.onStart();
         ESDatabaseAccessor.getESDatabaseAccessor().clearOrphanRecords(new ESTimestamp(0));
-        _dayRelativeToToday = 0;
+        if (_justGotBackFromFeedback) {
+            // Don't change the day.
+            _justGotBackFromFeedback = false;
+        }
+        else {
+            // Change the day to "today"
+            _dayRelativeToToday = 0;
+        }
         _presentingSplitContinuousActivity = false;
         clearMergeMarkZone();
         calculateAndPresentDaysHistory();
+    }
+
+    @Override
+    public void onActivityResult (int requestCode, int resultCode, Intent data) {
+        if (requestCode == FEEDBACK_FROM_HISTORY_REQUEST_CODE) {
+            // Remain in the same day
+            _justGotBackFromFeedback = true;
+        }
     }
 
     private boolean allowedToEditDaysActivities() {
@@ -255,7 +272,8 @@ public class HistoryFragment extends BaseTabFragment {
 
         Intent intent = new Intent(getActivity(),FeedbackActivity.class);
         FeedbackActivity.setFeedbackParametersBeforeStartingFeedback(new FeedbackActivity.FeedbackParameters(continuousActivityForFeedback));
-        startActivity(intent);
+        startActivityForResult(intent,FEEDBACK_FROM_HISTORY_REQUEST_CODE);
+        //startActivity(intent);
     }
 
     private void rowSwipedRight(ESContinuousActivity continuousActivity) {
