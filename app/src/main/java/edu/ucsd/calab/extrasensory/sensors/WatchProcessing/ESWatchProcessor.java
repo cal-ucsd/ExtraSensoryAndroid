@@ -88,18 +88,22 @@ public class ESWatchProcessor {
     public void startWatchCollection()
     {
         Log.i(LOG_TAG, "Resetting watch bundle data structures.");
-        _watchAccVals = new HashMap<>(3);
-        _watchAccVals.put(RAW_WATCH_ACC_X, new ArrayList<Integer>(MAX_WATCH_SAMPLES));
-        _watchAccVals.put(RAW_WATCH_ACC_Y, new ArrayList<Integer>(MAX_WATCH_SAMPLES));
-        _watchAccVals.put(RAW_WATCH_ACC_Z, new ArrayList<Integer>(MAX_WATCH_SAMPLES));
 
         PebbleDictionary data = new PebbleDictionary();
+        cleanWatchMeasurements();
 
         // Add a key of 1, and a string value.
         data.addString(1, WATCH_COLLECTION_ON);
 
         Log.i(LOG_TAG, "Sending message to watch to turn ON accel collection.");
         PebbleKit.sendDataToPebble(getTheApplicationContext(), PEBBLE_APP_UUID, data);
+    }
+
+    public void cleanWatchMeasurements() {
+        _watchAccVals = new HashMap<>(3);
+        _watchAccVals.put(RAW_WATCH_ACC_X, new ArrayList<Integer>(MAX_WATCH_SAMPLES));
+        _watchAccVals.put(RAW_WATCH_ACC_Y, new ArrayList<Integer>(MAX_WATCH_SAMPLES));
+        _watchAccVals.put(RAW_WATCH_ACC_Z, new ArrayList<Integer>(MAX_WATCH_SAMPLES));
     }
 
     // Send message to watch to turn off accel collection

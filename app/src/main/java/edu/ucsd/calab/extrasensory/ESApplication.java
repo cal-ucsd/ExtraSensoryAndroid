@@ -36,6 +36,7 @@ import edu.ucsd.calab.extrasensory.data.ESSettings;
 import edu.ucsd.calab.extrasensory.data.ESTimestamp;
 import edu.ucsd.calab.extrasensory.network.ESNetworkAccessor;
 import edu.ucsd.calab.extrasensory.sensors.ESSensorManager;
+import edu.ucsd.calab.extrasensory.sensors.WatchProcessing.ESWatchProcessor;
 import edu.ucsd.calab.extrasensory.ui.FeedbackActivity;
 import edu.ucsd.calab.extrasensory.ui.MainActivity;
 import edu.ucsd.calab.extrasensory.ui.SelectionFromListActivity;
@@ -148,6 +149,7 @@ public class ESApplication extends Application {
     }
 
     private ESSensorManager _sensorManager;
+    private ESWatchProcessor _watchProcessor;
     private AlarmManager _alarmManager;
     private boolean _userSelectedDataCollectionOn = true;
     private ESLifeCycleCallback _lifeCycleMonitor = new ESLifeCycleCallback();
@@ -226,7 +228,6 @@ public class ESApplication extends Application {
         }
     }
 
-    // TODO Change to true when using emulator
     public static boolean debugMode() { return false; }
 
     @Override
@@ -238,6 +239,10 @@ public class ESApplication extends Application {
 
         _sensorManager = ESSensorManager.getESSensorManager();
         _alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        _watchProcessor = ESWatchProcessor.getTheWatchProcessor();
+        if (_watchProcessor.isWatchConnected()) {
+            _watchProcessor.launchWatchApp();
+        }
 
         LocalBroadcastManager.getInstance(_appContext).registerReceiver(_broadcastReceiver,new IntentFilter(ESNetworkAccessor.BROADCAST_NETWORK_QUEUE_SIZE_CHANGED));
 

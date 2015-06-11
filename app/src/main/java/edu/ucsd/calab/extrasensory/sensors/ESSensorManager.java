@@ -37,6 +37,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -46,6 +47,7 @@ import edu.ucsd.calab.extrasensory.data.ESSettings;
 import edu.ucsd.calab.extrasensory.data.ESTimestamp;
 import edu.ucsd.calab.extrasensory.network.ESNetworkAccessor;
 import edu.ucsd.calab.extrasensory.sensors.AudioProcessing.ESAudioProcessor;
+import edu.ucsd.calab.extrasensory.sensors.WatchProcessing.ESWatchProcessor;
 
 /**
  * This class is to handle the activation of sensors for the recording period,
@@ -243,6 +245,7 @@ public class ESSensorManager
     private SensorManager _sensorManager;
     private GoogleApiClient _googleApiClient;
     private ESAudioProcessor _audioProcessor;
+    private ESWatchProcessor _watchProcessor;
 
     private HashMap<String,ArrayList<Double>> _highFreqData;
     private HashMap<String,ArrayList<Double>> _locationCoordinatesData;
@@ -290,6 +293,9 @@ public class ESSensorManager
 
         // Audio processor:
         _audioProcessor = new ESAudioProcessor();
+
+        // Watch processor:
+        _watchProcessor = ESWatchProcessor.getTheWatchProcessor();
 
         // Add raw motion sensors:
         if (!tryToAddSensor(Sensor.TYPE_ACCELEROMETER,true,"raw accelerometer",RAW_ACC_X)) {
@@ -369,6 +375,11 @@ public class ESSensorManager
         // Start recording audio:
         _audioProcessor.startRecordingSession();
 
+        // Start recording watch:
+        if (_watchProcessor.isWatchConnected()) {
+            _watchProcessor.startWatchCollection();
+        }
+
         // Start recording hi-frequency sensors:
         for (Sensor sensor : _hiFreqSensors) {
             _sensorManager.registerListener(this,sensor,SAMPLE_PERIOD_MICROSECONDS);
@@ -442,6 +453,12 @@ public class ESSensorManager
 
         // Clear audio data:
         _audioProcessor.clearAudioData();
+
+        // Clear watch data:
+        if (_watchProcessor.isWatchConnected()) {
+            _watchProcessor.stopWatchCollection();
+        }
+        _watchProcessor.cleanWatchMeasurements();
     }
 
     /**
@@ -517,6 +534,13 @@ public class ESSensorManager
         // Finish audio recording:
         _audioProcessor.stopRecordingSession(true);
 
+        // Finish watch recording:
+        Map<String,ArrayList<Integer>> watchMeasurements = null;
+        if (_watchProcessor.isWatchConnected()) {
+            _watchProcessor.stopWatchCollection();
+            watchMeasurements = _watchProcessor.getWatchAccelData();
+        }
+
         set_recordingRightNow(false);
 
         // Construct an object with all the data:
@@ -529,6 +553,19 @@ public class ESSensorManager
             }
             catch (JSONException e) {
                 Log.e(LOG_TAG,"JSON: failed putting key " + key + ". Message: " + e.getMessage());
+            }
+        }
+
+        // Add watch data:
+        if (watchMeasurements != null) {
+            for (String key : watchMeasurements.keySet()) {
+                JSONArray samples = new JSONArray(watchMeasurements.get(key));
+                try {
+                    data.put(key,samples);
+                }
+                catch (JSONException e) {
+                    Log.e(LOG_TAG,"JSON: failed putting watch key " + key + ". Message: " + e.getMessage());
+                }
             }
         }
 
