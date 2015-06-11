@@ -383,7 +383,7 @@ public class SelectionFromListActivity extends BaseActivity {
             ChoiceItem item = getItem(position);
             ImageView imageView = (ImageView)rowView.findViewById(R.id.image_mark_for_selection_choice);
             if (item._isSectionHeader) {
-                rowView.setBackgroundColor(Color.BLUE);
+                rowView.setBackgroundColor(Color.YELLOW);
                 imageView.setImageBitmap(null);
                 rowView.setEnabled(false);
                 rowView.setOnClickListener(null);
