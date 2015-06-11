@@ -5,6 +5,7 @@ import com.getpebble.android.kit.PebbleKit.PebbleDataReceiver;
 import com.getpebble.android.kit.util.PebbleDictionary;
 
 import android.app.Activity;
+import android.app.Service;
 import android.content.Context;
 import android.content.BroadcastReceiver;
 import android.content.Intent;
@@ -15,6 +16,9 @@ import java.util.HashMap;
 import java.util.UUID;
 
 import edu.ucsd.calab.extrasensory.ESApplication;
+import edu.ucsd.calab.extrasensory.data.ESActivity;
+import edu.ucsd.calab.extrasensory.data.ESContinuousActivity;
+import edu.ucsd.calab.extrasensory.data.ESDatabaseAccessor;
 
 /**
  * Created by rafaelaguayo on 6/1/15.
@@ -40,9 +44,15 @@ public class ESWatchProcessor {
 
     // non-static part
     private HashMap<String, ArrayList<Integer>> _watchAccVals;
+    private ESApplication _theApplication;
+//    private ESApplication.DataForAlertForPastFeedback _dataForAlertForPastFeedback = null;
 
     private Context getTheApplicationContext() {
         return ESApplication.getTheAppContext();
+    }
+
+    public void setTheESApplicationReference(ESApplication esApplicationReference) {
+        _theApplication = esApplicationReference;
     }
 
     /**
@@ -65,21 +75,18 @@ public class ESWatchProcessor {
     }
 
     /* Send activity question to watch */
-    public void nagUserWithQuestion(String str)
+    public void alertUserWithQuestion(String question)//,ESApplication.DataForAlertForPastFeedback dataForAlertForPastFeedback)
     {
-        Log.i(LOG_TAG, "Nagging user with question: " + str);
+        // Save the data for the alert:
+//        _dataForAlertForPastFeedback = dataForAlertForPastFeedback;
+
+        Log.i(LOG_TAG, "Nagging user with question: " + question);
         PebbleDictionary data = new PebbleDictionary();
 
         // Add a key of 2, and a string value.
-        data.addString(2, str);
+        data.addString(2, question);
 
         PebbleKit.sendDataToPebble(getTheApplicationContext(), PEBBLE_APP_UUID, data);
-    }
-
-    // TODO implement functionality to hold data labels
-    public void setUserInfo()
-    {
-
     }
 
     /*
@@ -147,11 +154,15 @@ public class ESWatchProcessor {
                     // process yes or not now message from response by user
                     if(data.getString(WATCH_MESSAGE_KEY).equals(YES_ANSWER))
                     {
-                        // TODO Handle yes reponse from watch
+                        applySameLabelForRecentActivity();
+                        // Since we're handling the user response, we can clear the data for this alert:
+                        if (_theApplication != null) {
+                            _theApplication.clearDataForAlertForPastFeedback();
+                        }
                     }
                     else if(data.getString(WATCH_MESSAGE_KEY).equals(NO_ANSWER))
                     {
-                        // TODO Handle not now response from watch
+                        // Basically, do nothing. Don't even clear the data from ESApplication or the alert from UI
                     }
                     else {
                         Log.e(LOG_TAG, "Message with key sent invalid string response!");
@@ -183,6 +194,31 @@ public class ESWatchProcessor {
             }
 
         });
+    }
+
+    private void applySameLabelForRecentActivity() {
+        if (_theApplication == null || _theApplication.get_dataForAlertForPastFeedback() == null) {
+            Log.i(LOG_TAG,"We have no data for alert about past activity.");
+            return;
+        }
+        ESActivity latestVerified = _theApplication.get_dataForAlertForPastFeedback().get_latestVerifiedActivity();
+        if (latestVerified == null) {
+            Log.i(LOG_TAG,"We have no latest verified activity.");
+            return;
+        }
+        ESContinuousActivity entireRange = ESDatabaseAccessor.getESDatabaseAccessor().getSingleContinuousActivityFromTimeRange(
+                latestVerified.get_timestamp(),
+                _theApplication.get_dataForAlertForPastFeedback().get_untilTimestamp());
+        // Apply the labels of latestVerified to all minutes in the range:
+        for (ESActivity minuteActivity : entireRange.getMinuteActivities()) {
+            ESDatabaseAccessor.getESDatabaseAccessor().setESActivityValues(
+                    minuteActivity,
+                    ESActivity.ESLabelSource.ES_LABEL_SOURCE_NOTIFICATION_ANSWER_CORRECT,
+                    latestVerified.get_mainActivityUserCorrection(),
+                    latestVerified.get_secondaryActivities(),
+                    latestVerified.get_moods()
+            );
+        }
     }
 
     /* Function to open the ExtraSensory watch app */

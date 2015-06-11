@@ -240,6 +240,7 @@ public class ESApplication extends Application {
         _sensorManager = ESSensorManager.getESSensorManager();
         _alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
         _watchProcessor = ESWatchProcessor.getTheWatchProcessor();
+        _watchProcessor.setTheESApplicationReference(this);
         if (_watchProcessor.isWatchConnected()) {
             _watchProcessor.launchWatchApp();
         }
@@ -395,6 +396,10 @@ public class ESApplication extends Application {
                 Intent broadcast = new Intent(ACTION_ALERT_ACTIVE_FEEDBACK);
                 LocalBroadcastManager manager = LocalBroadcastManager.getInstance(this);
                 manager.sendBroadcast(broadcast);
+                // Notify on the watch also:
+                if (_watchProcessor.isWatchConnected()) {
+                    _watchProcessor.alertUserWithQuestion(NOTIFICATION_TEXT_NO_VERIFIED);
+                }
                 return;
             }
 
@@ -408,6 +413,10 @@ public class ESApplication extends Application {
             Log.d(LOG_TAG,String.format("Notification. light: %d. vibrate len: %d",notification.ledARGB,notification.vibrate==null?0:notification.vibrate.length));
             NotificationManager notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
             notificationManager.notify(NOTIFICATION_ID,notification);
+            // Notify on the watch also:
+            if (_watchProcessor.isWatchConnected()) {
+                _watchProcessor.alertUserWithQuestion(NOTIFICATION_TEXT_NO_VERIFIED);
+            }
         }
         else {
             // Then use this verified activity's labels to ask if still doing the same
@@ -428,6 +437,10 @@ public class ESApplication extends Application {
                 intent.setAction(ACTION_ALERT_PAST_FEEDBACK);
                 LocalBroadcastManager manager = LocalBroadcastManager.getInstance(this);
                 manager.sendBroadcast(intent);
+                // Notify on the watch also:
+                if (_watchProcessor.isWatchConnected()) {
+                    _watchProcessor.alertUserWithQuestion(question);
+                }
                 return;
             }
 
@@ -439,6 +452,11 @@ public class ESApplication extends Application {
             Log.d(LOG_TAG,"Created notification: " + notification);
             NotificationManager notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
             notificationManager.notify(NOTIFICATION_ID,notification);
+
+            // Notify on the watch also:
+            if (_watchProcessor.isWatchConnected()) {
+                _watchProcessor.alertUserWithQuestion(question);
+            }
         }
     }
 

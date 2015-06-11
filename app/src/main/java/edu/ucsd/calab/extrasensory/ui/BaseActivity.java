@@ -149,7 +149,7 @@ public class BaseActivity extends ActionBarActivity {
 
     protected void displayPastFeedbackAlertIfNeeded(boolean askedByBroadcast) {
         ESApplication.DataForAlertForPastFeedback dataForAlertForPastFeedback = getTheESApplication().get_dataForAlertForPastFeedback();
-        getTheESApplication().clearDataForAlertForPastFeedback();
+        //getTheESApplication().clearDataForAlertForPastFeedback();
         if (dataForAlertForPastFeedback == null) {
             if (askedByBroadcast) {
                 Log.e(LOG_TAG,"Asked by broadcast to display alert, but missing data for it");
@@ -192,6 +192,7 @@ public class BaseActivity extends ActionBarActivity {
                             latestVerifiedActivity.get_secondaryActivities(),
                             latestVerifiedActivity.get_moods());
                 }
+                getTheESApplication().clearDataForAlertForPastFeedback();
                 dialog.dismiss();
             }
         });
@@ -202,6 +203,7 @@ public class BaseActivity extends ActionBarActivity {
                 intent.putExtra(FeedbackActivity.KEY_INITIATED_BY_NOTIFICATION,true);
                 FeedbackActivity.setFeedbackParametersBeforeStartingFeedback(new FeedbackActivity.FeedbackParameters(entireRange));
                 startActivity(intent);
+                getTheESApplication().clearDataForAlertForPastFeedback();
                 dialog.dismiss();
             }
         });
@@ -209,6 +211,7 @@ public class BaseActivity extends ActionBarActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 // Do nothing. Just close the alert:
+                getTheESApplication().clearDataForAlertForPastFeedback();
                 dialog.dismiss();
             }
         });
