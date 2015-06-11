@@ -14,10 +14,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.UUID;
 
+import edu.ucsd.calab.extrasensory.ESApplication;
+
 /**
  * Created by rafaelaguayo on 6/1/15.
  */
-public class ESWatchProcessor extends Activity {
+public class ESWatchProcessor {
 
     //static part of class
     private static ESWatchProcessor theSingleWatchProcessor;
@@ -39,11 +41,15 @@ public class ESWatchProcessor extends Activity {
     // non-static part
     private HashMap<String, ArrayList<Integer>> _watchAccVals;
 
+    private Context getTheApplicationContext() {
+        return ESApplication.getTheAppContext();
+    }
+
     /**
      * Get the single instance of this class
      * @return ESWatchProcessor
      */
-    public static ESWatchProcessor getESSensorManager() {
+    public static ESWatchProcessor getTheWatchProcessor() {
         if (theSingleWatchProcessor == null) {
             theSingleWatchProcessor = new ESWatchProcessor();
         }
@@ -53,7 +59,7 @@ public class ESWatchProcessor extends Activity {
 
     /* Function to let app know if a watch is connected */
     public boolean isWatchConnected() {
-        boolean connected = PebbleKit.isWatchConnected(getApplicationContext());
+        boolean connected = PebbleKit.isWatchConnected(getTheApplicationContext());
         Log.i(LOG_TAG, "Pebble is " + (connected ? "connected" : "not connected"));
         return connected;
     }
@@ -67,7 +73,7 @@ public class ESWatchProcessor extends Activity {
         // Add a key of 2, and a string value.
         data.addString(2, str);
 
-        PebbleKit.sendDataToPebble(getApplicationContext(), PEBBLE_APP_UUID, data);
+        PebbleKit.sendDataToPebble(getTheApplicationContext(), PEBBLE_APP_UUID, data);
     }
 
     // TODO implement functionality to hold data labels
@@ -93,7 +99,7 @@ public class ESWatchProcessor extends Activity {
         data.addString(1, WATCH_COLLECTION_ON);
 
         Log.i(LOG_TAG, "Sending message to watch to turn ON accel collection.");
-        PebbleKit.sendDataToPebble(getApplicationContext(), PEBBLE_APP_UUID, data);
+        PebbleKit.sendDataToPebble(getTheApplicationContext(), PEBBLE_APP_UUID, data);
     }
 
     // Send message to watch to turn off accel collection
@@ -104,7 +110,7 @@ public class ESWatchProcessor extends Activity {
 
         data.addString(1, WATCH_COLLECTION_OFF);
 
-        PebbleKit.sendDataToPebble(getApplicationContext(), PEBBLE_APP_UUID, data);
+        PebbleKit.sendDataToPebble(getTheApplicationContext(), PEBBLE_APP_UUID, data);
     }
 
     /* Return the watch acceleration data */
@@ -117,7 +123,7 @@ public class ESWatchProcessor extends Activity {
      messages received from the watch, will be sent here */
     public void registerReceiveHandler() {
 
-        PebbleKit.registerReceivedDataHandler(this, new PebbleKit.PebbleDataReceiver(PEBBLE_APP_UUID) {
+        PebbleKit.registerReceivedDataHandler(getTheApplicationContext(), new PebbleKit.PebbleDataReceiver(PEBBLE_APP_UUID) {
 
             @Override
             public void receiveData(final Context context, final int transactionId, final PebbleDictionary data) {
@@ -169,7 +175,7 @@ public class ESWatchProcessor extends Activity {
                     _watchAccVals.get(RAW_WATCH_ACC_Z).add(Integer.parseInt(xyzArr[2]));
                 }
 
-                PebbleKit.sendAckToPebble(getApplicationContext(), transactionId);
+                PebbleKit.sendAckToPebble(ESApplication.getTheAppContext(), transactionId);
             }
 
         });
@@ -178,12 +184,12 @@ public class ESWatchProcessor extends Activity {
     /* Function to open the ExtraSensory watch app */
     public void launchWatchApp()
     {
-        PebbleKit.startAppOnPebble(getApplicationContext(), PEBBLE_APP_UUID);
+        PebbleKit.startAppOnPebble(getTheApplicationContext(), PEBBLE_APP_UUID);
     }
 
     /* Function to close the ExtraSensory watch app */
     public void closeWatchApp()
     {
-        PebbleKit.closeAppOnPebble(getApplicationContext(), PEBBLE_APP_UUID);
+        PebbleKit.closeAppOnPebble(getTheApplicationContext(), PEBBLE_APP_UUID);
     }
 }
