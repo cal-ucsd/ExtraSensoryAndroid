@@ -55,6 +55,10 @@ public class ESWatchProcessor {
         _theApplication = esApplicationReference;
     }
 
+    private ESWatchProcessor() {
+        registerReceiveHandler();
+    }
+
     /**
      * Get the single instance of this class
      * @return ESWatchProcessor
@@ -143,7 +147,7 @@ public class ESWatchProcessor {
                     Log.e(LOG_TAG, "Watch sent null message. Return.");
                     return;
                 }
-                if(data.size() != ACTIVITY_RESPONSE_LENGTH || data.size() != ACCEL_RESPONSE_LENGTH)
+                if(data.size() != ACTIVITY_RESPONSE_LENGTH && data.size() != ACCEL_RESPONSE_LENGTH)
                 {
                     Log.e(LOG_TAG, "Message from watch is not reasonable length: " + data.size()
                     + ". With message: " + data.toJsonString());
