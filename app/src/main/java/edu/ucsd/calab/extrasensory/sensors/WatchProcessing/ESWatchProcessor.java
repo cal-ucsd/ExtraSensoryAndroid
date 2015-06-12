@@ -213,7 +213,7 @@ public class ESWatchProcessor {
         for (ESActivity minuteActivity : entireRange.getMinuteActivities()) {
             ESDatabaseAccessor.getESDatabaseAccessor().setESActivityValues(
                     minuteActivity,
-                    ESActivity.ESLabelSource.ES_LABEL_SOURCE_NOTIFICATION_ANSWER_CORRECT,
+                    ESActivity.ESLabelSource.ES_LABEL_SOURCE_NOTIFICATION_ANSWER_CORRECT_FROM_WATCH,
                     latestVerified.get_mainActivityUserCorrection(),
                     latestVerified.get_secondaryActivities(),
                     latestVerified.get_moods()

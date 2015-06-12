@@ -495,7 +495,7 @@ public class ESApplication extends Application {
     }
 
     private static String getAlertQuestion(ESActivity latestVerifiedActivity,int minutesPassed) {
-        String question = "In the past " + minutesPassed + " minutes were still " + latestVerifiedActivity.get_mainActivityUserCorrection();
+        String question = "In the past " + minutesPassed + " minutes were you still " + latestVerifiedActivity.get_mainActivityUserCorrection();
 
         String[] secondaries = latestVerifiedActivity.get_secondaryActivities();
         if (secondaries != null && secondaries.length > 0) {
