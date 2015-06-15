@@ -142,6 +142,7 @@ public class ESWatchProcessor {
 
             @Override
             public void receiveData(final Context context, final int transactionId, final PebbleDictionary data) {
+                Log.d(LOG_TAG,"got data: " + data);
                 if(data == null)
                 {
                     Log.e(LOG_TAG, "Watch sent null message. Return.");
@@ -155,9 +156,11 @@ public class ESWatchProcessor {
 
                 if ((data.getString(WATCH_MESSAGE_KEY) != null))
                 {
+                    Log.d(LOG_TAG,"Got message of: " + data.getString(WATCH_MESSAGE_KEY));
                     // process yes or not now message from response by user
                     if(data.getString(WATCH_MESSAGE_KEY).equals(YES_ANSWER))
                     {
+                        Log.i(LOG_TAG,"User pressed 'yes' on watch.");
                         applySameLabelForRecentActivity();
                         // Since we're handling the user response, we can clear the data for this alert:
                         if (_theApplication != null) {
@@ -166,11 +169,14 @@ public class ESWatchProcessor {
                     }
                     else if(data.getString(WATCH_MESSAGE_KEY).equals(NO_ANSWER))
                     {
+                        Log.i(LOG_TAG,"User pressed 'not now' on watch.");
                         // Basically, do nothing. Don't even clear the data from ESApplication or the alert from UI
                     }
                     else {
-                        Log.e(LOG_TAG, "Message with key sent invalid string response!");
+                        Log.e(LOG_TAG, "Message with key sent invalid string response: " + data.getString(WATCH_MESSAGE_KEY));
                     }
+
+                    return;
                 }
 
                 if(_watchAccVals == null)

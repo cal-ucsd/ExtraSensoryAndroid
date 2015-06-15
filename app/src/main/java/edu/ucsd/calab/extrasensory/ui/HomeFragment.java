@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 
@@ -16,6 +17,7 @@ import edu.ucsd.calab.extrasensory.ESApplication;
 import edu.ucsd.calab.extrasensory.R;
 import edu.ucsd.calab.extrasensory.network.ESNetworkAccessor;
 import edu.ucsd.calab.extrasensory.sensors.AudioProcessing.MFCC;
+import edu.ucsd.calab.extrasensory.sensors.WatchProcessing.ESWatchProcessor;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -36,6 +38,7 @@ public class HomeFragment extends BaseTabFragment {
     private RadioGroup _dataCollectionRadioGroup = null;
     private TextView _storedExamplesCount = null;
     private TextView _feedbackQueueCount = null;
+    private ImageView _watchIcon = null;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -68,11 +71,20 @@ public class HomeFragment extends BaseTabFragment {
         _feedbackQueueCount = (TextView)homeView.findViewById(R.id.text_feedback_count);
         presentFeedbackQueueCount();
 
-
+        _watchIcon = (ImageView)homeView.findViewById(R.id.image_watch_icon);
+        presentWatchIcon();
 
         return homeView;
     }
 
+    private void presentWatchIcon() {
+        if (ESWatchProcessor.getTheWatchProcessor().isWatchConnected()) {
+            _watchIcon.setImageResource(R.drawable.watch_on);
+        }
+        else {
+            _watchIcon.setImageResource(R.drawable.watch_off);
+        }
+    }
 
     private void presentNumStoredExamples() {
         int num = ESNetworkAccessor.getESNetworkAccessor().uploadQueueSize();
