@@ -86,7 +86,7 @@ public class ESWatchProcessor {
 
         // Add a key of 2, and a string value.
         data.addString(2, question);
-
+        launchWatchApp();
         PebbleKit.sendDataToPebble(getTheApplicationContext(), PEBBLE_APP_UUID, data);
     }
 
@@ -102,6 +102,8 @@ public class ESWatchProcessor {
 
         // Add a key of 1, and a string value.
         data.addString(1, WATCH_COLLECTION_ON);
+
+        launchWatchApp();
 
         Log.i(LOG_TAG, "Sending message to watch to turn ON accel collection.");
         PebbleKit.sendDataToPebble(getTheApplicationContext(), PEBBLE_APP_UUID, data);
@@ -231,6 +233,7 @@ public class ESWatchProcessor {
     /* Function to open the ExtraSensory watch app */
     public void launchWatchApp()
     {
+        Log.i(LOG_TAG,"Making sure the watch-side extrasensory app is launched.");
         PebbleKit.startAppOnPebble(getTheApplicationContext(), PEBBLE_APP_UUID);
     }
 
