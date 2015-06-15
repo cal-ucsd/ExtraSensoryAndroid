@@ -1,14 +1,9 @@
 package edu.ucsd.calab.extrasensory.sensors.WatchProcessing;
 
 import com.getpebble.android.kit.PebbleKit;
-import com.getpebble.android.kit.PebbleKit.PebbleDataReceiver;
 import com.getpebble.android.kit.util.PebbleDictionary;
 
-import android.app.Activity;
-import android.app.Service;
 import android.content.Context;
-import android.content.BroadcastReceiver;
-import android.content.Intent;
 import android.util.Log;
 
 import java.util.ArrayList;
