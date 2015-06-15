@@ -45,7 +45,6 @@ public class ESWatchProcessor {
     // non-static part
     private HashMap<String, ArrayList<Integer>> _watchAccVals;
     private ESApplication _theApplication;
-//    private ESApplication.DataForAlertForPastFeedback _dataForAlertForPastFeedback = null;
 
     private Context getTheApplicationContext() {
         return ESApplication.getTheAppContext();
@@ -81,8 +80,6 @@ public class ESWatchProcessor {
     /* Send activity question to watch */
     public void alertUserWithQuestion(String question)//,ESApplication.DataForAlertForPastFeedback dataForAlertForPastFeedback)
     {
-        // Save the data for the alert:
-//        _dataForAlertForPastFeedback = dataForAlertForPastFeedback;
 
         Log.i(LOG_TAG, "Nagging user with question: " + question);
         PebbleDictionary data = new PebbleDictionary();
