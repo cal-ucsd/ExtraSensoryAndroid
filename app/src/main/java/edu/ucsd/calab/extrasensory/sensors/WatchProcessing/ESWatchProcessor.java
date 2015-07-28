@@ -34,7 +34,8 @@ public class ESWatchProcessor {
     private static final String RAW_WATCH_ACC_X = "raw_watch_acc_x";
     private static final String RAW_WATCH_ACC_Y = "raw_watch_acc_y";
     private static final String RAW_WATCH_ACC_Z = "raw_watch_acc_z";
-    private static final String WATCH_COMPASS_TIMESTAMP = "watch_compass_timestamp";
+    private static final String WATCH_ACC_TIMEREF = "watch_acc_timeref";
+    private static final String WATCH_COMPASS_TIMEREF = "watch_compass_timeref";
     private static final String WATCH_COMPASS_HEADING = "watch_compass_heading";
     private static final int WATCH_MESSAGE_TYPE_KEY_RECORDING = 1;
     private static final int WATCH_MESSAGE_TYPE_KEY_ALERT = 2;
@@ -44,6 +45,7 @@ public class ESWatchProcessor {
     private static final String NO_ANSWER = "NO";
     private static final int ACTIVITY_RESPONSE_LENGTH = 1;
     private static final int ACCEL_RESPONSE_LENGTH = 25;
+    private static final int ACCEL_SAMPLE_PERIOD_MILLIS = 40;
     private static final int WATCH_MESSAGE_KEY = 42;
     private static final int MAX_WATCH_SAMPLES = 500;
 
@@ -69,11 +71,11 @@ public class ESWatchProcessor {
                 Log.e(LOG_TAG, "Watch sent null message. Return.");
                 return;
             }
-            if(data.size() != ACTIVITY_RESPONSE_LENGTH && data.size() != ACCEL_RESPONSE_LENGTH)
-            {
-                Log.e(LOG_TAG, "Message from watch (maybe it's compass) is not reasonable length: " + data.size()
-                        + ". With message: " + data.toJsonString());
-            }
+//            if(data.size() != ACTIVITY_RESPONSE_LENGTH && data.size() != ACCEL_RESPONSE_LENGTH)
+//            {
+//                Log.e(LOG_TAG, "Message from watch (maybe it's compass) is not reasonable length: " + data.size()
+//                        + ". With message: " + data.toJsonString());
+//            }
 
             if ((data.getString(WATCH_MESSAGE_KEY) != null))
             {
@@ -113,8 +115,9 @@ public class ESWatchProcessor {
                 return;
             }
 
-            for(int i = 0; i < data.size(); i++) {
-                String measureStr = data.getString(i);
+            int timereference = 0;
+            for(int key = 0; key < data.size(); key++) {
+                String measureStr = data.getString(key);
                 String [] xyzArr = measureStr.split(",");
                 try {
                     if (xyzArr.length == 3) {
@@ -122,12 +125,23 @@ public class ESWatchProcessor {
                         _watchMeasurements.get(RAW_WATCH_ACC_X).add(Integer.parseInt(xyzArr[0]));
                         _watchMeasurements.get(RAW_WATCH_ACC_Y).add(Integer.parseInt(xyzArr[1]));
                         _watchMeasurements.get(RAW_WATCH_ACC_Z).add(Integer.parseInt(xyzArr[2]));
+                        _watchMeasurements.get(WATCH_ACC_TIMEREF).add(timereference + ACCEL_SAMPLE_PERIOD_MILLIS*(key-1));
                     } else {
-                        // Then this should be a compass heading message:
+
                         String compassParts[] = measureStr.split(":");
-                        _watchMeasurements.get(WATCH_COMPASS_TIMESTAMP).add(Integer.parseInt(compassParts[0]));
-                        _watchMeasurements.get(WATCH_COMPASS_HEADING).add(Integer.parseInt(compassParts[1]));
-                        Log.d(LOG_TAG,"=== now compass data: " + _watchMeasurements.get(WATCH_COMPASS_HEADING));
+                        if (compassParts.length == 2) {
+                            // Then this should be a compass heading message:
+                            _watchMeasurements.get(WATCH_COMPASS_TIMEREF).add(Integer.parseInt(compassParts[0]));
+                            _watchMeasurements.get(WATCH_COMPASS_HEADING).add(Integer.parseInt(compassParts[1]));
+                            Log.d(LOG_TAG,"=== now compass data: " + _watchMeasurements.get(WATCH_COMPASS_HEADING));
+                        }
+                        else if (key == 0) {
+                            // It should be a timestamp for accelerations:
+                            timereference = Integer.parseInt(measureStr);
+                        }
+                        else {
+                            Log.e(LOG_TAG,"Got unrecognized message: " + measureStr);
+                        }
                     }
                 }
                 catch(Exception exception) {
@@ -222,8 +236,9 @@ public class ESWatchProcessor {
         _watchMeasurements.put(RAW_WATCH_ACC_X, new ArrayList<Integer>(MAX_WATCH_SAMPLES));
         _watchMeasurements.put(RAW_WATCH_ACC_Y, new ArrayList<Integer>(MAX_WATCH_SAMPLES));
         _watchMeasurements.put(RAW_WATCH_ACC_Z, new ArrayList<Integer>(MAX_WATCH_SAMPLES));
+        _watchMeasurements.put(WATCH_ACC_TIMEREF,new ArrayList<Integer>(MAX_WATCH_SAMPLES));
 
-        _watchMeasurements.put(WATCH_COMPASS_TIMESTAMP,new ArrayList<Integer>(10));
+        _watchMeasurements.put(WATCH_COMPASS_TIMEREF,new ArrayList<Integer>(10));
         _watchMeasurements.put(WATCH_COMPASS_HEADING,new ArrayList<Integer>(10));
     }
 
@@ -279,8 +294,11 @@ public class ESWatchProcessor {
     /* Function to open the ExtraSensory watch app */
     public void launchWatchApp()
     {
-        Log.i(LOG_TAG,"Making sure the watch-side extrasensory app is launched.");
+        Log.i(LOG_TAG,"Before registring receive handler, unregister any other receivers...");
+        LocalBroadcastManager.getInstance(getTheApplicationContext()).unregisterReceiver(_dataReceiver);
+        Log.i(LOG_TAG,"Now register the receive handler...");
         PebbleKit.registerReceivedDataHandler(getTheApplicationContext(),_dataReceiver);
+        Log.i(LOG_TAG,"Making sure the watch-side extrasensory app is launched.");
         PebbleKit.startAppOnPebble(getTheApplicationContext(), PEBBLE_APP_UUID);
     }
 
