@@ -19,7 +19,6 @@ import edu.ucsd.calab.extrasensory.ESApplication;
 import edu.ucsd.calab.extrasensory.data.ESActivity;
 import edu.ucsd.calab.extrasensory.data.ESContinuousActivity;
 import edu.ucsd.calab.extrasensory.data.ESDatabaseAccessor;
-import edu.ucsd.calab.extrasensory.data.ESSettings;
 
 /**
  * Created by rafaelaguayo on 6/1/15.
@@ -35,6 +34,8 @@ public class ESWatchProcessor {
     private static final String RAW_WATCH_ACC_X = "raw_watch_acc_x";
     private static final String RAW_WATCH_ACC_Y = "raw_watch_acc_y";
     private static final String RAW_WATCH_ACC_Z = "raw_watch_acc_z";
+    private static final String WATCH_COMPASS_TIMESTAMP = "watch_compass_timestamp";
+    private static final String WATCH_COMPASS_HEADING = "watch_compass_heading";
     private static final int WATCH_MESSAGE_TYPE_KEY_RECORDING = 1;
     private static final int WATCH_MESSAGE_TYPE_KEY_ALERT = 2;
     private static final String WATCH_COLLECTION_ON = "TURN ON";
@@ -47,7 +48,7 @@ public class ESWatchProcessor {
     private static final int MAX_WATCH_SAMPLES = 500;
 
     // non-static part
-    private HashMap<String, ArrayList<Integer>> _watchAccVals;
+    private HashMap<String, ArrayList<Integer>> _watchMeasurements;
     private ESApplication _theApplication;
 
     private Context getTheApplicationContext() {
@@ -70,7 +71,7 @@ public class ESWatchProcessor {
             }
             if(data.size() != ACTIVITY_RESPONSE_LENGTH && data.size() != ACCEL_RESPONSE_LENGTH)
             {
-                Log.e(LOG_TAG, "Message from watch is not reasonable length: " + data.size()
+                Log.e(LOG_TAG, "Message from watch (maybe it's compass) is not reasonable length: " + data.size()
                         + ". With message: " + data.toJsonString());
             }
 
@@ -99,13 +100,13 @@ public class ESWatchProcessor {
                 return;
             }
 
-            if(_watchAccVals == null)
+            if(_watchMeasurements == null)
             {
                 Log.e(LOG_TAG, "Watch data bundle is null! startWatchCollection should have been called!");
                 return;
             }
 
-            if(_watchAccVals.get(RAW_WATCH_ACC_X).size() == MAX_WATCH_SAMPLES)
+            if(_watchMeasurements.get(RAW_WATCH_ACC_X).size() == MAX_WATCH_SAMPLES)
             {
                 Log.i(LOG_TAG, "Have enough watch samples, stopping watch accel collection.");
                 theSingleWatchProcessor.stopWatchCollection();
@@ -113,11 +114,25 @@ public class ESWatchProcessor {
             }
 
             for(int i = 0; i < data.size(); i++) {
-                String xyzStr = data.getString(i);
-                String [] xyzArr = xyzStr.split(",");
-                _watchAccVals.get(RAW_WATCH_ACC_X).add(Integer.parseInt(xyzArr[0]));
-                _watchAccVals.get(RAW_WATCH_ACC_Y).add(Integer.parseInt(xyzArr[1]));
-                _watchAccVals.get(RAW_WATCH_ACC_Z).add(Integer.parseInt(xyzArr[2]));
+                String measureStr = data.getString(i);
+                String [] xyzArr = measureStr.split(",");
+                try {
+                    if (xyzArr.length == 3) {
+                        // Then this should be an acceleration message:
+                        _watchMeasurements.get(RAW_WATCH_ACC_X).add(Integer.parseInt(xyzArr[0]));
+                        _watchMeasurements.get(RAW_WATCH_ACC_Y).add(Integer.parseInt(xyzArr[1]));
+                        _watchMeasurements.get(RAW_WATCH_ACC_Z).add(Integer.parseInt(xyzArr[2]));
+                    } else {
+                        // Then this should be a compass heading message:
+                        String compassParts[] = measureStr.split(":");
+                        _watchMeasurements.get(WATCH_COMPASS_TIMESTAMP).add(Integer.parseInt(compassParts[0]));
+                        _watchMeasurements.get(WATCH_COMPASS_HEADING).add(Integer.parseInt(compassParts[1]));
+                        Log.d(LOG_TAG,"=== now compass data: " + _watchMeasurements.get(WATCH_COMPASS_HEADING));
+                    }
+                }
+                catch(Exception exception) {
+                    Log.e(LOG_TAG,"Failed parsing watch measure message: " + measureStr);
+                }
             }
 
             PebbleKit.sendAckToPebble(ESApplication.getTheAppContext(), transactionId);
@@ -203,10 +218,13 @@ public class ESWatchProcessor {
     }
 
     public void cleanWatchMeasurements() {
-        _watchAccVals = new HashMap<>(3);
-        _watchAccVals.put(RAW_WATCH_ACC_X, new ArrayList<Integer>(MAX_WATCH_SAMPLES));
-        _watchAccVals.put(RAW_WATCH_ACC_Y, new ArrayList<Integer>(MAX_WATCH_SAMPLES));
-        _watchAccVals.put(RAW_WATCH_ACC_Z, new ArrayList<Integer>(MAX_WATCH_SAMPLES));
+        _watchMeasurements = new HashMap<>(3);
+        _watchMeasurements.put(RAW_WATCH_ACC_X, new ArrayList<Integer>(MAX_WATCH_SAMPLES));
+        _watchMeasurements.put(RAW_WATCH_ACC_Y, new ArrayList<Integer>(MAX_WATCH_SAMPLES));
+        _watchMeasurements.put(RAW_WATCH_ACC_Z, new ArrayList<Integer>(MAX_WATCH_SAMPLES));
+
+        _watchMeasurements.put(WATCH_COMPASS_TIMESTAMP,new ArrayList<Integer>(10));
+        _watchMeasurements.put(WATCH_COMPASS_HEADING,new ArrayList<Integer>(10));
     }
 
     // Send message to watch to turn off accel collection
@@ -221,9 +239,9 @@ public class ESWatchProcessor {
     }
 
     /* Return the watch acceleration data */
-    public HashMap<String, ArrayList<Integer>> getWatchAccelData()
+    public HashMap<String, ArrayList<Integer>> getWatchMeasurements()
     {
-        return _watchAccVals;
+        return _watchMeasurements;
     }
 
     /*ONE call to this function to register the receive handler where

@@ -32,14 +32,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 import edu.ucsd.calab.extrasensory.ESApplication;
@@ -538,7 +536,7 @@ public class ESSensorManager
         Map<String,ArrayList<Integer>> watchMeasurements = null;
         if (_watchProcessor.isWatchConnected()) {
             _watchProcessor.stopWatchCollection();
-            watchMeasurements = _watchProcessor.getWatchAccelData();
+            watchMeasurements = _watchProcessor.getWatchMeasurements();
         }
 
         set_recordingRightNow(false);
