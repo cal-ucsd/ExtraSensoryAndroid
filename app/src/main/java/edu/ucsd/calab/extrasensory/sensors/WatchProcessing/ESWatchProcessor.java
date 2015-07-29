@@ -11,8 +11,11 @@ import android.content.IntentFilter;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.UUID;
 
 import edu.ucsd.calab.extrasensory.ESApplication;
@@ -65,7 +68,7 @@ public class ESWatchProcessor {
 
         @Override
         public void receiveData(final Context context, final int transactionId, final PebbleDictionary data) {
-            Log.d(LOG_TAG,"got data: " + data);
+            Log.d(LOG_TAG,"got data: " + data.toJsonString());
             if(data == null)
             {
                 Log.e(LOG_TAG, "Watch sent null message. Return.");
@@ -77,7 +80,7 @@ public class ESWatchProcessor {
 //                        + ". With message: " + data.toJsonString());
 //            }
 
-            if ((data.getString(WATCH_MESSAGE_KEY) != null))
+            if ((data.size() == 1) && (data.getString(WATCH_MESSAGE_KEY) != null))
             {
                 Log.d(LOG_TAG,"Got message of: " + data.getString(WATCH_MESSAGE_KEY));
                 // process yes or not now message from response by user
@@ -116,8 +119,12 @@ public class ESWatchProcessor {
             }
 
             int timereference = 0;
-            for(int key = 0; key < data.size(); key++) {
+            int largest_key_expected = 2*data.size();
+            for(int key = 0; key < largest_key_expected; key++) {
                 String measureStr = data.getString(key);
+                if (measureStr == null) {
+                    continue;
+                }
                 String [] xyzArr = measureStr.split(",");
                 try {
                     if (xyzArr.length == 3) {
@@ -126,14 +133,14 @@ public class ESWatchProcessor {
                         _watchMeasurements.get(RAW_WATCH_ACC_Y).add(Integer.parseInt(xyzArr[1]));
                         _watchMeasurements.get(RAW_WATCH_ACC_Z).add(Integer.parseInt(xyzArr[2]));
                         _watchMeasurements.get(WATCH_ACC_TIMEREF).add(timereference + ACCEL_SAMPLE_PERIOD_MILLIS*(key-1));
-                    } else {
-
+                    }
+                    else {
                         String compassParts[] = measureStr.split(":");
                         if (compassParts.length == 2) {
                             // Then this should be a compass heading message:
                             _watchMeasurements.get(WATCH_COMPASS_TIMEREF).add(Integer.parseInt(compassParts[0]));
                             _watchMeasurements.get(WATCH_COMPASS_HEADING).add(Integer.parseInt(compassParts[1]));
-                            Log.d(LOG_TAG,"=== now compass data: " + _watchMeasurements.get(WATCH_COMPASS_HEADING));
+                            //Log.d(LOG_TAG,"=== now compass data: " + _watchMeasurements.get(WATCH_COMPASS_HEADING));
                         }
                         else if (key == 0) {
                             // It should be a timestamp for accelerations:
@@ -298,7 +305,7 @@ public class ESWatchProcessor {
         LocalBroadcastManager.getInstance(getTheApplicationContext()).unregisterReceiver(_dataReceiver);
         Log.i(LOG_TAG,"Now register the receive handler...");
         PebbleKit.registerReceivedDataHandler(getTheApplicationContext(),_dataReceiver);
-        Log.i(LOG_TAG,"Making sure the watch-side extrasensory app is launched.");
+        Log.i(LOG_TAG, "Making sure the watch-side extrasensory app is launched.");
         PebbleKit.startAppOnPebble(getTheApplicationContext(), PEBBLE_APP_UUID);
     }
 
