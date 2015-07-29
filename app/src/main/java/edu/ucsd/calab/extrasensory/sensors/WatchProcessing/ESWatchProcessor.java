@@ -11,11 +11,9 @@ import android.content.IntentFilter;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.UUID;
 
 import edu.ucsd.calab.extrasensory.ESApplication;
@@ -182,9 +180,6 @@ public class ESWatchProcessor {
         filter.addAction(Constants.INTENT_PEBBLE_CONNECTED);
         filter.addAction(Constants.INTENT_PEBBLE_DISCONNECTED);
         LocalBroadcastManager.getInstance(getTheApplicationContext()).registerReceiver(_watchConnectionReceiver,filter);
-
-        //TODO: just for debugging:
-//        ESSettings.setNotificationIntervalInSeconds(50);
     }
 
     /**
@@ -215,8 +210,17 @@ public class ESWatchProcessor {
 
         // Add a key of 2, and a string value.
         data.addString(WATCH_MESSAGE_TYPE_KEY_ALERT, question);
-        //launchWatchApp();
+        sendMessageToWatch(data);
+    }
+
+    private void sendMessageToWatch(PebbleDictionary data) {
         PebbleKit.sendDataToPebble(getTheApplicationContext(), PEBBLE_APP_UUID, data);
+        Log.d(LOG_TAG,">>> sending message: " + data.toJsonString());
+//        try {
+//            Thread.sleep(5);
+//        } catch (InterruptedException e) {
+//            Log.e(LOG_TAG,"Failed to sleep thread after sending message to watch.");
+//        }
     }
 
     /*
@@ -235,7 +239,7 @@ public class ESWatchProcessor {
         //launchWatchApp();
 
         Log.i(LOG_TAG, "Sending message to watch to turn ON accel collection.");
-        PebbleKit.sendDataToPebble(getTheApplicationContext(), PEBBLE_APP_UUID, data);
+        sendMessageToWatch(data);
     }
 
     public void cleanWatchMeasurements() {
@@ -256,8 +260,7 @@ public class ESWatchProcessor {
         PebbleDictionary data = new PebbleDictionary();
 
         data.addString(WATCH_MESSAGE_TYPE_KEY_RECORDING, WATCH_COLLECTION_OFF);
-
-        PebbleKit.sendDataToPebble(getTheApplicationContext(), PEBBLE_APP_UUID, data);
+        sendMessageToWatch(data);
     }
 
     /* Return the watch acceleration data */
