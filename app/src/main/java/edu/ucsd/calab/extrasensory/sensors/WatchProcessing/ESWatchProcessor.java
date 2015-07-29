@@ -175,11 +175,15 @@ public class ESWatchProcessor {
         }
     };
 
+    private ArrayList<PebbleDictionary> _outgoingMessageQueue;
+    private boolean _currentlySendingMessage = false;
+
     private ESWatchProcessor() {
         IntentFilter filter = new IntentFilter();
         filter.addAction(Constants.INTENT_PEBBLE_CONNECTED);
         filter.addAction(Constants.INTENT_PEBBLE_DISCONNECTED);
         LocalBroadcastManager.getInstance(getTheApplicationContext()).registerReceiver(_watchConnectionReceiver,filter);
+        _outgoingMessageQueue = new ArrayList<>(10);
     }
 
     /**
@@ -204,7 +208,6 @@ public class ESWatchProcessor {
     /* Send activity question to watch */
     public void alertUserWithQuestion(String question)//,ESApplication.DataForAlertForPastFeedback dataForAlertForPastFeedback)
     {
-
         Log.i(LOG_TAG, "Nagging user with question: " + question);
         PebbleDictionary data = new PebbleDictionary();
 
@@ -214,13 +217,28 @@ public class ESWatchProcessor {
     }
 
     private void sendMessageToWatch(PebbleDictionary data) {
-        PebbleKit.sendDataToPebble(getTheApplicationContext(), PEBBLE_APP_UUID, data);
-        Log.d(LOG_TAG,">>> sending message: " + data.toJsonString());
-//        try {
-//            Thread.sleep(5);
-//        } catch (InterruptedException e) {
-//            Log.e(LOG_TAG,"Failed to sleep thread after sending message to watch.");
-//        }
+        // Add the given message to the queue:
+        _outgoingMessageQueue.add(data);
+        // Go over the messages in the queue until emptied:
+        while (!_outgoingMessageQueue.isEmpty()) {
+            if (!_currentlySendingMessage) {
+                _currentlySendingMessage = true;
+                if (!_outgoingMessageQueue.isEmpty()) {
+                    PebbleDictionary nextMessage = _outgoingMessageQueue.remove(0);
+                    PebbleKit.sendDataToPebble(getTheApplicationContext(), PEBBLE_APP_UUID, nextMessage);
+                    Log.d(LOG_TAG, ">>> sending message: " + data.toJsonString());
+               }
+                _currentlySendingMessage = false;
+            }
+            else {
+                try {
+                    Log.i(LOG_TAG,"Waiting for sending mechanism to be available...");
+                    Thread.sleep(5);
+                } catch (InterruptedException e) {
+                    Log.e(LOG_TAG,"Failed to sleep thread after sending message to watch.");
+                }
+            }
+        }
     }
 
     /*

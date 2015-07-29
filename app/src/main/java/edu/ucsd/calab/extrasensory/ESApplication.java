@@ -203,6 +203,11 @@ public class ESApplication extends Application {
     }
 
     private void turnDataCollectionOn() {
+        Log.i(LOG_TAG,"Turning data collection on (launching watch app if applicable).");
+        if (_watchProcessor.isWatchConnected()) {
+            Log.d(LOG_TAG,"watch connected, so calling launch");
+            _watchProcessor.launchWatchApp();
+        }
         startRecordingSchedule(0);
         startNotificationSchedule();
     }
