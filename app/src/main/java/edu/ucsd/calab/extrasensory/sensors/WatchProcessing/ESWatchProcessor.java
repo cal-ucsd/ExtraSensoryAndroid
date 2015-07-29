@@ -117,7 +117,7 @@ public class ESWatchProcessor {
             }
 
             int timereference = 0;
-            int largest_key_expected = 2*data.size();
+            int largest_key_expected = data.size();
             for(int key = 0; key < largest_key_expected; key++) {
                 String measureStr = data.getString(key);
                 if (measureStr == null) {
