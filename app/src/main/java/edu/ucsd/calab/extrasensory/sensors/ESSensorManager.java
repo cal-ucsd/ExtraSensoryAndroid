@@ -627,8 +627,15 @@ public class ESSensorManager
             sumSqLong += Math.pow(longVals.get(i),2);
             if (i>0) {
                 double timeDiff = timerefs.get(i)-timerefs.get(i-1);
-                sumAbsLatDeriv += Math.abs(latVals.get(i)-latVals.get(i-1)) / timeDiff;
-                sumAbsLongDeriv += Math.abs(longVals.get(i)-longVals.get(i-1)) / timeDiff;
+                if (timeDiff > 0) {
+                    sumAbsLatDeriv += Math.abs(latVals.get(i) - latVals.get(i - 1)) / timeDiff;
+                    sumAbsLongDeriv += Math.abs(longVals.get(i) - longVals.get(i - 1)) / timeDiff;
+                }
+                else {
+                    sumAbsLatDeriv = -1;
+                    sumAbsLongDeriv = -1;
+                    break;
+                }
             }
         }
 
@@ -638,8 +645,9 @@ public class ESSensorManager
         double meanSqLong = sumSqLong / n;
         double varLat = meanSqLat - Math.pow(meanLat,2);
         double varLong = meanSqLong - Math.pow(meanLong,2);
-        double meanAbsLatDeriv = n > 1 ? sumAbsLatDeriv / (n-1) : 0;
-        double meanAbsLongDeriv = n > 1 ? sumAbsLongDeriv / (n-1) : 0;
+
+        double meanAbsLatDeriv = (sumAbsLatDeriv < 0) ? -1 : (n > 1 ? sumAbsLatDeriv / (n-1) : 0);
+        double meanAbsLongDeriv = (sumAbsLongDeriv < 0) ? -1 : (n > 1 ? sumAbsLongDeriv / (n-1) : 0);
 
         double latStd = Math.sqrt(varLat);
         double longStd = Math.sqrt(varLong);
