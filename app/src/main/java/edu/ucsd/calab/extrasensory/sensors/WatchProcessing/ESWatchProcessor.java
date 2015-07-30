@@ -13,6 +13,7 @@ import android.util.Log;
 
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.UUID;
 
@@ -49,6 +50,7 @@ public class ESWatchProcessor {
     private static final int ACCEL_SAMPLE_PERIOD_MILLIS = 40;
     private static final int WATCH_MESSAGE_KEY = 42;
     private static final int MAX_WATCH_SAMPLES = 500;
+    private static final long WAIT_AFTER_SEND_MESSAGE_IN_MILLIS = 100;
 
     // non-static part
     private HashMap<String, ArrayList<Integer>> _watchMeasurements;
@@ -176,7 +178,8 @@ public class ESWatchProcessor {
     };
 
     private ArrayList<PebbleDictionary> _outgoingMessageQueue;
-    private boolean _currentlySendingMessage = false;
+    //private boolean _currentlySendingMessage = false;
+    private long _waitUntilTimeBeforeSendingMessage;
 
     private ESWatchProcessor() {
         IntentFilter filter = new IntentFilter();
@@ -184,6 +187,7 @@ public class ESWatchProcessor {
         filter.addAction(Constants.INTENT_PEBBLE_DISCONNECTED);
         LocalBroadcastManager.getInstance(getTheApplicationContext()).registerReceiver(_watchConnectionReceiver,filter);
         _outgoingMessageQueue = new ArrayList<>(10);
+        _waitUntilTimeBeforeSendingMessage = 0;
     }
 
     /**
@@ -216,24 +220,33 @@ public class ESWatchProcessor {
         sendMessageToWatch(data);
     }
 
+    private boolean canWeSendWatchMessageNow() {
+        long now = new Date().getTime();
+        return now > _waitUntilTimeBeforeSendingMessage;
+    }
+
+    private void setSendWatiTimeAfterSendingNow() {
+        long now = new Date().getTime();
+        _waitUntilTimeBeforeSendingMessage = now + WAIT_AFTER_SEND_MESSAGE_IN_MILLIS;
+    }
+
     private void sendMessageToWatch(PebbleDictionary data) {
         // Add the given message to the queue:
         _outgoingMessageQueue.add(data);
         // Go over the messages in the queue until emptied:
         while (!_outgoingMessageQueue.isEmpty()) {
-            if (!_currentlySendingMessage) {
-                _currentlySendingMessage = true;
+            if (canWeSendWatchMessageNow()) {
+                setSendWatiTimeAfterSendingNow();
                 if (!_outgoingMessageQueue.isEmpty()) {
                     PebbleDictionary nextMessage = _outgoingMessageQueue.remove(0);
                     PebbleKit.sendDataToPebble(getTheApplicationContext(), PEBBLE_APP_UUID, nextMessage);
                     Log.d(LOG_TAG, ">>> sending message: " + data.toJsonString());
                }
-                _currentlySendingMessage = false;
             }
             else {
                 try {
                     Log.i(LOG_TAG,"Waiting for sending mechanism to be available...");
-                    Thread.sleep(5);
+                    Thread.sleep(WAIT_AFTER_SEND_MESSAGE_IN_MILLIS);
                 } catch (InterruptedException e) {
                     Log.e(LOG_TAG,"Failed to sleep thread after sending message to watch.");
                 }
