@@ -371,7 +371,12 @@ public class ESSensorManager
         }
 
         // Start recording audio:
-        _audioProcessor.startRecordingSession();
+        try {
+            _audioProcessor.startRecordingSession();
+        }
+        catch (Exception exception) {
+            Log.e(LOG_TAG,"Failed to start audio recording session: " + exception.getMessage());
+        }
 
         // Start recording watch:
         if (_watchProcessor.isWatchConnected()) {
@@ -530,7 +535,12 @@ public class ESSensorManager
         _googleApiClient.disconnect();
 
         // Finish audio recording:
-        _audioProcessor.stopRecordingSession(true);
+        try {
+            _audioProcessor.stopRecordingSession(true);
+        }
+        catch (Exception exception) {
+            Log.e(LOG_TAG,"Failed to stop audio recording session: " + exception.getMessage());
+        }
 
         // Finish watch recording:
         Map<String,ArrayList<Integer>> watchMeasurements = null;

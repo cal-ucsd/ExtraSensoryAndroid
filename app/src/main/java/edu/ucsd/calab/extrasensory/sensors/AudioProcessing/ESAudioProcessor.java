@@ -163,10 +163,14 @@ public class ESAudioProcessor {
         int bufferCount = 0;
         while (_isRecording) {
             bufferCount ++;
-            int numShortsRead = _audioRecorder.read(soundFrame,0,AUDIO_WRITER_BUFFER_SIZE_IN_SHORTS);
-//            if (bufferCount % 20 == 1) {
-//                Log.d(LOG_TAG,String.format("buffer %d) Read %d short values from recorder.",bufferCount,numShortsRead));
-//            }
+            int numShortsRead;
+            try {
+                numShortsRead = _audioRecorder.read(soundFrame, 0, AUDIO_WRITER_BUFFER_SIZE_IN_SHORTS);
+            }
+            catch (Exception exception) {
+                Log.e(LOG_TAG,"Failed to read sound frame: " + exception.getMessage());
+                return;
+            }
 
             int short_i;
             int absVal;
