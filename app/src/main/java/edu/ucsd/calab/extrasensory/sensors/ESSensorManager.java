@@ -251,6 +251,7 @@ public class ESSensorManager
     private ESTimestamp _timestamp;
     private ArrayList<Sensor> _hiFreqSensors;
     private ArrayList<String> _hiFreqSensorFeatureKeys;
+    private ArrayList<String> _sensorKeysThatShouldGetEnoughSamples;
     private ArrayList<Sensor> _lowFreqSensors;
     private ArrayList<String> _lowFreqSensorFeatureKeys;
 
@@ -316,6 +317,13 @@ public class ESSensorManager
         tryToAddSensor(Sensor.TYPE_PROXIMITY,false,"proximity",PROXIMITY);
         tryToAddSensor(Sensor.TYPE_RELATIVE_HUMIDITY,false,"relative humidity",HUMIDITY);
 
+        // Prepare a list of sensors that we expect to get enough samples from:
+        _sensorKeysThatShouldGetEnoughSamples = new ArrayList<>(10);
+        for (String sensorName : _hiFreqSensorFeatureKeys) {
+            if (!sensorName.equals(PROC_ROTATION_X)) {
+                _sensorKeysThatShouldGetEnoughSamples.add(sensorName);
+            }
+        }
         Log.v(LOG_TAG, "An instance of ESSensorManager was created.");
     }
 
@@ -348,7 +356,7 @@ public class ESSensorManager
      */
     public void startRecordingSensors(ESTimestamp timestamp) {
         Log.i(LOG_TAG, "Starting recording for timestamp: " + timestamp.toString());
-        clearRecordingSession();
+        clearRecordingSession(true);
         set_recordingRightNow(true);
         // Set the new timestamp:
         _timestamp = timestamp;
@@ -442,7 +450,7 @@ public class ESSensorManager
         }
     }
 
-    private void clearRecordingSession() {
+    private void clearRecordingSession(boolean clearBeforeStart) {
         // Clear the high frequency map:
         _highFreqData = new HashMap<>(20);
 
@@ -458,7 +466,7 @@ public class ESSensorManager
         _audioProcessor.clearAudioData();
 
         // Clear watch data:
-        if (_watchProcessor.isWatchConnected()) {
+        if (!clearBeforeStart && _watchProcessor.isWatchConnected()) {
             _watchProcessor.stopWatchCollection();
         }
         _watchProcessor.cleanWatchMeasurements();
@@ -474,7 +482,7 @@ public class ESSensorManager
         _sensorManager.unregisterListener(this);
         _googleApiClient.disconnect();
 
-        clearRecordingSession();
+        clearRecordingSession(false);
         set_recordingRightNow(false);
     }
 
@@ -785,7 +793,7 @@ public class ESSensorManager
         }
 
         // Check expected feature keys:
-        for (String featureKey : _hiFreqSensorFeatureKeys) {
+        for (String featureKey : _sensorKeysThatShouldGetEnoughSamples) {
             if (!_highFreqData.containsKey(featureKey) ||
                     _highFreqData.get(featureKey) == null ||
                     _highFreqData.get(featureKey).size() < NUM_SAMPLES_IN_SESSION) {
@@ -794,10 +802,6 @@ public class ESSensorManager
             }
         }
 
-        // All the expected sensors sampled the required amount of data
-//        for (String featureKey : _hiFreqSensorFeatureKeys) {
-//            Log.d("===", featureKey + ": " + _highFreqData.get(featureKey).size());
-//        }
         return true;
     }
 
