@@ -92,6 +92,7 @@ public class ESDatabaseAccessor {
                         ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_UUID + " TEXT PRIMARY KEY," +
                         ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_MAX_STORED_EXAMPLES + " INTEGER," +
                         ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_NOTIFICATION_INTERVAL_SECONDS + " INTEGER," +
+                        ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_ALLOW_CELLULAR + " INTEGER," +
                         ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_HOME_SENSING + " INTEGER," +
                         ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_USED + " INTEGER," +
                         ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_CENTER_LAT + " DOUBLE PRECISION," +
@@ -136,6 +137,7 @@ public class ESDatabaseAccessor {
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_MAX_STORED_EXAMPLES, MAX_STORED_EXAMPLES_DEFAULT);
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_NOTIFICATION_INTERVAL_SECONDS,NOTIFICATION_INTERVAL_DEFAULT);
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_HOME_SENSING,0);
+        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_ALLOW_CELLULAR,0);
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_USED,0);
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_CENTER_LAT,LOCATION_BUBBLE_CENTER_LAT_DEFAULT);
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_CENTER_LONG,LOCATION_BUBBLE_CENTER_LONG_DEFAULT);
@@ -144,7 +146,7 @@ public class ESDatabaseAccessor {
         Location bubbleCenter = new Location(LOCATION_BUBBLE_LOCATION_PROVIDER);
         bubbleCenter.setLatitude(LOCATION_BUBBLE_CENTER_LAT_DEFAULT);
         bubbleCenter.setLongitude(LOCATION_BUBBLE_CENTER_LONG_DEFAULT);
-        ESSettings settings = new ESSettings(uuid, MAX_STORED_EXAMPLES_DEFAULT,NOTIFICATION_INTERVAL_DEFAULT,false,false,bubbleCenter);
+        ESSettings settings = new ESSettings(uuid, MAX_STORED_EXAMPLES_DEFAULT,NOTIFICATION_INTERVAL_DEFAULT,false,false,false,bubbleCenter);
 
         _dbHelper.close();
 
@@ -165,6 +167,7 @@ public class ESDatabaseAccessor {
                 ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_MAX_STORED_EXAMPLES,
                 ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_NOTIFICATION_INTERVAL_SECONDS,
                 ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_HOME_SENSING,
+                ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_ALLOW_CELLULAR,
                 ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_USED,
                 ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_CENTER_LAT,
                 ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_CENTER_LONG
@@ -222,6 +225,25 @@ public class ESDatabaseAccessor {
         int affectedCount = db.update(ESDatabaseContract.ESSettingsEntry.TABLE_NAME,values,null,null);
         if (affectedCount <= 0) {
             Log.e(LOG_TAG,"Settings update affected no records in the DB");
+        }
+        if (affectedCount > 1) {
+            Log.e(LOG_TAG,"Settings update affected more than one record in the DB");
+        }
+
+        _dbHelper.close();
+
+        return getTheSettings();
+    }
+
+    synchronized  ESSettings setSettingsAllowCellular(boolean allowCellular) {
+        SQLiteDatabase db = _dbHelper.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_ALLOW_CELLULAR,allowCellular ? 1 : 0);
+
+        int affectedCount = db.update(ESDatabaseContract.ESSettingsEntry.TABLE_NAME,values,null,null);
+        if (affectedCount <= 0) {
+            Log.e(LOG_TAG, "Settings update affected no records in the DB");
         }
         if (affectedCount > 1) {
             Log.e(LOG_TAG,"Settings update affected more than one record in the DB");
@@ -298,6 +320,7 @@ public class ESDatabaseAccessor {
         int maxStored = cursor.getInt(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_MAX_STORED_EXAMPLES));
         int notificationInterval = cursor.getInt(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_NOTIFICATION_INTERVAL_SECONDS));
         boolean homeSensingUsed = cursor.getInt(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_HOME_SENSING)) > 0;
+        boolean allowCellular = cursor.getInt(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_ALLOW_CELLULAR)) > 0;
         boolean locationBubbleUsed = cursor.getInt(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_USED)) > 0;
         double locationBubbleCenterLat = cursor.getDouble(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_CENTER_LAT));
         double locationBubbleCenterLong = cursor.getDouble(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_CENTER_LONG));
@@ -306,7 +329,7 @@ public class ESDatabaseAccessor {
         locationBubbleCenter.setLatitude(locationBubbleCenterLat);
         locationBubbleCenter.setLongitude(locationBubbleCenterLong);
 
-        return new ESSettings(uuid,maxStored,notificationInterval,homeSensingUsed,locationBubbleUsed,locationBubbleCenter);
+        return new ESSettings(uuid,maxStored,notificationInterval,homeSensingUsed,allowCellular,locationBubbleUsed,locationBubbleCenter);
     }
 
     /**

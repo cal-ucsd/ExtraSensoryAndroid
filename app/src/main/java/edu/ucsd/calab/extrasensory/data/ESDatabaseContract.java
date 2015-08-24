@@ -34,6 +34,7 @@ final class ESDatabaseContract {
         public static final String COLUMN_NAME_MAX_STORED_EXAMPLES = "max_stored_examples";
         public static final String COLUMN_NAME_NOTIFICATION_INTERVAL_SECONDS = "notification_interval";
         public static final String COLUMN_NAME_HOME_SENSING = "home_sensing";
+        public static final String COLUMN_NAME_ALLOW_CELLULAR = "allow_cellular";
         public static final String COLUMN_NAME_BUBBLE_USED = "bubble_used";
         public static final String COLUMN_NAME_BUBBLE_CENTER_LONG = "bubble_center_longitude";
         public static final String COLUMN_NAME_BUBBLE_CENTER_LAT = "bubble_center_latitude";

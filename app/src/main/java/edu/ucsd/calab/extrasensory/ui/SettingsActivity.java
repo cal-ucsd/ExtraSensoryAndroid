@@ -90,6 +90,24 @@ public class SettingsActivity extends BaseActivity {
         });
 
 
+        // Cellular communication:
+        RadioGroup allowCellularRG = (RadioGroup)findViewById(R.id.radio_group_allow_cellular);
+        allowCellularRG.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                switch (checkedId) {
+                    case R.id.radio_allow_cellular_on:
+                        ESSettings.setAllowCellular(true);
+                        break;
+                    case R.id.radio_allow_cellular_off:
+                        ESSettings.setAllowCellular(false);
+                        break;
+                    default:
+                        Log.e(LOG_TAG,"got unexpected id for radio group of home sensing");
+                }
+            }
+        });
+
         // Location bubble:
         RadioGroup locationUsedRG = (RadioGroup)findViewById(R.id.radio_group_location_bubble);
         final EditText latitudeEdit = (EditText)findViewById(R.id.edit_location_bubble_latitude);
@@ -184,6 +202,16 @@ public class SettingsActivity extends BaseActivity {
         }
         else {
             useHomeSensingRG.check(R.id.radio_home_sensing_off);
+        }
+
+        // Cellular communication:
+        boolean allowCellular = ESSettings.isCellularAllowed();
+        RadioGroup allowCellularRG = (RadioGroup)findViewById(R.id.radio_group_allow_cellular);
+        if (allowCellular) {
+            allowCellularRG.check(R.id.radio_allow_cellular_on);
+        }
+        else {
+            allowCellularRG.check(R.id.radio_allow_cellular_off);
         }
 
         // Location bubble:

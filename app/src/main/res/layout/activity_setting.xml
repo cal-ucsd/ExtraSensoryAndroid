@@ -42,6 +42,36 @@
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="wrap_content"
+            android:text="@string/allow_cellular"/>
+        <RadioGroup xmlns:android="http://schemas.android.com/apk/res/android"
+            android:id="@+id/radio_group_allow_cellular"
+            android:layout_width="0dp"
+            android:layout_weight="2"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <RadioButton android:id="@+id/radio_allow_cellular_off"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/cellular_off"/>
+            <RadioButton android:id="@+id/radio_allow_cellular_on"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/cellular_on"/>
+        </RadioGroup>
+    </LinearLayout>
+    <View
+        android:layout_width="fill_parent"
+        android:layout_height="1dp"
+        android:background="@android:color/darker_gray"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <TextView
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
             android:text="@string/use_secure_communication"/>
         <RadioGroup xmlns:android="http://schemas.android.com/apk/res/android"
             android:id="@+id/radio_group_use_https"

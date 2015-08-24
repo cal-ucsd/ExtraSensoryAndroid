@@ -20,16 +20,18 @@ public class ESSettings {
     private int _maxStoredExamples;
     private int _notificationIntervalInSeconds;
     private boolean _homeSensing;
+    private boolean _allowCellular;
     private boolean _locationBubbleUsed;
     private Location _locationBubbleCenter;
 
     ESSettings(String uuid,int maxStoredExamples,int notificationIntervalInSeconds,
-               boolean homeSensing,
+               boolean homeSensing,boolean allowCellular,
                boolean locationBubbleUsed, Location locationBubbleCenter) {
         _uuid = uuid;
         _maxStoredExamples = maxStoredExamples;
         _notificationIntervalInSeconds = notificationIntervalInSeconds;
         _homeSensing = homeSensing;
+        _allowCellular = allowCellular;
         _locationBubbleUsed = locationBubbleUsed;
         _locationBubbleCenter = locationBubbleCenter;
     }
@@ -78,6 +80,12 @@ public class ESSettings {
     public static boolean isHomeSensingRelevant() { return getTheSettings()._homeSensing; }
 
     /**
+     * Does the user allow using cellular network communication (as opposed to "just WiFi")?
+     * @return
+     */
+    public static boolean isCellularAllowed() { return getTheSettings()._allowCellular; }
+
+    /**
      * Should we use a location bubble?
      * @return
      */
@@ -119,6 +127,14 @@ public class ESSettings {
      */
     public static void setHomeSensingUsed(boolean homeSensingUsed) {
         _settings = getTheDBAccessor().setSettingsHomeSensing(homeSensingUsed);
+    }
+
+    /**
+     * Set does the user allow using cellular communication.
+     * @param allowCellular
+     */
+    public static void setAllowCellular(boolean allowCellular) {
+        _settings = getTheDBAccessor().setSettingsAllowCellular(allowCellular);
     }
 
     /**

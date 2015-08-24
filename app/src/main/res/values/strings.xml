@@ -49,5 +49,8 @@
     <string name="home_sensing_off">no</string>
     <string name="home_sensing_on">yes</string>
     <string name="use_home_sensing">Home sensing:</string>
+    <string name="allow_cellular">Allow cellular communication:</string>
+    <string name="cellular_off">off</string>
+    <string name="cellular_on">on</string>
 
 </resources>
