@@ -167,7 +167,7 @@ public class ESNetworkAccessor {
             }
             if (WifiManager.NETWORK_STATE_CHANGED_ACTION.equals(intent.getAction())) {
                 Log.i(LOG_TAG,"received broadcast of WiFi connectivity change");
-                if (isThereWiFiConnectivity()) {
+                if (canWeUseNetworkNow()) {
                     Log.i(LOG_TAG,"We now have WiFi. Call upload and send from feedback queue");
                     uploadWhatYouHave();
                     sendFeedbackFromQueue();
@@ -398,7 +398,7 @@ public class ESNetworkAccessor {
             return;
         }
         // Check if there is WiFi connectivity:
-        if (!isThereWiFiConnectivity()) {
+        if (!canWeUseNetworkNow()) {
             Log.i(LOG_TAG,"There is no WiFi right now. Not uploading.");
             return;
         }
@@ -427,6 +427,23 @@ public class ESNetworkAccessor {
         Log.d(LOG_TAG,"Created api params: " + params);
         ESApiHandler api = new ESApiHandler();
         api.execute(params);
+    }
+
+    public boolean canWeUseNetworkNow() {
+        if (!ESSettings.isCellularAllowed()) {
+            // Then only allowed to use network when having wifi:
+            return isThereWiFiConnectivity();
+        }
+
+        // Then allowed to use either wifi or cellular:
+        return isThereWiFiConnectivity() || isThereMobileConnectivity();
+    }
+
+    private boolean isThereMobileConnectivity() {
+        ConnectivityManager connectivityManager =
+                (ConnectivityManager)ESApplication.getTheAppContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfoMobile = connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
+        return networkInfoMobile.isConnected();
     }
 
     /**
@@ -473,7 +490,7 @@ public class ESNetworkAccessor {
             return;
         }
         // Check if there is WiFi connectivity:
-        if (!isThereWiFiConnectivity()) {
+        if (!canWeUseNetworkNow()) {
             Log.i(LOG_TAG,"There is no WiFi right now. Not sending.");
             return;
         }
