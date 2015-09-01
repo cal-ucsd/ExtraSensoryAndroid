@@ -24,6 +24,8 @@ Manual labor|Housework
 Dancing|Leisure
 Listening to music (with earphones)|Leisure
 Listening to music (no earphones)|Leisure
+Listening to audio (with earphones)|Leisure
+Listening to audio (no earphones)|Leisure
 Playing musical instrument|Leisure
 Singing|Leisure
 Whistling|Leisure
