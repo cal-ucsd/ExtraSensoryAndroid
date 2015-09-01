@@ -34,7 +34,7 @@ Strolling|Leisure
 Hiking|Leisure
 Shopping|Housework,Leisure,Basic needs
 Watching TV|Leisure
-Talking|Leisure,Physical,Work
+Talking|Leisure,Physical,Work,Company
 Reading a book|Leisure
 Drinking (alcohol)|Leisure
 Smoking|Leisure,Basic needs
@@ -91,8 +91,15 @@ Phone in hand|Phone
 Phone in bag|Phone
 Phone on table|Phone
 Phone away from me|Phone
+Phone - someone else using it|Phone,Company
 Phone strapped|Phone
 Transfer - bed to wheelchair|Functional independence
 Transfer - bed to stand|Functional independence
 Transfer - wheelchair to bed|Functional independence
 Transfer - stand to bed|Functional independence
+On a date|Company,Leisure,Location
+With co-workers|Company,Work
+With family|Company
+With friends|Company,Leisure
+With kids|Company
+Taking care of kids|Company,Housework
