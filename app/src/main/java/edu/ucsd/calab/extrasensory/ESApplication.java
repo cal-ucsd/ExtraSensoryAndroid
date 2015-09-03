@@ -107,7 +107,7 @@ public class ESApplication extends Application {
             _initiatedByNotification = initiatedByNotification;
             _startedFirstActivityRecording = false;
 
-            long gracePeriod = 2000;
+            long gracePeriod = (long)(1.5*MILLISECONDS_IN_MINUTE);
             Date validUntilDate = new Date(new Date().getTime() + validForHowManyMinutes*MILLISECONDS_IN_MINUTE + gracePeriod);
             _validUntil = new ESTimestamp(validUntilDate);
         }

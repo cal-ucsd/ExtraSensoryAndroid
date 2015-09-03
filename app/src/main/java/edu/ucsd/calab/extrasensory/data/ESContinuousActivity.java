@@ -15,7 +15,7 @@ import java.util.Set;
  */
 public class ESContinuousActivity {
 
-    private static final int MAX_TIME_GAP_FOR_MERGING_ACTIVITIES = 120;
+    private static final int MAX_TIME_GAP_FOR_MERGING_ACTIVITIES = 370;
 
     private ESActivity[] _minuteActivities;
     ESContinuousActivity(ESActivity[] minuteActivities) {
