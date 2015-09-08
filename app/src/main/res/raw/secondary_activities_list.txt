@@ -71,6 +71,7 @@ At school|Location,Work
 At a bar|Location,Leisure
 At a concert|Location,Leisure
 At a party|Location,Leisure
+At a sports event|Location,Leisure,Sports
 At the beach|Location,Leisure
 At sea|Location,Leisure
 At the pool|Sports,Location,Leisure
