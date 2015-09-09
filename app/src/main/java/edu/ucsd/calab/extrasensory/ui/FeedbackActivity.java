@@ -61,7 +61,7 @@ public class FeedbackActivity extends BaseActivity {
     private static final String[] ROW_HEADERS = new String[] { "Main Activity", "Secondary Activities", "Mood", "Valid for" };
 
     private ESLabelStruct _labelStruct = new ESLabelStruct();
-    private String _validFor = "";
+    private String _validFor = SelectionFromListActivity.getValidForValues()[0];
     private int _validForHowManyMinutes = 0;
     private String _historyValidFor = "";
     /**
@@ -211,7 +211,7 @@ public class FeedbackActivity extends BaseActivity {
 
         String validRowHeader = _parameters._feedbackType == FEEDBACK_TYPE_ACTIVE ? ROW_HEADERS[ROW_VALID] : _historyValidFor;
         validDatum.put(KEY_ROW_HEADER,validRowHeader);
-        validDatum.put(KEY_ROW_DETAIL, _validFor);
+        validDatum.put(KEY_ROW_DETAIL, _parameters._feedbackType == FEEDBACK_TYPE_ACTIVE ? _validFor : "");
         data.add(validDatum);
 
         SimpleAdapter adapter = new SimpleAdapter(this, data,

@@ -74,7 +74,7 @@ public class SelectionFromListActivity extends BaseActivity {
     public static final int LIST_TYPE_MOODS = 2;
     public static final int LIST_TYPE_VALID_FOR = 3;
 
-    private static String[] getValidForValues() {
+    public static String[] getValidForValues() {
         return new String[]{"1 minute","2 minutes","5 minutes","10 minutes","15 minutes","20 minutes","25 minutes","30 minutes"};
     }
 
