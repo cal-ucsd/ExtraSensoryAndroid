@@ -81,6 +81,7 @@ public class BaseActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         getSupportActionBar().setIcon(R.drawable.ic_launcher);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
     }
 
     @Override

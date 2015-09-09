@@ -147,7 +147,6 @@ public class SelectionFromListActivity extends BaseActivity {
             return;
         }
 
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         // Set the view according to the parameters:
         int listType = inputParameters.getIntExtra(LIST_TYPE_KEY,LIST_TYPE_MISSING);
         switch (listType) {
