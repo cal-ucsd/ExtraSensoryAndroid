@@ -11,6 +11,7 @@ Yoga|Sports
 Elliptical machine|Sports
 Treadmill|Sports
 Stationary bike|Sports
+Surfing|Sports
 Cooking|Housework
 Cleaning|Housework
 Gardening|Housework
