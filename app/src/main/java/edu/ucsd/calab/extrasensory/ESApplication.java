@@ -200,6 +200,10 @@ public class ESApplication extends Application {
     private void turnDataCollectionOff() {
         stopCurrentRecordingAndRecordingSchedule();
         stopNotificationSchedule();
+        if (_watchProcessor.isWatchConnected()) {
+            Log.d(LOG_TAG,"watch connected, so calling close watch app");
+            _watchProcessor.closeWatchApp();
+        }
     }
 
     private void turnDataCollectionOn() {
