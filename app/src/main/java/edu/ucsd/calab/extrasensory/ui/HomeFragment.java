@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RadioGroup;
 import android.widget.TextView;
@@ -38,7 +39,8 @@ public class HomeFragment extends BaseTabFragment {
     private RadioGroup _dataCollectionRadioGroup = null;
     private TextView _storedExamplesCount = null;
     private TextView _feedbackQueueCount = null;
-    private ImageView _watchIcon = null;
+//    private ImageView _watchIcon = null;
+    private ImageButton _watchIconButton = null;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -71,18 +73,28 @@ public class HomeFragment extends BaseTabFragment {
         _feedbackQueueCount = (TextView)homeView.findViewById(R.id.text_feedback_count);
         presentFeedbackQueueCount();
 
-        _watchIcon = (ImageView)homeView.findViewById(R.id.image_watch_icon);
+        _watchIconButton = (ImageButton)homeView.findViewById(R.id.imagebutton_watch_icon);
         presentWatchIcon();
+        _watchIconButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (ESWatchProcessor.getTheWatchProcessor().isWatchConnected()) {
+                    ESWatchProcessor.getTheWatchProcessor().launchWatchApp();
+                }
+            }
+        });
 
         return homeView;
     }
 
     private void presentWatchIcon() {
         if (ESWatchProcessor.getTheWatchProcessor().isWatchConnected()) {
-            _watchIcon.setImageResource(R.drawable.watch_on);
+            _watchIconButton.setImageResource(R.drawable.watch_on);
+            _watchIconButton.setEnabled(true);
         }
         else {
-            _watchIcon.setImageResource(R.drawable.watch_off);
+            _watchIconButton.setImageResource(R.drawable.watch_off);
+            _watchIconButton.setEnabled(false);
         }
     }
 
@@ -109,6 +121,8 @@ public class HomeFragment extends BaseTabFragment {
         else {
             _dataCollectionRadioGroup.check(R.id.radio_data_collection_off);
         }
+
+        presentWatchIcon();
     }
 
     @Override

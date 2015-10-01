@@ -349,4 +349,5 @@ public class ESWatchProcessor {
     {
         PebbleKit.closeAppOnPebble(getTheApplicationContext(), PEBBLE_APP_UUID);
     }
+
 }
