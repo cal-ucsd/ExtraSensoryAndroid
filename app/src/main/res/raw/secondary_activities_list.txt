@@ -102,8 +102,11 @@ Transfer - bed to stand|Functional independence
 Transfer - wheelchair to bed|Functional independence
 Transfer - stand to bed|Functional independence
 On a date|Company,Leisure,Location
+Walking the dog|Company,Housework,Leisure
 With co-workers|Company,Work
 With family|Company
 With friends|Company,Leisure
 With kids|Company
+With a pet|Company,Leisure
 Taking care of kids|Company,Housework
+Taking care of pet|Company,Housework
