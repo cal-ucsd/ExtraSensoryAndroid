@@ -320,9 +320,12 @@ public class ESSensorManager
         // Prepare a list of sensors that we expect to get enough samples from:
         _sensorKeysThatShouldGetEnoughSamples = new ArrayList<>(10);
         for (String sensorName : _hiFreqSensorFeatureKeys) {
-            if (!sensorName.equals(PROC_ROTATION_X)) {
+            if (sensorName.equals(RAW_ACC_X)) {
                 _sensorKeysThatShouldGetEnoughSamples.add(sensorName);
             }
+//            if (!sensorName.equals(PROC_ROTATION_X)) {
+//                _sensorKeysThatShouldGetEnoughSamples.add(sensorName);
+//            }
         }
         Log.v(LOG_TAG, "An instance of ESSensorManager was created.");
     }
