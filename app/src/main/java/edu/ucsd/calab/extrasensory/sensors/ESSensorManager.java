@@ -560,6 +560,9 @@ public class ESSensorManager
             watchMeasurements = _watchProcessor.getWatchMeasurements();
         }
 
+        // Finish any leftover phone sensors:
+        _sensorManager.unregisterListener(this);
+
         set_recordingRightNow(false);
 
         // Construct an object with all the data:
@@ -868,6 +871,11 @@ public class ESSensorManager
     // Implementing the SensorEventListener interface:
     @Override
     public void onSensorChanged(SensorEvent event) {
+        // Sanity check: we shouldn't be recording now:
+        if (!is_recordingRightNow()) {
+            Log.e(LOG_TAG,"!!! We're not in a recording session (maybe finished recently) but got a sensor event for: " + event.sensor.getName());
+            return;
+        }
         boolean sensorCollectedEnough = false;
         double timestampSeconds =  ((double)event.timestamp) / NANOSECONDS_IN_SECOND;
 
@@ -959,6 +967,7 @@ public class ESSensorManager
                 // Then we've collected enough samples from accelerometer,
                 // and we can stop listening to it.
                 _sensorManager.unregisterListener(this, event.sensor);
+                Log.d(LOG_TAG,"=========== unregistered sensor: " + event.sensor.getName());
                 finishSessionIfReady();
             }
 
