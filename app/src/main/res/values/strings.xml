@@ -52,5 +52,7 @@
     <string name="allow_cellular">Allow cellular communication:</string>
     <string name="cellular_off">off</string>
     <string name="cellular_on">on</string>
+    <string name="num_examples_store_before_send">Num examples to store before send:</string>
+    <string name="send_stored_examples">Send stored examples</string>
 
 </resources>

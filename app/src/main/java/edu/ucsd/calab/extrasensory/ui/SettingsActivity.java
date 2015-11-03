@@ -52,6 +52,27 @@ public class SettingsActivity extends BaseActivity {
             }
         });
 
+        // Num examples stored before sending:
+        SeekBar numExamplesStoreBeforeSendSeekBar = (SeekBar)findViewById(R.id.num_examples_store_before_send_seek_bar);
+        numExamplesStoreBeforeSendSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                ESSettings.setNumExamplesStoreBeforeSend(progress);
+                Log.i(LOG_TAG,"Changed num examples stored before sending to " + progress);
+                displayNumExamplesStoreBeforeSend(progress);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+
         // Secure communication:
         RadioGroup useHttpsRG = (RadioGroup)findViewById(R.id.radio_group_use_https);
         useHttpsRG.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
@@ -184,6 +205,12 @@ public class SettingsActivity extends BaseActivity {
         SeekBar intervalSeekBar = (SeekBar)findViewById(R.id.notification_interval_seek_bar);
         intervalSeekBar.setProgress(intervalMinutes);
 
+        // Set the number of examples stored before sending:
+        int numExamplesStoreBeforeSend = ESSettings.numExamplesStoreBeforeSend();
+        displayNumExamplesStoreBeforeSend(numExamplesStoreBeforeSend);
+        SeekBar numExSeekBar = (SeekBar)findViewById(R.id.num_examples_store_before_send_seek_bar);
+        numExSeekBar.setProgress(numExamplesStoreBeforeSend);
+
         // Secure communication:
         boolean useHttps = ESNetworkAccessor.getESNetworkAccessor().get_useHttps();
         RadioGroup useHttpsRG = (RadioGroup)findViewById(R.id.radio_group_use_https);
@@ -249,6 +276,12 @@ public class SettingsActivity extends BaseActivity {
         TextView intervalValueView = (TextView)findViewById(R.id.notification_interval_value);
         String intervalString = String.format("%d min",intervalMinutes);
         intervalValueView.setText(intervalString);
+    }
+
+    private void displayNumExamplesStoreBeforeSend(int numExamplesStoreBeforeSend) {
+        TextView textView = (TextView)findViewById(R.id.num_examples_store_before_send_value);
+        String numStr = String.format("%d",numExamplesStoreBeforeSend);
+        textView.setText(numStr);
     }
 
 /*

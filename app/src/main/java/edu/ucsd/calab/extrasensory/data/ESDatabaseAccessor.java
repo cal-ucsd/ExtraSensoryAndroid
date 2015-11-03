@@ -37,6 +37,7 @@ public class ESDatabaseAccessor {
     private static final String LOG_TAG = "[ESDatabaseAccessor]";
     private static final int MAX_STORED_EXAMPLES_DEFAULT = 600;
     private static final int NOTIFICATION_INTERVAL_DEFAULT = 600;
+    private static final int NUM_EXAMPLES_STORE_BEFORE_SEND_DEFAULT = 0;
     private static final double LOCATION_BUBBLE_CENTER_LONG_DEFAULT = 0.0;
     private static final double LOCATION_BUBBLE_CENTER_LAT_DEFAULT = 0.0;
     private static final String LOCATION_BUBBLE_LOCATION_PROVIDER = "BubbleCenter";
@@ -92,6 +93,7 @@ public class ESDatabaseAccessor {
                         ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_UUID + " TEXT PRIMARY KEY," +
                         ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_MAX_STORED_EXAMPLES + " INTEGER," +
                         ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_NOTIFICATION_INTERVAL_SECONDS + " INTEGER," +
+                        ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_NUM_EXAMPLES_STORE_BEFORE_SEND + " INTEGER," +
                         ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_ALLOW_CELLULAR + " INTEGER," +
                         ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_HOME_SENSING + " INTEGER," +
                         ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_USED + " INTEGER," +
@@ -136,6 +138,7 @@ public class ESDatabaseAccessor {
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_UUID,uuid);
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_MAX_STORED_EXAMPLES, MAX_STORED_EXAMPLES_DEFAULT);
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_NOTIFICATION_INTERVAL_SECONDS,NOTIFICATION_INTERVAL_DEFAULT);
+        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_NUM_EXAMPLES_STORE_BEFORE_SEND,NUM_EXAMPLES_STORE_BEFORE_SEND_DEFAULT);
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_HOME_SENSING,0);
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_ALLOW_CELLULAR,0);
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_USED,0);
@@ -146,7 +149,7 @@ public class ESDatabaseAccessor {
         Location bubbleCenter = new Location(LOCATION_BUBBLE_LOCATION_PROVIDER);
         bubbleCenter.setLatitude(LOCATION_BUBBLE_CENTER_LAT_DEFAULT);
         bubbleCenter.setLongitude(LOCATION_BUBBLE_CENTER_LONG_DEFAULT);
-        ESSettings settings = new ESSettings(uuid, MAX_STORED_EXAMPLES_DEFAULT,NOTIFICATION_INTERVAL_DEFAULT,false,false,false,bubbleCenter);
+        ESSettings settings = new ESSettings(uuid, MAX_STORED_EXAMPLES_DEFAULT,NOTIFICATION_INTERVAL_DEFAULT,NUM_EXAMPLES_STORE_BEFORE_SEND_DEFAULT,false,false,false,bubbleCenter);
 
         _dbHelper.close();
 
@@ -166,6 +169,7 @@ public class ESDatabaseAccessor {
                 ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_UUID,
                 ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_MAX_STORED_EXAMPLES,
                 ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_NOTIFICATION_INTERVAL_SECONDS,
+                ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_NUM_EXAMPLES_STORE_BEFORE_SEND,
                 ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_HOME_SENSING,
                 ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_ALLOW_CELLULAR,
                 ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_USED,
@@ -202,6 +206,25 @@ public class ESDatabaseAccessor {
         ContentValues values = new ContentValues();
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_MAX_STORED_EXAMPLES,maxStoredExamples);
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_NOTIFICATION_INTERVAL_SECONDS,notificationInterval);
+
+        int affectedCount = db.update(ESDatabaseContract.ESSettingsEntry.TABLE_NAME,values,null,null);
+        if (affectedCount <= 0) {
+            Log.e(LOG_TAG,"Settings update affected no records in the DB");
+        }
+        if (affectedCount > 1) {
+            Log.e(LOG_TAG,"Settings update affected more than one record in the DB");
+        }
+
+        _dbHelper.close();
+
+        return getTheSettings();
+    }
+
+    synchronized ESSettings setSettings(int numExamplesStoreBeforeSend) {
+        SQLiteDatabase db = _dbHelper.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_NUM_EXAMPLES_STORE_BEFORE_SEND,numExamplesStoreBeforeSend);
 
         int affectedCount = db.update(ESDatabaseContract.ESSettingsEntry.TABLE_NAME,values,null,null);
         if (affectedCount <= 0) {
@@ -319,6 +342,7 @@ public class ESDatabaseAccessor {
         String uuid = cursor.getString(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_UUID));
         int maxStored = cursor.getInt(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_MAX_STORED_EXAMPLES));
         int notificationInterval = cursor.getInt(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_NOTIFICATION_INTERVAL_SECONDS));
+        int numExamplesStoreBeforeSend = cursor.getInt(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_NUM_EXAMPLES_STORE_BEFORE_SEND));
         boolean homeSensingUsed = cursor.getInt(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_HOME_SENSING)) > 0;
         boolean allowCellular = cursor.getInt(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_ALLOW_CELLULAR)) > 0;
         boolean locationBubbleUsed = cursor.getInt(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_USED)) > 0;
@@ -329,7 +353,7 @@ public class ESDatabaseAccessor {
         locationBubbleCenter.setLatitude(locationBubbleCenterLat);
         locationBubbleCenter.setLongitude(locationBubbleCenterLong);
 
-        return new ESSettings(uuid,maxStored,notificationInterval,homeSensingUsed,allowCellular,locationBubbleUsed,locationBubbleCenter);
+        return new ESSettings(uuid,maxStored,notificationInterval,numExamplesStoreBeforeSend,homeSensingUsed,allowCellular,locationBubbleUsed,locationBubbleCenter);
     }
 
     /**

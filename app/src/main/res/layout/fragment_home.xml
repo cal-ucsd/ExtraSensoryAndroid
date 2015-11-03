@@ -75,6 +75,11 @@
             android:id="@+id/imagebutton_watch_icon"
             android:src="@drawable/watch"/>
 
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/button_send_stored_examples"
+            android:text="@string/send_stored_examples"/>
 
 
     </LinearLayout>

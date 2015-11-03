@@ -378,7 +378,10 @@ public class ESNetworkAccessor {
      */
     public void addToUploadQueue(String zipFileName) {
         addToUploadQueueWithoutUploadingYet(zipFileName);
-        uploadWhatYouHave();
+        // If we stored enough, we can start uploading sequence:
+        if (_uploadQueue.size() > ESSettings.numExamplesStoreBeforeSend()) {
+            uploadWhatYouHave();
+        }
     }
 
     private void deleteZipFileAndRemoveFromUploadQueue(String zipFileName) {

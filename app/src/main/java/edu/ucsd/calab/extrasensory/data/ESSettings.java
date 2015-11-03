@@ -19,17 +19,20 @@ public class ESSettings {
     private String _uuid;
     private int _maxStoredExamples;
     private int _notificationIntervalInSeconds;
+    private int _numExamplesStoreBeforeSend;
     private boolean _homeSensing;
     private boolean _allowCellular;
     private boolean _locationBubbleUsed;
     private Location _locationBubbleCenter;
 
     ESSettings(String uuid,int maxStoredExamples,int notificationIntervalInSeconds,
+               int numExamplesStoreBeforeSend,
                boolean homeSensing,boolean allowCellular,
                boolean locationBubbleUsed, Location locationBubbleCenter) {
         _uuid = uuid;
         _maxStoredExamples = maxStoredExamples;
         _notificationIntervalInSeconds = notificationIntervalInSeconds;
+        _numExamplesStoreBeforeSend = numExamplesStoreBeforeSend;
         _homeSensing = homeSensing;
         _allowCellular = allowCellular;
         _locationBubbleUsed = locationBubbleUsed;
@@ -71,6 +74,15 @@ public class ESSettings {
      */
     public static int notificationIntervalInSeconds() {
         return getTheSettings()._notificationIntervalInSeconds;
+    }
+
+    /**
+     * Get the number of examples to store before initiating a sequence of uploading to the server.
+     *
+     * @return The number of examples to store before sending them all in a short time.
+     */
+    public static int numExamplesStoreBeforeSend() {
+        return getTheSettings()._numExamplesStoreBeforeSend;
     }
 
     /**
@@ -119,6 +131,14 @@ public class ESSettings {
     public static void setNotificationIntervalInSeconds(int notificationIntervalInSeconds) {
         _settings = getTheDBAccessor().setSettings(maxStoredExamples(),notificationIntervalInSeconds);
         ((ESApplication)ESApplication.getTheAppContext()).checkShouldWeCollectDataAndManageAppropriately();
+    }
+
+    /**
+     * Set the number of examples to store before sending them to the server.
+     * @param numExamplesStoreBeforeSend
+     */
+    public static void setNumExamplesStoreBeforeSend(int numExamplesStoreBeforeSend) {
+        _settings = getTheDBAccessor().setSettings(numExamplesStoreBeforeSend);
     }
 
     /**

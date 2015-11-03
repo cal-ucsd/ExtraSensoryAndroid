@@ -1,6 +1,8 @@
 package edu.ucsd.calab.extrasensory.ui;
 
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -26,6 +28,8 @@ import edu.ucsd.calab.extrasensory.sensors.WatchProcessing.ESWatchProcessor;
 public class HomeFragment extends BaseTabFragment {
 
     private static final String LOG_TAG = "[ES-HomeFragment]";
+    private static final String NO_AVAILABLE_NETWORK_FOR_SENDING = "There's no available network now to send the data to the server.";
+    private static final String ALERT_BUTTON_TEXT_OK = "o.k.";
 
     private ESApplication getESApplication()  {
         MainActivity mainActivity = (MainActivity) getActivity();
@@ -41,6 +45,7 @@ public class HomeFragment extends BaseTabFragment {
     private TextView _feedbackQueueCount = null;
 //    private ImageView _watchIcon = null;
     private ImageButton _watchIconButton = null;
+    private Button _sendStoredExamplesButton = null;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -81,6 +86,28 @@ public class HomeFragment extends BaseTabFragment {
                 if (ESWatchProcessor.getTheWatchProcessor().isWatchConnected()) {
                     ESWatchProcessor.getTheWatchProcessor().launchWatchApp();
                 }
+            }
+        });
+
+        _sendStoredExamplesButton = (Button)homeView.findViewById(R.id.button_send_stored_examples);
+        _sendStoredExamplesButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!ESNetworkAccessor.getESNetworkAccessor().canWeUseNetworkNow()) {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                    builder.setIcon(R.drawable.ic_launcher).setMessage(NO_AVAILABLE_NETWORK_FOR_SENDING);
+                    builder.setPositiveButton(ALERT_BUTTON_TEXT_OK,new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    });
+                    builder.create().show();
+
+                    return;
+                }
+                // If we can use network to send the data, go for it:
+                ESNetworkAccessor.getESNetworkAccessor().uploadWhatYouHave();
             }
         });
 
