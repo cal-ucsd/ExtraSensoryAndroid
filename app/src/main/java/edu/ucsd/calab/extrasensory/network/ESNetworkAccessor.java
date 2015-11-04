@@ -57,6 +57,7 @@ import edu.ucsd.calab.extrasensory.data.ESDatabaseAccessor;
 import edu.ucsd.calab.extrasensory.data.ESLabelStrings;
 import edu.ucsd.calab.extrasensory.data.ESSettings;
 import edu.ucsd.calab.extrasensory.data.ESTimestamp;
+import edu.ucsd.calab.extrasensory.sensors.ESSensorManager;
 
 /**
  * This class handles the networking with the server.
@@ -480,6 +481,13 @@ public class ESNetworkAccessor {
      * @param activity The activity whose labels we wish to send
      */
     public void addToFeedbackQueue(ESActivity activity) {
+        // First, check if the activity still has a zip file waiting to be sent to the server:
+        String relevantZipFilename = ESSensorManager.getZipFilename(activity.get_timestamp());
+        if (_uploadQueue.indexOf(relevantZipFilename) >= 0) {
+            Log.i(LOG_TAG,"Instance " + activity.get_timestamp() + " has zip file waiting to be sent, so not adding feedback file for it now. It should be added later when zip will be sent.");
+            return;
+        }
+
         _feedbackQueue.addActivityForFeedback(activity);
         createFeedbackFile(activity.get_timestamp());
         Log.i(LOG_TAG,"Added activity " + activity.get_timestamp() + " to feedback queue, which is now: " + _feedbackQueue);

@@ -784,7 +784,7 @@ public class ESSensorManager
         return new File(ESApplication.getZipDir(),getZipFilename(timestamp));
     }
 
-    private static String getZipFilename(ESTimestamp timestamp) {
+    public static String getZipFilename(ESTimestamp timestamp) {
         return timestamp.toString() + "-" + ESSettings.uuid() + ".zip";
     }
 
