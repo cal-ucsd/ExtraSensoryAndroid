@@ -301,6 +301,11 @@ public class ESApplication extends Application {
     }
 
     private void startNotificationSchedule() {
+        boolean unlabeled = false;
+        if (unlabeled) {
+            Log.d(LOG_TAG, "Ignoring notification schedule, because this is the unlabeled version");
+            return;
+        }
         if (_alarmManager == null) {
             Log.e(LOG_TAG,"Alarm manager is null");
             return;
