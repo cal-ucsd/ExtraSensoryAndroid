@@ -280,14 +280,14 @@ public class HistoryFragment extends BaseTabFragment {
         // Are we presenting a split continuous activity?
         if (_presentingSplitContinuousActivity) {
             // Then ignore this gesture:
-            Log.v(LOG_TAG+"[swipe-right]","In split-activities mode. Ignoring swipe to the right.");
+            Log.v(LOG_TAG,"[swipe-right] In split-activities mode. Ignoring swipe to the right.");
             return;
         }
 
         // Is this continuous activity already in the mark zone?
         if (isActivityInTheMergeMarkZone(continuousActivity)) {
             // Then this gesture should cause clearing the mark zone:
-            Log.v(LOG_TAG + "[swipe-right]", "Row already in marked zone. Clearing mark zone.");
+            Log.v(LOG_TAG, "[swipe-right] Row already in marked zone. Clearing mark zone.");
             clearMergeMarkZone();
             presentHistoryContent();
             return;
@@ -299,16 +299,16 @@ public class HistoryFragment extends BaseTabFragment {
         // Is there no mark zone currently?
         if (_markZoneStartTimestamp == null || _markZoneEndTimestamp == null) {
             // Then this marked activity is starting a new mark zone:
-            Log.v(LOG_TAG+"[swipe-right]","No mark zone. Starting new mark zone with this one row.");
+            Log.v(LOG_TAG,"[swipe-right] No mark zone. Starting new mark zone with this one row.");
             _markZoneStartTimestamp = swipedStartTimestamp;
             _markZoneEndTimestamp = swipedEndTimestamp;
         }
         else if (swipedStartTimestamp.isEarlierThan(_markZoneStartTimestamp)) {
-            Log.v(LOG_TAG+"[swipe-right]","Row earlier than mark zone. Expanding zone to earlier.");
+            Log.v(LOG_TAG,"[swipe-right] Row earlier than mark zone. Expanding zone to earlier.");
             _markZoneStartTimestamp = swipedStartTimestamp;
         }
         else if (swipedEndTimestamp.isLaterThan(_markZoneEndTimestamp)) {
-            Log.v(LOG_TAG+"[swipe-right]","Row later than mark zone. Expanding zone to later.");
+            Log.v(LOG_TAG,"[swipe-right] Row later than mark zone. Expanding zone to later.");
             _markZoneEndTimestamp = swipedEndTimestamp;
         }
         else {
