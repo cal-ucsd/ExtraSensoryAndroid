@@ -548,6 +548,7 @@ public class ESNetworkAccessor {
     }
 
     private String adjustPredictedActivity(String predictedMainActivity) {
+        predictedMainActivity = ESLabelStrings.reverseStandardizeLabelFromNetwork(predictedMainActivity);
         if ("Driving".equals(predictedMainActivity)) {
             Log.v(LOG_TAG,"Got prediction 'Driving'. Changing it to 'Sitting'");
             return "Sitting";

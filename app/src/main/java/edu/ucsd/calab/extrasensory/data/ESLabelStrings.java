@@ -128,6 +128,22 @@ public class ESLabelStrings {
     }
 
     /**
+     * Prepare label string for transmission on the network.
+     * The strings should then be more standard, without special characters that may appear in some labels.
+     * @param label
+     * @return
+     */
+    public static String standardizeLabelForNetwork(String label) {
+        label = label.replaceAll(" ", "_");
+        label = label.replaceAll("\\'", "_");
+        label = label.replaceAll("\\(", "_");
+        label = label.replaceAll("\\)", "_");
+        label = label.toUpperCase();
+
+        return label;
+    }
+
+    /**
      * Prepare labels string for transmission on the network.
      * The strings should then be more standard, without special characters that may appear in some labels.
      * @param labels
@@ -135,17 +151,34 @@ public class ESLabelStrings {
      */
     public static String[] standardizeLabelsForNetwork(String[] labels) {
         String[] standardLabels = new String[labels.length];
-        for (int i = 0; i < labels.length; i ++) {
-            String label = labels[i];
-            label = label.replaceAll(" ", "_");
-            label = label.replaceAll("\\'", "_");
-            label = label.replaceAll("\\(", "_");
-            label = label.replaceAll("\\)", "_");
-            label = label.toUpperCase();
-            standardLabels[i] = label;
+        for (int i = 0; i < labels.length; i++) {
+            standardLabels[i] = standardizeLabelForNetwork(labels[i]);
         }
 
         return standardLabels;
+    }
+
+
+    /**
+     * Reverse the label names back to the original (nice human readable) format
+     * from the standardized network format.
+     * @param labelFromNetwork
+     * @return
+     */
+    public static String reverseStandardizeLabelFromNetwork(String labelFromNetwork) {
+        String label = labelFromNetwork;
+        if (label.endsWith("_")) {
+            // Assume parentheses would be at the end of the label
+            label = label.substring(0,label.length()-1) + ")";
+        }
+        label = label.replaceAll("__","_(");
+        label = label.replaceAll("_"," ");
+        // The standard version should be all upper case:
+        label = label.substring(0,1) + label.substring(1).toLowerCase();
+        label = label.replaceAll("i m","I\'m");
+        label = label.replaceAll(" tv"," TV");
+
+        return label;
     }
 
     /**
@@ -154,38 +187,27 @@ public class ESLabelStrings {
      * @param labelsFromNetwork
      * @return
      */
-    public static  String[] reverseStandardizeLabelsFromNetwork(String[] labelsFromNetwork) {
+    public static String[] reverseStandardizeLabelsFromNetwork(String[] labelsFromNetwork) {
         String[] originalFormatLabels = new String[labelsFromNetwork.length];
         for (int i = 0; i < labelsFromNetwork.length; i ++) {
-            String label = labelsFromNetwork[i];
-            if (label.endsWith("_")) {
-                // Assume parentheses would be at the end of the label
-                label = label.substring(0,label.length()-1) + ")";
-            }
-            label = label.replaceAll("__","_(");
-            label = label.replaceAll("_"," ");
-            // The standard version should be all upper case:
-            label = label.substring(0,1) + label.substring(1).toLowerCase();
-            label = label.replaceAll("i m","I\'m");
-            label = label.replaceAll(" tv"," TV");
-            originalFormatLabels[i] = label;
+            originalFormatLabels[i] = reverseStandardizeLabelFromNetwork(labelsFromNetwork[i]);
         }
 
         return originalFormatLabels;
     }
 
-    /**
-     * Read the labels from the text file in resources.raw.
-     * The format of the file should be that every line has a single label,
-     * and possibly with extra information (if after the labels there is a pipe '|' and then some more text).
-     * The labels to extract here are just what's before the pipe (if it exists in the line).
-     *
-     * @param textFileResourceID ID of the raw resource text file
-     * @param labelsPerSubject A map object into which to insert the relevant labels for each subject,
-     *                         according to the content of the text file (if it has text after pipe).
-     *                         If this given argument is null, disregard the text after pipe.
-     * @return The array of labels read from the file
-     */
+        /**
+         * Read the labels from the text file in resources.raw.
+         * The format of the file should be that every line has a single label,
+         * and possibly with extra information (if after the labels there is a pipe '|' and then some more text).
+         * The labels to extract here are just what's before the pipe (if it exists in the line).
+         *
+         * @param textFileResourceID ID of the raw resource text file
+         * @param labelsPerSubject A map object into which to insert the relevant labels for each subject,
+         *                         according to the content of the text file (if it has text after pipe).
+         *                         If this given argument is null, disregard the text after pipe.
+         * @return The array of labels read from the file
+         */
     private static String[] readLabelsFromFile(int textFileResourceID,Map<String,String[]> labelsPerSubject) {
         Context context = ESApplication.getTheAppContext();
         ArrayList<String> parsedLabels = new ArrayList<String>();
