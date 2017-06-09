@@ -82,7 +82,9 @@ public class ESDatabaseAccessor {
                         ESDatabaseContract.ESActivityEntry.COLUMN_NAME_MAIN_ACTIVITY_SERVER_PREDICTION + " TEXT," +
                         ESDatabaseContract.ESActivityEntry.COLUMN_NAME_MAIN_ACTIVITY_USER_CORRECTION + " TEXT," +
                         ESDatabaseContract.ESActivityEntry.COLUMN_NAME_SECONDARY_ACTIVITIES_CSV + " TEXT," +
-                        ESDatabaseContract.ESActivityEntry.COLUMN_NAME_MOODS_CSV + " TEXT" +
+                        ESDatabaseContract.ESActivityEntry.COLUMN_NAME_MOODS_CSV + " TEXT," +
+                        ESDatabaseContract.ESActivityEntry.COLUMN_NAME_PREDICTED_LABEL_NAMES_CSV + " TEXT," +
+                        ESDatabaseContract.ESActivityEntry.COLUMN_NAME_PREDICTED_LABEL_PROBS_CSV + " TEXT" +
                         ")";
         private static final String SQL_DELETE_ES_ACTIVITY_TABLE =
                 "DROP TABLE IF EXISTS " + ESDatabaseContract.ESActivityEntry.TABLE_NAME;
@@ -109,8 +111,11 @@ public class ESDatabaseAccessor {
 
         @Override
         public void onCreate(SQLiteDatabase db) {
+            Log.d(LOG_TAG,"ESDatabaseAccessor: onCreate");
             db.execSQL(SQL_CREATE_ES_ACTIVITY_TABLE);
+            Log.d(LOG_TAG,"ESDatabaseAccessor: onCreate. after creating activity table, before creating settings table.");
             db.execSQL(SQL_CREATE_ES_SETTINGS_TABLE);
+            Log.d(LOG_TAG,"ESDatabaseAccessor: onCreate. after creating activity table and settings table.");
         }
 
         @Override
@@ -384,6 +389,8 @@ public class ESDatabaseAccessor {
         values.put(ESDatabaseContract.ESActivityEntry.COLUMN_NAME_MAIN_ACTIVITY_USER_CORRECTION,(String)null);
         values.put(ESDatabaseContract.ESActivityEntry.COLUMN_NAME_SECONDARY_ACTIVITIES_CSV,"");
         values.put(ESDatabaseContract.ESActivityEntry.COLUMN_NAME_MOODS_CSV,"");
+        values.put(ESDatabaseContract.ESActivityEntry.COLUMN_NAME_PREDICTED_LABEL_NAMES_CSV,"");
+        values.put(ESDatabaseContract.ESActivityEntry.COLUMN_NAME_PREDICTED_LABEL_PROBS_CSV,"");
 
         db.insert(ESDatabaseContract.ESActivityEntry.TABLE_NAME,null,values);
         ESActivity newActivity = new ESActivity(timestamp);
@@ -412,7 +419,9 @@ public class ESDatabaseAccessor {
                 ESDatabaseContract.ESActivityEntry.COLUMN_NAME_MAIN_ACTIVITY_SERVER_PREDICTION,
                 ESDatabaseContract.ESActivityEntry.COLUMN_NAME_MAIN_ACTIVITY_USER_CORRECTION,
                 ESDatabaseContract.ESActivityEntry.COLUMN_NAME_SECONDARY_ACTIVITIES_CSV,
-                ESDatabaseContract.ESActivityEntry.COLUMN_NAME_MOODS_CSV
+                ESDatabaseContract.ESActivityEntry.COLUMN_NAME_MOODS_CSV,
+                ESDatabaseContract.ESActivityEntry.COLUMN_NAME_PREDICTED_LABEL_NAMES_CSV,
+                ESDatabaseContract.ESActivityEntry.COLUMN_NAME_PREDICTED_LABEL_PROBS_CSV
         };
 
         String selection = ESDatabaseContract.ESActivityEntry.COLUMN_NAME_TIMESTAMP + " = " + timestamp.get_secondsSinceEpoch();
@@ -443,20 +452,23 @@ public class ESDatabaseAccessor {
      * @param activity The ESActivity to set the prediction for
      * @param mainActivityServerPrediction The server prediction to assign to the activity
      */
-    public synchronized void setESActivityServerPrediction(ESActivity activity,String mainActivityServerPrediction) {
+    public synchronized void setESActivityServerPrediction(ESActivity activity,String mainActivityServerPrediction,
+                                                           String[] predictedLabelNames,double[] predictedLabelProbs) {
         setESActivityValuesAndPossiblySendFeedback(activity,
                 activity.get_labelSource(),
                 mainActivityServerPrediction,
                 activity.get_mainActivityUserCorrection(),
                 activity.get_secondaryActivities(),
-                activity.get_moods(),false);
+                activity.get_moods(),
+                predictedLabelNames,predictedLabelProbs,
+                false);
     }
 
     /**
      * Make changes to the values of the properties of an activity instance.
      * These changes will be reflected both in the given ESActivity object
      * and in the corresponding record in the DB.
-     * After setting the new values, this will trigger an API call to send the labesl to the server.
+     * After setting the new values, this will trigger an API call to send the labels to the server.
      *
      * @param activity The activity instance to set
      * @param labelSource The label source value to assign to the activity
@@ -465,10 +477,34 @@ public class ESDatabaseAccessor {
      * @param moods The array of moods to assign to the activity
      */
     public synchronized void setESActivityValues(ESActivity activity,
-                                    ESActivity.ESLabelSource labelSource,String mainActivityUserCorrection,
-                                    String[] secondaryActivities,String[] moods) {
-        setESActivityValuesAndPossiblySendFeedback(activity,labelSource,activity.get_mainActivityServerPrediction(),mainActivityUserCorrection,
+                                                 ESActivity.ESLabelSource labelSource,String mainActivityUserCorrection,
+                                                 String[] secondaryActivities,String[] moods) {
+        setESActivityUserCorrectedValuesAndPossiblySendFeedback(activity,labelSource,mainActivityUserCorrection,
                 secondaryActivities,moods,true);
+    }
+
+    /**
+     * Make changes to the values of the properties of an activity instance (except the server-predicted values).
+     * These changes will be reflected both in the given ESActivity object
+     * and in the corresponding record in the DB.
+     * IFF sendFeedback: after setting the new values, this will trigger an API call to send the labels to the server.
+     *
+     * @param activity The activity instance to set
+     * @param labelSource The label source value to assign to the activity
+     * @param mainActivityUserCorrection The user correction to assign to the activity
+     * @param secondaryActivities The array of secondary activities to assign to the activity
+     * @param moods The array of moods to assign to the activity
+     * @param sendFeedback Should we send feedback update with this activity's labels?
+     */
+    public synchronized void setESActivityUserCorrectedValuesAndPossiblySendFeedback(ESActivity activity, ESActivity.ESLabelSource labelSource,
+                                                                                     String mainActivityUserCorrection,
+                                                                                     String[] secondaryActivities, String[] moods,
+                                                                                     boolean sendFeedback) {
+
+        setESActivityValuesAndPossiblySendFeedback(activity,labelSource,
+                activity.get_mainActivityServerPrediction(),mainActivityUserCorrection,
+                secondaryActivities,moods,
+                activity.get_predictedLabelNames(),activity.get_predictedLabelProbs(),sendFeedback);
     }
 
     /**
@@ -483,12 +519,15 @@ public class ESDatabaseAccessor {
      * @param mainActivityUserCorrection The user correction to assign to the activity
      * @param secondaryActivities The array of secondary activities to assign to the activity
      * @param moods The array of moods to assign to the activity
+     * @param predictedLabelNames The array of labels provided by the server in the prediction
+     * @param moods The array of prediction-probabilities assigned to the labels by the server
      * @param sendFeedback Should we send feedback update with this activity's labels?
      */
     public synchronized void setESActivityValuesAndPossiblySendFeedback(ESActivity activity,ESActivity.ESLabelSource labelSource,
-                                                           String mainActivityServerPrediction,String mainActivityUserCorrection,
-                                                           String[] secondaryActivities,String[] moods,
-                                                           boolean sendFeedback) {
+                                                                        String mainActivityServerPrediction,String mainActivityUserCorrection,
+                                                                        String[] secondaryActivities,String[] moods,
+                                                                        String[] predictedLabelNames,double[] predictedLabelProbs,
+                                                                        boolean sendFeedback) {
 
         SQLiteDatabase db = _dbHelper.getWritableDatabase();
 
@@ -497,10 +536,18 @@ public class ESDatabaseAccessor {
         values.put(ESDatabaseContract.ESActivityEntry.COLUMN_NAME_LABEL_SOURCE,labelSource.get_value());
         values.put(ESDatabaseContract.ESActivityEntry.COLUMN_NAME_MAIN_ACTIVITY_SERVER_PREDICTION,mainActivityServerPrediction);
         values.put(ESDatabaseContract.ESActivityEntry.COLUMN_NAME_MAIN_ACTIVITY_USER_CORRECTION,mainActivityUserCorrection);
+
         String secondaryCSV = ESLabelStrings.makeCSV(secondaryActivities);
         values.put(ESDatabaseContract.ESActivityEntry.COLUMN_NAME_SECONDARY_ACTIVITIES_CSV,secondaryCSV);
+
         String moodCSV = ESLabelStrings.makeCSV(moods);
         values.put(ESDatabaseContract.ESActivityEntry.COLUMN_NAME_MOODS_CSV,moodCSV);
+
+        String predictedLabelNamesCSV = ESLabelStrings.makeCSV(predictedLabelNames);
+        values.put(ESDatabaseContract.ESActivityEntry.COLUMN_NAME_PREDICTED_LABEL_NAMES_CSV,predictedLabelNamesCSV);
+
+        String predictedLabelProbsCSV = ESLabelStrings.makeCSV(predictedLabelProbs);
+        values.put(ESDatabaseContract.ESActivityEntry.COLUMN_NAME_PREDICTED_LABEL_PROBS_CSV,predictedLabelProbsCSV);
 
         String selection = ESDatabaseContract.ESActivityEntry.COLUMN_NAME_TIMESTAMP + " = " + activity.get_timestamp().get_secondsSinceEpoch();
 
@@ -528,6 +575,7 @@ public class ESDatabaseAccessor {
             ESNetworkAccessor.getESNetworkAccessor().addToFeedbackQueue(activity);
         }
     }
+
 
     /**
      * Get all the activities from the given time range, already merged to continuous activities.
@@ -580,7 +628,9 @@ public class ESDatabaseAccessor {
                 ESDatabaseContract.ESActivityEntry.COLUMN_NAME_MAIN_ACTIVITY_SERVER_PREDICTION,
                 ESDatabaseContract.ESActivityEntry.COLUMN_NAME_MAIN_ACTIVITY_USER_CORRECTION,
                 ESDatabaseContract.ESActivityEntry.COLUMN_NAME_SECONDARY_ACTIVITIES_CSV,
-                ESDatabaseContract.ESActivityEntry.COLUMN_NAME_MOODS_CSV
+                ESDatabaseContract.ESActivityEntry.COLUMN_NAME_MOODS_CSV,
+                ESDatabaseContract.ESActivityEntry.COLUMN_NAME_PREDICTED_LABEL_NAMES_CSV,
+                ESDatabaseContract.ESActivityEntry.COLUMN_NAME_PREDICTED_LABEL_PROBS_CSV
         };
 
         String selection = ESDatabaseContract.ESActivityEntry.COLUMN_NAME_TIMESTAMP + " >= " + fromTimestamp.get_secondsSinceEpoch() +
@@ -604,7 +654,6 @@ public class ESDatabaseAccessor {
         return activities;
     }
 
-
     /**
      * Construct an ESActivity object representing the activity in a database record.
      * This method assumes the cursor is active and pointing at a record.
@@ -625,12 +674,22 @@ public class ESDatabaseAccessor {
         ESActivity.ESLabelSource labelSource = ESActivity.ESLabelSource.labelSourceFromValue(labelSourceCode);
         String serverMain = cursor.getString(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESActivityEntry.COLUMN_NAME_MAIN_ACTIVITY_SERVER_PREDICTION));
         String userMain = cursor.getString(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESActivityEntry.COLUMN_NAME_MAIN_ACTIVITY_USER_CORRECTION));
-        String secondaryCSV = cursor.getString(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESActivityEntry.COLUMN_NAME_SECONDARY_ACTIVITIES_CSV));
-        String[] secondaryActivities = (secondaryCSV==null || secondaryCSV.isEmpty()) ? new String[]{} : parseCSV(secondaryCSV);
-        String moodCSV = cursor.getString(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESActivityEntry.COLUMN_NAME_MOODS_CSV));
-        String[] moods = (moodCSV==null || moodCSV.isEmpty()) ? new String[]{} : parseCSV(moodCSV);
 
-        return new ESActivity(timestamp,labelSource,serverMain,userMain,secondaryActivities,moods);
+        String secondaryCSV = cursor.getString(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESActivityEntry.COLUMN_NAME_SECONDARY_ACTIVITIES_CSV));
+        String[] secondaryActivities = parsePossiblyEmptyCSV(secondaryCSV);
+        //String[] secondaryActivities = (secondaryCSV==null || secondaryCSV.isEmpty()) ? new String[]{} : parseCSV(secondaryCSV);
+
+        String moodCSV = cursor.getString(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESActivityEntry.COLUMN_NAME_MOODS_CSV));
+        String[] moods = parsePossiblyEmptyCSV(moodCSV);
+        //String[] moods = (moodCSV==null || moodCSV.isEmpty()) ? new String[]{} : parseCSV(moodCSV);
+
+        String predictedLabelNamesCSV = cursor.getString(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESActivityEntry.COLUMN_NAME_PREDICTED_LABEL_NAMES_CSV));
+        String[] predictedLabelNames = parsePossiblyEmptyCSV(predictedLabelNamesCSV);
+
+        String predictedLabelProbsCSV = cursor.getString(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESActivityEntry.COLUMN_NAME_PREDICTED_LABEL_PROBS_CSV));
+        double[] predictedLabelProbs = parseCSVOfNumbers(predictedLabelProbsCSV);
+
+        return new ESActivity(timestamp,labelSource,serverMain,userMain,secondaryActivities,moods,predictedLabelNames,predictedLabelProbs);
     }
 
     /**
@@ -802,8 +861,24 @@ public class ESDatabaseAccessor {
     }
 
 
-    private String[] parseCSV(String csv) {
+    private static String[] parseCSV(String csv) {
         return csv.split(",");
+    }
+
+    private static String[] parsePossiblyEmptyCSV(String csv) {
+        if (csv==null || csv.isEmpty()) {
+            return new String[]{};
+        }
+        return parseCSV(csv);
+    }
+
+    private static double[] parseCSVOfNumbers(String csv) {
+        String[] numberStrings = parsePossiblyEmptyCSV(csv);
+        double[] numbers = new double[numberStrings.length];
+        for (int i = 0; i < numbers.length; i ++) {
+            numbers[i] = Double.parseDouble(numberStrings[i]);
+        }
+        return numbers;
     }
 
 

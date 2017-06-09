@@ -2,16 +2,13 @@ package edu.ucsd.calab.extrasensory;
 
 import android.app.IntentService;
 import android.content.Intent;
-import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
-import android.view.animation.TranslateAnimation;
 
 import edu.ucsd.calab.extrasensory.data.ESActivity;
 import edu.ucsd.calab.extrasensory.data.ESDatabaseAccessor;
 import edu.ucsd.calab.extrasensory.data.ESLabelStruct;
 import edu.ucsd.calab.extrasensory.data.ESTimestamp;
 import edu.ucsd.calab.extrasensory.sensors.ESSensorManager;
-import edu.ucsd.calab.extrasensory.ui.FeedbackActivity;
 
 
 /**
@@ -74,8 +71,8 @@ public class ESIntentService extends IntentService {
                     Log.i(LOG_TAG,"This new activity is the continue of active feedback.");
                 }
                 // Set the labels for the newly created activity:
-                ESDatabaseAccessor.getESDatabaseAccessor().setESActivityValuesAndPossiblySendFeedback(
-                        newActivity,labelSource,newActivity.get_mainActivityServerPrediction(),
+                ESDatabaseAccessor.getESDatabaseAccessor().setESActivityUserCorrectedValuesAndPossiblySendFeedback(
+                        newActivity,labelSource,
                         predeterminedLabels._mainActivity,predeterminedLabels._secondaryActivities,
                         predeterminedLabels._moods,false);
                 Log.i(LOG_TAG,"Applied predetermined labels to new activity.");

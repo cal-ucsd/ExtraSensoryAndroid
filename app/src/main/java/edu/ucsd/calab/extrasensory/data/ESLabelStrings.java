@@ -117,6 +117,23 @@ public class ESLabelStrings {
     }
 
     /**
+     * Create a single String representation of a CSV of an array of numbers
+     * @param numbers The numbers in the array to combine as CSV
+     * @return A single String in CSV format with the numbers in it.
+     */
+    public static String makeCSV(double[] numbers) {
+        if (numbers == null || numbers.length <= 0) {
+            return "";
+        }
+        String[] numberStrings = new String[numbers.length];
+        for (int i = 0; i < numbers.length; i ++) {
+            numberStrings[i] = "" + numbers[i];
+        }
+
+        return makeCSV(numberStrings);
+    }
+
+    /**
      * Create a single String representation of the labels (network-standardized version) in the array, using Comma Separate Values
      * This function assumes non of the components of the array are null
      * @param labels The labels to represent in a single String. Assumed that no string contains comma.

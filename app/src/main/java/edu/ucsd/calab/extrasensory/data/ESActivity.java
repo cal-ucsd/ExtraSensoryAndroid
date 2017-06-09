@@ -63,6 +63,8 @@ public class ESActivity {
     private String _mainActivityUserCorrection;
     private String[] _secondaryActivities;
     private String[] _moods;
+    private String[] _predictedLabelNames;
+    private double[] _predictedLabelProbs;
 
     // Constructors available only inside the package:
     ESActivity(ESTimestamp timestamp) {
@@ -72,17 +74,34 @@ public class ESActivity {
         _mainActivityUserCorrection = null;
         _secondaryActivities = null;
         _moods = null;
+        _predictedLabelNames = null;
+        _predictedLabelProbs = null;
     }
 
     ESActivity(ESTimestamp timestamp, ESLabelSource labelSource,
                String mainActivityServerPrediction, String mainActivityUserCorrection,
-               String[] secondaryActivities, String[] moods) {
+               String[] secondaryActivities, String[] moods,
+               String[] predictedLabelNames, double[] predictedLabelProbs) {
         _timestamp = timestamp;
         _labelSource = labelSource;
         _mainActivityServerPrediction = mainActivityServerPrediction;
         _mainActivityUserCorrection = mainActivityUserCorrection;
         _secondaryActivities = secondaryActivities;
         _moods = moods;
+        if ((predictedLabelNames==null && predictedLabelProbs!=null) || (predictedLabelNames!=null && predictedLabelProbs==null)) {
+            Log.w(LOG_TAG, "Trying to construct ESActivity with one of predictedLabelNames and predictedLabelProbs being null. Setting them both to null.");
+            _predictedLabelNames = null;
+            _predictedLabelProbs = null;
+        }
+        else if (predictedLabelNames.length != predictedLabelProbs.length) {
+            Log.v(LOG_TAG,"Trying to construct ESActivity with inconsistent lengths of predictedLabelNames and predictedLabelProbs. Setting them both to null.");
+            _predictedLabelNames = null;
+            _predictedLabelProbs = null;
+        }
+        else {
+            _predictedLabelNames = predictedLabelNames;
+            _predictedLabelProbs = predictedLabelProbs;
+        }
     }
 
     // Public getters:
@@ -110,6 +129,9 @@ public class ESActivity {
         return _moods;
     }
 
+    public String[] get_predictedLabelNames() { return _predictedLabelNames; }
+
+    public double[] get_predictedLabelProbs() { return _predictedLabelProbs; }
 
 
     // Utility public info functions:
@@ -125,7 +147,10 @@ public class ESActivity {
                 ", main activity prediction: " + _mainActivityServerPrediction +
                 ",main activity correction: " + _mainActivityUserCorrection +
                 ",secondary: {" + _secondaryActivities + "}" +
-                ",mood: {" + _moods + "}>";
+                ",mood: {" + _moods + "}" +
+                ",predicted label names: {" + _predictedLabelNames + "}" +
+                ",predicted label probs: {" + _predictedLabelProbs + "}" +
+                ">";
     }
 
     public String mostUpToDateMainActivity() {

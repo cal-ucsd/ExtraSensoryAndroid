@@ -12,6 +12,7 @@ import android.os.AsyncTask;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -518,7 +519,8 @@ public class ESNetworkAccessor {
     }
 
 
-    private void handleUploadedZip(ESTimestamp timestamp,String zipFilename,String predictedMainActivity) {
+    private void handleUploadedZip(ESTimestamp timestamp,String zipFilename,String predictedMainActivity,
+                                   String[] predictedLabelNames,double[] predictedLabelProbs) {
         // Since zip uploaded successfully, can remove it from network queue and delete the file:
         deleteZipFileAndRemoveFromUploadQueue(zipFilename);
         // Update the ESActivity record:
@@ -533,7 +535,7 @@ public class ESNetworkAccessor {
             }
             else {
                 predictedMainActivity = adjustPredictedActivity(predictedMainActivity);
-                dba.setESActivityServerPrediction(activity, predictedMainActivity);
+                dba.setESActivityServerPrediction(activity, predictedMainActivity,predictedLabelNames,predictedLabelProbs);
                 Log.i(LOG_TAG, "After getting server prediction, activity is now: " + activity);
 
                 // If there is already user labels, send feedback to server:
@@ -613,7 +615,36 @@ public class ESNetworkAccessor {
         private static final String RESPONSE_FIELD_MESSAGE = "msg";
         private static final String RESPONSE_FIELD_ZIP_FILE = "filename";
         private static final String RESPONSE_FIELD_PREDICTED_MAIN_ACTIVITY = "predicted_activity";
+        private static final String RESPONSE_FIELD_PREDICTED_LABEL_NAMES = "label_names";
+        private static final String RESPONSE_FIELD_PREDICTED_LABEL_PROBS = "label_probs";
 
+        private static String[] parseJSONArrayOfStrings(JSONArray jsona) {
+            try {
+                String[] strings = new String[jsona.length()];
+                for (int i = 0; i < jsona.length(); i++) {
+                    strings[i] = jsona.getString(i);
+                }
+                return strings;
+            }
+            catch (org.json.JSONException exception) {
+                Log.e(LOG_TAG,"Trouble getting array of strings from JSONArray: " + jsona);
+                return new String[]{};
+            }
+        }
+
+        private static double[] parseJSONArrayOfNumbers(JSONArray jsona) {
+            try {
+                double[] numbers = new double[jsona.length()];
+                for (int i = 0; i < jsona.length(); i++) {
+                    numbers[i] = jsona.getDouble(i);
+                }
+                return numbers;
+            }
+            catch (org.json.JSONException exception) {
+                Log.e(LOG_TAG,"Trouble getting array of doubles from JSONArray: " + jsona);
+                return new double[]{};
+            }
+        }
 
         private void doApiRequest(ESApiParams params) {
             Log.v(LOG_TAG,"API params: " + params);
@@ -823,15 +854,24 @@ public class ESNetworkAccessor {
                 ESTimestamp timestamp = null;
                 String responseZipFilename = zipFilename;
                 String predictedMainActivity = null;
+                String[] predictedLabelNames = null;
+                double[] predictedLabelProbs = null;
                 JSONObject response = getServerResponseAndDisconnect(conn,"upload");
                 if (response != null) {
                     timestamp = new ESTimestamp(response.getInt(RESPONSE_FIELD_TIMESTAMP));
                     responseZipFilename = response.getString(RESPONSE_FIELD_ZIP_FILE);
                     predictedMainActivity = response.getString(RESPONSE_FIELD_PREDICTED_MAIN_ACTIVITY);
+
+                    predictedLabelNames = parseJSONArrayOfStrings(response.getJSONArray(RESPONSE_FIELD_PREDICTED_LABEL_NAMES));
+                    predictedLabelProbs = parseJSONArrayOfNumbers(response.getJSONArray(RESPONSE_FIELD_PREDICTED_LABEL_PROBS));
+                    if (predictedLabelNames.length != predictedLabelProbs.length) {
+                        Log.e(LOG_TAG,"Server responded with prediction label names and label probabilities of inconsistent sizes. Changing them both to empty.");
+                    }
                 }
 
                 conn.disconnect();
-                params._requester.handleUploadedZip(timestamp, responseZipFilename, predictedMainActivity);
+                params._requester.handleUploadedZip(timestamp, responseZipFilename, predictedMainActivity,
+                        predictedLabelNames,predictedLabelProbs);
 
             } catch (MalformedURLException e) {
                 Log.e(LOG_TAG,"Failed with creating URI for uploading zip");

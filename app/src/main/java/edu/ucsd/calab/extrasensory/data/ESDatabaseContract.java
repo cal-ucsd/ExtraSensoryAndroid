@@ -23,6 +23,8 @@ final class ESDatabaseContract {
         public static final String COLUMN_NAME_SECONDARY_ACTIVITIES_CSV = "secondary_activities";
         public static final String COLUMN_NAME_MOODS_CSV = "moods";
         public static final String COLUMN_NAME_LABEL_SOURCE = "label_source";
+        public static final String COLUMN_NAME_PREDICTED_LABEL_NAMES_CSV = "predicted_label_names";
+        public static final String COLUMN_NAME_PREDICTED_LABEL_PROBS_CSV = "predicted_label_probs";
     }
 
     /**
