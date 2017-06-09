@@ -77,7 +77,7 @@ public class ESNetworkAccessor {
 
     private static final String LOG_TAG = "[ESNetworkAccessor]";
     private static final long WAIT_TIME_AFTER_UPLOAD_IN_MILLIS = 15000;
-    private static final String SERVER_HOSTNAME = "137.110.112.50";
+    private static final String SERVER_HOSTNAME = "calab3.ucsd.edu";
     private static final String HTTP_PREFIX = "http://";
     private static final String HTTPS_PREFIX = "https://";
     private static final String HTTP_PORT = "8080";
@@ -737,8 +737,8 @@ public class ESNetworkAccessor {
             String labelSourceStr = "label_source=" + activity.get_labelSource();
             String mainPredictionStr = "predicted_activity=" + activity.get_mainActivityServerPrediction();
             String mainUserStr = "corrected_activity=" + activity.get_mainActivityUserCorrection();
-            String secondaryStr = "secondary_activities=" + ESLabelStrings.makeCSV(activity.get_secondaryActivities());
-            String moodStr = "moods=" + ESLabelStrings.makeCSV(activity.get_moods());
+            String secondaryStr = "secondary_activities=" + ESLabelStrings.makeCSVForNetwork(activity.get_secondaryActivities());
+            String moodStr = "moods=" + ESLabelStrings.makeCSVForNetwork(activity.get_moods());
 
             String apiParams = uuidStr + "&" +
                     timestampStr + "&" +

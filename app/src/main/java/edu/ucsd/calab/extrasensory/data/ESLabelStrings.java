@@ -116,6 +116,63 @@ public class ESLabelStrings {
         return csv;
     }
 
+    /**
+     * Create a single String representation of the labels (network-standardized version) in the array, using Comma Separate Values
+     * This function assumes non of the components of the array are null
+     * @param labels The labels to represent in a single String. Assumed that no string contains comma.
+     * @return A single String representation of the array
+     */
+    public static String makeCSVForNetwork(String[] labels) {
+        String[] standardLabels = standardizeLabelsForNetwork(labels);
+        return makeCSV(standardLabels);
+    }
+
+    /**
+     * Prepare labels string for transmission on the network.
+     * The strings should then be more standard, without special characters that may appear in some labels.
+     * @param labels
+     * @return
+     */
+    public static String[] standardizeLabelsForNetwork(String[] labels) {
+        String[] standardLabels = new String[labels.length];
+        for (int i = 0; i < labels.length; i ++) {
+            String label = labels[i];
+            label = label.replaceAll(" ", "_");
+            label = label.replaceAll("\\'", "_");
+            label = label.replaceAll("\\(", "_");
+            label = label.replaceAll("\\)", "_");
+            label = label.toUpperCase();
+            standardLabels[i] = label;
+        }
+
+        return standardLabels;
+    }
+
+    /**
+     * Reverse the label names back to the original (nice human readable) format
+     * from the standardized network format.
+     * @param labelsFromNetwork
+     * @return
+     */
+    public static  String[] reverseStandardizeLabelsFromNetwork(String[] labelsFromNetwork) {
+        String[] originalFormatLabels = new String[labelsFromNetwork.length];
+        for (int i = 0; i < labelsFromNetwork.length; i ++) {
+            String label = labelsFromNetwork[i];
+            if (label.endsWith("_")) {
+                // Assume parentheses would be at the end of the label
+                label = label.substring(0,label.length()-1) + ")";
+            }
+            label = label.replaceAll("__","_(");
+            label = label.replaceAll("_"," ");
+            // The standard version should be all upper case:
+            label = label.substring(0,1) + label.substring(1).toLowerCase();
+            label = label.replaceAll("i m","I\'m");
+            label = label.replaceAll(" tv"," TV");
+            originalFormatLabels[i] = label;
+        }
+
+        return originalFormatLabels;
+    }
 
     /**
      * Read the labels from the text file in resources.raw.
