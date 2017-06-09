@@ -1,8 +1,14 @@
 package edu.ucsd.calab.extrasensory.data;
 
+import android.util.Log;
+
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -167,6 +173,16 @@ public class ESContinuousActivity {
         return null;
     }
 
+    public String[] getSecondaryActivitiesOrServerGuesses() {
+        String[] secActivities = getSecondaryActivities();
+        if (secActivities != null) {
+            return secActivities;
+        }
+        // Otherwise, get the label_names of the labels that the server predicted with probability more than half:
+        String[] predictedSecLabels = getPredictionLabelNamesPredictedYes();
+        return predictedSecLabels;
+    }
+
     /**
      * Get the array of mood labels associated with this continuous activity.
      * The order of the moods is arbitrary.
@@ -186,6 +202,58 @@ public class ESContinuousActivity {
         }
 
         return null;
+    }
+
+    /**
+     *
+     * @return
+     */
+    public Map<String,Double> getServerPredictionLabelNamesAndProbs() {
+        if (this.isEmpty()) {
+            return null;
+        }
+
+        for (ESActivity minuteActivity : _minuteActivities) {
+            if (minuteActivity != null) {
+                Map<String,Double> probMap = minuteActivity.get_predictedLabelNameAndProbPairs();
+                if (probMap != null) {
+                    return probMap;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public List<Map.Entry<String,Double>> getPredictionLabelsSortedByProb() {
+        Map<String,Double> probMap = getServerPredictionLabelNamesAndProbs();
+        List<Map.Entry<String,Double>> sortedLabelList = new LinkedList<>(probMap.entrySet());
+        Collections.sort(sortedLabelList,new Comparator<Map.Entry<String, Double>>() {
+            @Override
+            public int compare(Map.Entry<String, Double> lhs, Map.Entry<String, Double> rhs) {
+                // Make sure it's descending order:
+                return rhs.getValue().compareTo(lhs.getValue());
+            }
+        });
+
+        return sortedLabelList;
+    }
+
+    public String[] getPredictionLabelNamesPredictedYes() {
+        List<Map.Entry<String,Double>> sortedLabels = getPredictionLabelsSortedByProb();
+        ArrayList<String> positiveLabelsList = new ArrayList<>(10);
+        for (int i = 0; i < sortedLabels.size(); i ++ ) {
+            if (sortedLabels.get(i).getValue() <= 0.5) {
+                break;
+            }
+            else {
+                positiveLabelsList.add(sortedLabels.get(i).getKey());
+            }
+        }
+
+        String[] positiveLabels = new String[positiveLabelsList.size()];
+        positiveLabels = positiveLabelsList.toArray(positiveLabels);
+        return positiveLabels;
     }
 
     /**

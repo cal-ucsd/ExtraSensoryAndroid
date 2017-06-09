@@ -89,14 +89,14 @@ public class ESActivity {
         _secondaryActivities = secondaryActivities;
         _moods = moods;
         if ((predictedLabelNames==null && predictedLabelProbs!=null) || (predictedLabelNames!=null && predictedLabelProbs==null)) {
-            Log.w(LOG_TAG, "Trying to construct ESActivity with one of predictedLabelNames and predictedLabelProbs being null. Setting them both to null.");
-            _predictedLabelNames = null;
-            _predictedLabelProbs = null;
+            Log.w(LOG_TAG, "Trying to construct ESActivity with one of predictedLabelNames and predictedLabelProbs being null. Setting them both to empty.");
+            _predictedLabelNames = new String[]{};
+            _predictedLabelProbs = new double[]{};
         }
         else if (predictedLabelNames.length != predictedLabelProbs.length) {
-            Log.v(LOG_TAG,"Trying to construct ESActivity with inconsistent lengths of predictedLabelNames and predictedLabelProbs. Setting them both to null.");
-            _predictedLabelNames = null;
-            _predictedLabelProbs = null;
+            Log.v(LOG_TAG,"Trying to construct ESActivity with inconsistent lengths of predictedLabelNames and predictedLabelProbs. Setting them both to empty.");
+            _predictedLabelNames = new String[]{};
+            _predictedLabelProbs = new double[]{};
         }
         else {
             _predictedLabelNames = predictedLabelNames;
@@ -132,6 +132,14 @@ public class ESActivity {
     public String[] get_predictedLabelNames() { return _predictedLabelNames; }
 
     public double[] get_predictedLabelProbs() { return _predictedLabelProbs; }
+
+    public Map<String,Double> get_predictedLabelNameAndProbPairs() {
+        Map<String,Double> map = new HashMap<>(_predictedLabelNames.length);
+        for (int i = 0; i < _predictedLabelNames.length; i ++) {
+            map.put(_predictedLabelNames[i],_predictedLabelProbs[i]);
+        }
+        return map;
+    }
 
 
     // Utility public info functions:

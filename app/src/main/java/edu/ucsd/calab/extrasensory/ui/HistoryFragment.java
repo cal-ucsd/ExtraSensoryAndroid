@@ -461,11 +461,21 @@ public class HistoryFragment extends BaseTabFragment {
                 }
             }
 
-            String[] sec = continuousActivity.getSecondaryActivities();
+            String[] sec = null;
+            String delim = ",";
+            String suffix = "";
+            if (continuousActivity.hasUserProvidedLabels()) {
+                sec = continuousActivity.getSecondaryActivities();
+            }
+            else {
+                sec = continuousActivity.getSecondaryActivitiesOrServerGuesses();
+                delim = "";
+                suffix = "?";
+            }
             if (sec != null && sec.length > 0) {
-                details += " (" + sec[0];
+                details += " (" + sec[0] + suffix;
                 for (int i=1; i<sec.length; i++) {
-                    details += ", " + sec[i];
+                    details += delim + " " + sec[i] + suffix;
                 }
                 details += ")";
             }

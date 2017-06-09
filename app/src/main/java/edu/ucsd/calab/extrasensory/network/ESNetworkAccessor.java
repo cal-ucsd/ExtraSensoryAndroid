@@ -862,7 +862,7 @@ public class ESNetworkAccessor {
                     responseZipFilename = response.getString(RESPONSE_FIELD_ZIP_FILE);
                     predictedMainActivity = response.getString(RESPONSE_FIELD_PREDICTED_MAIN_ACTIVITY);
 
-                    predictedLabelNames = parseJSONArrayOfStrings(response.getJSONArray(RESPONSE_FIELD_PREDICTED_LABEL_NAMES));
+                    predictedLabelNames = ESLabelStrings.reverseStandardizeLabelsFromNetwork(parseJSONArrayOfStrings(response.getJSONArray(RESPONSE_FIELD_PREDICTED_LABEL_NAMES)));
                     predictedLabelProbs = parseJSONArrayOfNumbers(response.getJSONArray(RESPONSE_FIELD_PREDICTED_LABEL_PROBS));
                     if (predictedLabelNames.length != predictedLabelProbs.length) {
                         Log.e(LOG_TAG,"Server responded with prediction label names and label probabilities of inconsistent sizes. Changing them both to empty.");
