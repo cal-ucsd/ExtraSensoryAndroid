@@ -167,6 +167,9 @@ public class ESLabelStrings {
      * @return
      */
     public static String[] standardizeLabelsForNetwork(String[] labels) {
+        if (labels == null) {
+            return new String[]{};
+        }
         String[] standardLabels = new String[labels.length];
         for (int i = 0; i < labels.length; i++) {
             standardLabels[i] = standardizeLabelForNetwork(labels[i]);
