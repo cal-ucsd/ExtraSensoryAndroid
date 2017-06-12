@@ -480,6 +480,9 @@ public class HistoryFragment extends BaseTabFragment {
                 details += ")";
             }
 
+            if (details.length() > 100) {
+                details = details.substring(0,100) + "...";
+            }
             return details;
         }
 

@@ -207,7 +207,8 @@ public class ESNetworkAccessor {
         } catch (CertificateException e) {
             e.printStackTrace();
         }
-        InputStream inputStream = ESApplication.getTheAppContext().getResources().openRawResource(R.raw.calab_macserver_ucsd_edu);
+//        InputStream inputStream = ESApplication.getTheAppContext().getResources().openRawResource(R.raw.calab_macserver_ucsd_edu);
+        InputStream inputStream = ESApplication.getTheAppContext().getResources().openRawResource(R.raw.calab3_ucsd_edu);
         InputStream caInput = new BufferedInputStream(inputStream);
         Certificate ca = null;
         try {
