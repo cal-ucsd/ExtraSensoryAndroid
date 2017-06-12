@@ -81,10 +81,10 @@ public class ESNetworkAccessor {
     private static final String SERVER_HOSTNAME = "calab3.ucsd.edu";
     private static final String HTTP_PREFIX = "http://";
     private static final String HTTPS_PREFIX = "https://";
-    private static final String HTTP_PORT = "8080";
+    private static final String HTTP_PORT = "80";//"8080";
     private static final String HTTPS_PORT = "443";
-    private static final String SERVER_HTTP_API_PREFIX = HTTP_PREFIX + SERVER_HOSTNAME + ":" + HTTP_PORT + "/api/";
-    private static final String SERVER_HTTPS_API_PREFIX = HTTPS_PREFIX + SERVER_HOSTNAME + ":" + HTTPS_PORT + "/api/";
+    private static final String SERVER_HTTP_API_PREFIX = HTTP_PREFIX + SERVER_HOSTNAME + ":" + HTTP_PORT + "/extrasensory/";
+    private static final String SERVER_HTTPS_API_PREFIX = HTTPS_PREFIX + SERVER_HOSTNAME + ":" + HTTPS_PORT + "/extrasensory/";
 
     private static final String FEEDBACK_FILE_EXTENSION = ".feedback";
 
