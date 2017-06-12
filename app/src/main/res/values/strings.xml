@@ -54,5 +54,12 @@
     <string name="cellular_on">on</string>
     <string name="num_examples_store_before_send">Num examples to store before send:</string>
     <string name="send_stored_examples">Send stored examples</string>
+    <string name="researcher_settings_label">Researcher settings:</string>
+    <string name="classifier_type_label">Classifier type:</string>
+    <string name="classifier_name_label">Classifier name:</string>
+    <string name="classifier_update_button_label">Update classifier type and name</string>
+    <string name="classifier_settings_header">Classifier selection:</string>
+    <string name="classifier_settings_off">keep</string>
+    <string name="classifier_settings_on">edit</string>
 
 </resources>

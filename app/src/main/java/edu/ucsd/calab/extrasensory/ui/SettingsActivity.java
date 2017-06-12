@@ -186,6 +186,56 @@ public class SettingsActivity extends BaseActivity {
         });
 
 
+        // Classifier settings:
+        RadioGroup classifierSettingsRG = (RadioGroup)findViewById(R.id.radio_group_classifier_setting);
+        final EditText classifierTypeEdit = (EditText)findViewById(R.id.edit_classifier_type);
+        final EditText classifierNameEdit = (EditText)findViewById(R.id.edit_classifier_name);
+        final Button updateClassifierButton = (Button)findViewById(R.id.button_classifier_update);
+
+        classifierSettingsRG.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                switch (checkedId) {
+                    case R.id.radio_classifier_setting_off:
+//                        ESSettings.setLocationBubbleUsed(false);
+                        classifierTypeEdit.setEnabled(false);
+                        classifierNameEdit.setEnabled(false);
+                        updateClassifierButton.setEnabled(false);
+                        break;
+                    case R.id.radio_classifier_setting_on:
+//                        ESSettings.setLocationBubbleUsed(true);
+                        classifierTypeEdit.setEnabled(true);
+                        classifierNameEdit.setEnabled(true);
+                        updateClassifierButton.setEnabled(true);
+                        break;
+                    default:
+                        Log.e(LOG_TAG,"got unexpected id for radio group");
+                }
+            }
+        });
+
+        classifierTypeEdit.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                // Update the classifier type:
+//                ESSettings.setLocationBubbleCenter(newLatitude,newLongitude);
+            }
+        });
+        classifierNameEdit.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                // Update the classifier name:
+//                ESSettings.setLocationBubbleCenter(newLatitude,newLongitude);
+            }
+        });
+        updateClassifierButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Update the classifier settings:
+//                ESSettings.setLocationBubbleCenter(newLatitude,newLongitude);
+            }
+        });
+
         setDisplayedContent();
     }
 
@@ -270,6 +320,22 @@ public class SettingsActivity extends BaseActivity {
         // Set the UUID:
         TextView uuid_text = (TextView)findViewById(R.id.uuid_content);
         uuid_text.setText(ESSettings.uuid());
+
+        // Classifier settings:
+        EditText classifierTypeEdit = (EditText)findViewById(R.id.edit_classifier_type);
+        EditText classifierNameEdit = (EditText)findViewById(R.id.edit_classifier_name);
+        Button updateClassifierButton = (Button)findViewById(R.id.button_classifier_update);
+
+//        classifierTypeEdit.setText(....);
+//        classifierNameEdit.setText(....);
+
+        RadioGroup classifierSettingsRG = (RadioGroup)findViewById(R.id.radio_group_classifier_setting);
+        classifierSettingsRG.check(R.id.radio_classifier_setting_off);
+        classifierTypeEdit.setEnabled(false);
+        classifierNameEdit.setEnabled(false);
+        updateClassifierButton.setEnabled(false);
+
+
     }
 
     private void displayNotificationIntervalValue(int intervalMinutes) {
