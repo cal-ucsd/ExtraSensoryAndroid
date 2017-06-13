@@ -18,8 +18,8 @@
     <string name="action_active_feedback">active feedback</string>
     <string name="title_activity_setting">Setting</string>
     <string name="title_activity_feedback">Feedback</string>
-    <string name="api_upload_zip">feedback_upload</string>
-    <string name="api_feedback">feedback</string>
+    <string name="api_upload_zip">upload_sensor_data</string>
+    <string name="api_feedback">user_labels</string>
     <string name="REC">REC</string>
     <string name="need_google_play_services_message">ExtraSensory needs you to have Google Play services available in order to use Location services. Please update Google Play services!</string>
     <string name="set_google_play_button">Set Google Play</string>
