@@ -218,14 +218,14 @@ public class SettingsActivity extends BaseActivity {
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
                 // Update the classifier type:
-                ESSettings.setClassifierSettings(classifierTypeEdit.getText().toString(),ESSettings.classifierName());
+//                ESSettings.setClassifierSettings(classifierTypeEdit.getText().toString(),ESSettings.classifierName());
             }
         });
         classifierNameEdit.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
                 // Update the classifier name:
-                ESSettings.setClassifierSettings(ESSettings.classifierType(),classifierNameEdit.getText().toString());
+//                ESSettings.setClassifierSettings(ESSettings.classifierType(),classifierNameEdit.getText().toString());
             }
         });
         updateClassifierButton.setOnClickListener(new View.OnClickListener() {
