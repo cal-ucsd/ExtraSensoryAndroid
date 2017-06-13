@@ -41,6 +41,8 @@ public class ESDatabaseAccessor {
     private static final double LOCATION_BUBBLE_CENTER_LONG_DEFAULT = 0.0;
     private static final double LOCATION_BUBBLE_CENTER_LAT_DEFAULT = 0.0;
     private static final String LOCATION_BUBBLE_LOCATION_PROVIDER = "BubbleCenter";
+    private static final String CLASSIFIER_TYPE_DEFAULT = "es_mlp";
+    private static final String CLASSIFIER_NAME_DEFAULT = "es6sensors";
 
     public static final String BROADCAST_DATABASE_RECORDS_UPDATED = "edu.ucsd.calab.extrasensory.broadcast.database_records_updated";
     public static enum ESLabelType {
@@ -100,7 +102,9 @@ public class ESDatabaseAccessor {
                         ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_HOME_SENSING + " INTEGER," +
                         ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_USED + " INTEGER," +
                         ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_CENTER_LAT + " DOUBLE PRECISION," +
-                        ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_CENTER_LONG + " DOUBLE PRECISION" +
+                        ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_CENTER_LONG + " DOUBLE PRECISION," +
+                        ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_CLASSIFIER_TYPE + " TEXT," +
+                        ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_CLASSIFIER_NAME + " TEXT" +
                         ")";
         private static final String SQL_DELETE_ES_SETTINGS_TABLE =
                 "DROP TABLE IF EXISTS " + ESDatabaseContract.ESSettingsEntry.TABLE_NAME;
@@ -149,12 +153,14 @@ public class ESDatabaseAccessor {
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_USED,0);
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_CENTER_LAT,LOCATION_BUBBLE_CENTER_LAT_DEFAULT);
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_CENTER_LONG,LOCATION_BUBBLE_CENTER_LONG_DEFAULT);
+        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_CLASSIFIER_TYPE,CLASSIFIER_TYPE_DEFAULT);
+        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_CLASSIFIER_NAME,CLASSIFIER_NAME_DEFAULT);
 
         db.insert(ESDatabaseContract.ESSettingsEntry.TABLE_NAME,null,values);
         Location bubbleCenter = new Location(LOCATION_BUBBLE_LOCATION_PROVIDER);
         bubbleCenter.setLatitude(LOCATION_BUBBLE_CENTER_LAT_DEFAULT);
         bubbleCenter.setLongitude(LOCATION_BUBBLE_CENTER_LONG_DEFAULT);
-        ESSettings settings = new ESSettings(uuid, MAX_STORED_EXAMPLES_DEFAULT,NOTIFICATION_INTERVAL_DEFAULT,NUM_EXAMPLES_STORE_BEFORE_SEND_DEFAULT,false,false,false,bubbleCenter);
+        ESSettings settings = new ESSettings(uuid, MAX_STORED_EXAMPLES_DEFAULT,NOTIFICATION_INTERVAL_DEFAULT,NUM_EXAMPLES_STORE_BEFORE_SEND_DEFAULT,false,false,false,bubbleCenter,CLASSIFIER_TYPE_DEFAULT,CLASSIFIER_NAME_DEFAULT);
 
         _dbHelper.close();
 
@@ -179,7 +185,9 @@ public class ESDatabaseAccessor {
                 ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_ALLOW_CELLULAR,
                 ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_USED,
                 ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_CENTER_LAT,
-                ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_CENTER_LONG
+                ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_CENTER_LONG,
+                ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_CLASSIFIER_TYPE,
+                ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_CLASSIFIER_NAME
         };
 
         Cursor cursor = db.query(ESDatabaseContract.ESSettingsEntry.TABLE_NAME,
@@ -328,6 +336,26 @@ public class ESDatabaseAccessor {
         return setSettings(locationBubbleCenterLat,locationBubbleCenterLong);
     }
 
+    synchronized ESSettings setClassifierSettings(String classifierType,String classifierName) {
+        SQLiteDatabase db = _dbHelper.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_CLASSIFIER_TYPE,classifierType);
+        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_CLASSIFIER_NAME,classifierName);
+
+        int affectedCount = db.update(ESDatabaseContract.ESSettingsEntry.TABLE_NAME,values,null,null);
+        if (affectedCount <= 0) {
+            Log.e(LOG_TAG,"Settings update affected no records in the DB");
+        }
+        if (affectedCount > 1) {
+            Log.e(LOG_TAG,"Settings update affected more than one record in the DB");
+        }
+
+        _dbHelper.close();
+
+        return getTheSettings();
+    }
+
     private String generateUUID() {
         return UUID.randomUUID().toString().toUpperCase();
     }
@@ -358,7 +386,10 @@ public class ESDatabaseAccessor {
         locationBubbleCenter.setLatitude(locationBubbleCenterLat);
         locationBubbleCenter.setLongitude(locationBubbleCenterLong);
 
-        return new ESSettings(uuid,maxStored,notificationInterval,numExamplesStoreBeforeSend,homeSensingUsed,allowCellular,locationBubbleUsed,locationBubbleCenter);
+        String classifierType = cursor.getString(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_CLASSIFIER_TYPE));
+        String classifierName = cursor.getString(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_CLASSIFIER_NAME));
+
+        return new ESSettings(uuid,maxStored,notificationInterval,numExamplesStoreBeforeSend,homeSensingUsed,allowCellular,locationBubbleUsed,locationBubbleCenter,classifierType,classifierName);
     }
 
     /**

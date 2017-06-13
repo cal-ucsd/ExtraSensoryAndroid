@@ -41,5 +41,7 @@ final class ESDatabaseContract {
         public static final String COLUMN_NAME_BUBBLE_USED = "bubble_used";
         public static final String COLUMN_NAME_BUBBLE_CENTER_LONG = "bubble_center_longitude";
         public static final String COLUMN_NAME_BUBBLE_CENTER_LAT = "bubble_center_latitude";
+        public static final String COLUMN_NAME_CLASSIFIER_TYPE = "classifier_type";
+        public static final String COLUMN_NAME_CLASSIFIER_NAME = "classifier_name";
     }
 }

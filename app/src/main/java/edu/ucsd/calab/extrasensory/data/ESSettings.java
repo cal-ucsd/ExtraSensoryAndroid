@@ -24,11 +24,14 @@ public class ESSettings {
     private boolean _allowCellular;
     private boolean _locationBubbleUsed;
     private Location _locationBubbleCenter;
+    private String _classifierType;
+    private String _classifierName;
 
     ESSettings(String uuid,int maxStoredExamples,int notificationIntervalInSeconds,
                int numExamplesStoreBeforeSend,
                boolean homeSensing,boolean allowCellular,
-               boolean locationBubbleUsed, Location locationBubbleCenter) {
+               boolean locationBubbleUsed, Location locationBubbleCenter,
+               String classifierType,String classifierName) {
         _uuid = uuid;
         _maxStoredExamples = maxStoredExamples;
         _notificationIntervalInSeconds = notificationIntervalInSeconds;
@@ -37,6 +40,8 @@ public class ESSettings {
         _allowCellular = allowCellular;
         _locationBubbleUsed = locationBubbleUsed;
         _locationBubbleCenter = locationBubbleCenter;
+        _classifierType = classifierType != null ? classifierType : "";
+        _classifierName = classifierName != null ? classifierName : "";
     }
 
     private static ESSettings _settings = null;
@@ -114,6 +119,18 @@ public class ESSettings {
     }
 
     /**
+     * Get the classifier type. This signals to the server what type of classifier to use when getting the sensor measurements.
+     * @return
+     */
+    public static String classifierType() { return getTheSettings()._classifierType; }
+
+    /**
+     * Get the classifier name. This signals to the server which trained model to use when getting the sensor measurements.
+     * @return
+     */
+    public static String classifierName() { return getTheSettings()._classifierName; }
+
+    /**
      * Set the maximum allowed number of stored examples.
      *
      * @param maxStoredExamples The maximum allowed number of stored examples.
@@ -181,6 +198,16 @@ public class ESSettings {
      */
     public static void setLocationBubbleCenter(Location locationBubbleCenter) {
         _settings = getTheDBAccessor().setSettings(locationBubbleCenter);
+    }
+
+    /**
+     * Set the classifier settings. This will signal to the server what type of classifier and what is the name of the
+     * trained classifier model to use when it gets sensor measurements, to classify the example.
+     * @param classifierType
+     * @param classifierName
+     */
+    public static void setClassifierSettings(String classifierType,String classifierName) {
+        _settings = getTheDBAccessor().setClassifierSettings(classifierType,classifierName);
     }
 
     private static ESDatabaseAccessor getTheDBAccessor() {
