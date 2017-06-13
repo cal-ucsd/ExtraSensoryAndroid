@@ -326,8 +326,8 @@ public class SettingsActivity extends BaseActivity {
         EditText classifierNameEdit = (EditText)findViewById(R.id.edit_classifier_name);
         Button updateClassifierButton = (Button)findViewById(R.id.button_classifier_update);
 
-//        classifierTypeEdit.setText(....);
-//        classifierNameEdit.setText(....);
+        classifierTypeEdit.setText(ESSettings.classifierType());
+        classifierNameEdit.setText(ESSettings.classifierName());
 
         RadioGroup classifierSettingsRG = (RadioGroup)findViewById(R.id.radio_group_classifier_setting);
         classifierSettingsRG.check(R.id.radio_classifier_setting_off);
