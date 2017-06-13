@@ -218,21 +218,21 @@ public class SettingsActivity extends BaseActivity {
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
                 // Update the classifier type:
-//                ESSettings.setLocationBubbleCenter(newLatitude,newLongitude);
+                ESSettings.setClassifierSettings(classifierTypeEdit.getText().toString(),ESSettings.classifierName());
             }
         });
         classifierNameEdit.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
                 // Update the classifier name:
-//                ESSettings.setLocationBubbleCenter(newLatitude,newLongitude);
+                ESSettings.setClassifierSettings(ESSettings.classifierType(),classifierNameEdit.getText().toString());
             }
         });
         updateClassifierButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 // Update the classifier settings:
-//                ESSettings.setLocationBubbleCenter(newLatitude,newLongitude);
+                ESSettings.setClassifierSettings(classifierTypeEdit.getText().toString(),classifierNameEdit.getText().toString());
             }
         });
 

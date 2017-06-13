@@ -610,6 +610,9 @@ public class ESNetworkAccessor {
         private static final String TWO_HYPHENS = "--";
         private static final String BOUNDARY = "0xKhTmLbOuNdArY";
 
+        private static final String REQUEST_FIELD_CLASSIFIER_TYPE = "classifier_type";
+        private static final String REQUEST_FIELD_CLASSIFIER_NAME = "classifier_name";
+
         private static final String RESPONSE_FIELD_TIMESTAMP = "timestamp";
         private static final String RESPONSE_FIELD_SUCCESS = "success";
         private static final String RESPONSE_FIELD_MESSAGE = "msg";
@@ -617,6 +620,8 @@ public class ESNetworkAccessor {
         private static final String RESPONSE_FIELD_PREDICTED_MAIN_ACTIVITY = "predicted_activity";
         private static final String RESPONSE_FIELD_PREDICTED_LABEL_NAMES = "label_names";
         private static final String RESPONSE_FIELD_PREDICTED_LABEL_PROBS = "label_probs";
+        private static final String RESPONSE_FIELD_CLASSIFIER_TYPE = "classifier_type";
+        private static final String RESPONSE_FIELD_CLASSIFIER_NAME = "classifier_name";
 
         private static String[] parseJSONArrayOfStrings(JSONArray jsona) {
             try {
@@ -798,8 +803,11 @@ public class ESNetworkAccessor {
                     return;
                 }
 
-                URL url = new URL((params._requester.shouldSendWithHttps() ? SERVER_HTTPS_API_PREFIX : SERVER_HTTP_API_PREFIX)
-                        + resources.getString(R.string.api_upload_zip));
+                String urlString = (params._requester.shouldSendWithHttps() ? SERVER_HTTPS_API_PREFIX : SERVER_HTTP_API_PREFIX)
+                        + resources.getString(R.string.api_upload_zip) +
+                        "?" + REQUEST_FIELD_CLASSIFIER_TYPE + "=" + ESSettings.classifierType() +
+                        "&" + REQUEST_FIELD_CLASSIFIER_NAME + "=" + ESSettings.classifierName();
+                URL url = new URL(urlString);
                 Log.i(LOG_TAG,"Api url: " + url);
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 if (params._requester.shouldSendWithHttps()) {
@@ -811,6 +819,10 @@ public class ESNetworkAccessor {
                 conn.setDoInput(true); // Allow Inputs
                 conn.setUseCaches(false); // Don't use a Cached Copy
                 conn.setRequestMethod("POST");
+
+                conn.setRequestProperty(REQUEST_FIELD_CLASSIFIER_TYPE,ESSettings.classifierType());
+                conn.setRequestProperty(REQUEST_FIELD_CLASSIFIER_NAME,ESSettings.classifierName());
+
                 conn.setRequestProperty("Connection", "Keep-Alive");
                 conn.setRequestProperty("ENCTYPE", "multipart/form-data");
                 conn.setRequestProperty("Content-Type", "multipart/form-data;boundary=" + BOUNDARY);
