@@ -1,7 +1,6 @@
 Lying down
 Sitting
-Standing in place
-Standing and moving
+Standing
 Walking
 Running
 Bicycling
