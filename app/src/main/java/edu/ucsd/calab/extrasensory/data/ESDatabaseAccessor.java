@@ -351,7 +351,32 @@ public class ESDatabaseAccessor {
     synchronized ESSettings setRecordAudio(boolean recordAudio) {
         ContentValues values = new ContentValues();
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_RECORD_AUDIO,recordAudio ? 1 : 0);
+        return updateSettingsAndReturnUpdatedRecord(values);
+    }
 
+    synchronized ESSettings setRecordLocation(boolean recordLocation) {
+        ContentValues values = new ContentValues();
+        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_RECORD_LOCATION,recordLocation ? 1 : 0);
+        return updateSettingsAndReturnUpdatedRecord(values);
+    }
+
+    synchronized ESSettings setRecordWatch(boolean recordWatch) {
+        ContentValues values = new ContentValues();
+        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_RECORD_WATCH,recordWatch ? 1 : 0);
+        return updateSettingsAndReturnUpdatedRecord(values);
+    }
+
+    synchronized ESSettings setHighFreqSensorsToRecord(int[] hfSensorTypesToRecord) {
+        ContentValues values = new ContentValues();
+        String hfSensorsJson = intArrayToJsonStr(hfSensorTypesToRecord);
+        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_HF_SENSOR_TYPES_TO_RECORD_JSON,hfSensorsJson);
+        return updateSettingsAndReturnUpdatedRecord(values);
+    }
+
+    synchronized ESSettings setLowFreqSensorsToRecord(int[] lfSensorTypesToRecord) {
+        ContentValues values = new ContentValues();
+        String lfSensorsJson = intArrayToJsonStr(lfSensorTypesToRecord);
+        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_LF_SENSOR_TYPES_TO_RECORD_JSON,lfSensorsJson);
         return updateSettingsAndReturnUpdatedRecord(values);
     }
 
