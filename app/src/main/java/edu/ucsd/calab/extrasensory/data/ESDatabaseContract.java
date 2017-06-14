@@ -43,5 +43,10 @@ final class ESDatabaseContract {
         public static final String COLUMN_NAME_BUBBLE_CENTER_LAT = "bubble_center_latitude";
         public static final String COLUMN_NAME_CLASSIFIER_TYPE = "classifier_type";
         public static final String COLUMN_NAME_CLASSIFIER_NAME = "classifier_name";
+        public static final String COLUMN_NAME_RECORD_AUDIO = "record_audio";
+        public static final String COLUMN_NAME_RECORD_LOCATION = "record_location";
+        public static final String COLUMN_NAME_RECORD_WATCH = "record_watch";
+        public static final String COLUMN_NAME_HF_SENSOR_TYPES_TO_RECORD_JSON = "hf_sensors_to_record";
+        public static final String COLUMN_NAME_LF_SENSOR_TYPES_TO_RECORD_JSON = "lf_sensors_to_record";
     }
 }

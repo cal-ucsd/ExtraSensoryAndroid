@@ -404,8 +404,11 @@ public class ESSensorManager
             _sensorManager.registerListener(this,sensor,LOW_FREQ_SAMPLE_PERIOD_MICROSECONDS);
         }
 
-        // Get low-frequency measurements:
-        collectLowFrequencyMeasurements();
+        // Get phone-state measurements:
+        collectPhoneStateMeasurements();
+
+        // Maybe the session is already done:
+        finishSessionIfReady();
     }
 
     private void simulateRecordingSession() {
@@ -812,7 +815,7 @@ public class ESSensorManager
     }
 
 
-    private void collectLowFrequencyMeasurements() {
+    private void collectPhoneStateMeasurements() {
         // Wifi connectivity:
         try {
             _lowFreqData.put(WIFI_STATUS,ESNetworkAccessor.getESNetworkAccessor().isThereWiFiConnectivity());

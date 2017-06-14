@@ -6,9 +6,13 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.hardware.Sensor;
 import android.location.Location;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
+
+import org.json.JSONArray;
+import org.json.JSONException;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -44,8 +48,27 @@ public class ESDatabaseAccessor {
     private static final String CLASSIFIER_TYPE_DEFAULT = "es_mlp";
     private static final String CLASSIFIER_NAME_DEFAULT = "es6sensors";
 
+    private static int[] defaultHFSensorsToRecordJSONString() {
+        int[] highFreqSensorTypesToRecordDefault = new int[]{
+                Sensor.TYPE_ACCELEROMETER,
+                Sensor.TYPE_GYROSCOPE,
+        };
+        return highFreqSensorTypesToRecordDefault;
+    }
+
+    private static int[] defaultLFSensorsToRecordJSONString() {
+        int [] lowFreqSensorTypesToRecordDefault = new int[] {
+                Sensor.TYPE_AMBIENT_TEMPERATURE,
+                Sensor.TYPE_LIGHT,
+                Sensor.TYPE_PRESSURE,
+                Sensor.TYPE_PROXIMITY,
+                Sensor.TYPE_RELATIVE_HUMIDITY
+        };
+        return lowFreqSensorTypesToRecordDefault;
+    }
+
     public static final String BROADCAST_DATABASE_RECORDS_UPDATED = "edu.ucsd.calab.extrasensory.broadcast.database_records_updated";
-    public static enum ESLabelType {
+    public enum ESLabelType {
         ES_LABEL_TYPE_MAIN,
         ES_LABEL_TYPE_SECONDARY,
         ES_LABEL_TYPE_MOOD
@@ -104,7 +127,12 @@ public class ESDatabaseAccessor {
                         ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_CENTER_LAT + " DOUBLE PRECISION," +
                         ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_CENTER_LONG + " DOUBLE PRECISION," +
                         ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_CLASSIFIER_TYPE + " TEXT," +
-                        ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_CLASSIFIER_NAME + " TEXT" +
+                        ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_CLASSIFIER_NAME + " TEXT," +
+                        ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_RECORD_AUDIO + " INTEGER," +
+                        ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_RECORD_LOCATION + " INTEGER," +
+                        ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_RECORD_WATCH + " INTEGER," +
+                        ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_HF_SENSOR_TYPES_TO_RECORD_JSON + " TEXT," +
+                        ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_LF_SENSOR_TYPES_TO_RECORD_JSON + " TEXT" +
                         ")";
         private static final String SQL_DELETE_ES_SETTINGS_TABLE =
                 "DROP TABLE IF EXISTS " + ESDatabaseContract.ESSettingsEntry.TABLE_NAME;
@@ -132,6 +160,32 @@ public class ESDatabaseAccessor {
 
     // Settings:
 
+    private static String intArrayToJsonStr(int[] numbers) {
+        if (numbers == null) {
+            numbers = new int[0];
+        }
+
+        JSONArray jsonArray = new JSONArray();
+        for (int i = 0; i < numbers.length; i ++) {
+            jsonArray.put(numbers[i]);
+        }
+        return jsonArray.toString();
+    }
+
+    private static int[] jsonArrayToIntArray(String jsonStr) {
+        try {
+            JSONArray jsonArray = new JSONArray(jsonStr);
+            int[] numbers = new int[jsonArray.length()];
+            for (int i = 0; i < jsonArray.length(); i ++) {
+                numbers[i] = jsonArray.getInt(i);
+            }
+            return numbers;
+        } catch (JSONException e) {
+            Log.e(LOG_TAG,"Failed to parse JSON as array of integers: " + jsonStr);
+            return new int[0];
+        }
+    }
+
     /**
      * Create a new settings record for the application (including generating a unique user identifier).
      * This should only be called when there is no current record in the settings table.
@@ -155,12 +209,29 @@ public class ESDatabaseAccessor {
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_CENTER_LONG,LOCATION_BUBBLE_CENTER_LONG_DEFAULT);
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_CLASSIFIER_TYPE,CLASSIFIER_TYPE_DEFAULT);
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_CLASSIFIER_NAME,CLASSIFIER_NAME_DEFAULT);
+        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_RECORD_AUDIO,0);
+        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_RECORD_LOCATION,0);
+        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_RECORD_WATCH,0);
+        int[] defaultHFSensors = defaultHFSensorsToRecordJSONString();
+        int[] defaultLFSensors = defaultLFSensorsToRecordJSONString();
+        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_HF_SENSOR_TYPES_TO_RECORD_JSON,intArrayToJsonStr(defaultHFSensors));
+        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_LF_SENSOR_TYPES_TO_RECORD_JSON,intArrayToJsonStr(defaultLFSensors));
 
         db.insert(ESDatabaseContract.ESSettingsEntry.TABLE_NAME,null,values);
         Location bubbleCenter = new Location(LOCATION_BUBBLE_LOCATION_PROVIDER);
         bubbleCenter.setLatitude(LOCATION_BUBBLE_CENTER_LAT_DEFAULT);
         bubbleCenter.setLongitude(LOCATION_BUBBLE_CENTER_LONG_DEFAULT);
-        ESSettings settings = new ESSettings(uuid, MAX_STORED_EXAMPLES_DEFAULT,NOTIFICATION_INTERVAL_DEFAULT,NUM_EXAMPLES_STORE_BEFORE_SEND_DEFAULT,false,false,false,bubbleCenter,CLASSIFIER_TYPE_DEFAULT,CLASSIFIER_NAME_DEFAULT);
+        ESSettings settings = new ESSettings(
+                uuid,
+                MAX_STORED_EXAMPLES_DEFAULT,
+                NOTIFICATION_INTERVAL_DEFAULT,
+                NUM_EXAMPLES_STORE_BEFORE_SEND_DEFAULT,
+                false,false,false,
+                bubbleCenter,
+                CLASSIFIER_TYPE_DEFAULT,CLASSIFIER_NAME_DEFAULT,
+                false,false,false,
+                defaultHFSensors,defaultLFSensors
+                );
 
         _dbHelper.close();
 
@@ -187,7 +258,12 @@ public class ESDatabaseAccessor {
                 ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_CENTER_LAT,
                 ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_CENTER_LONG,
                 ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_CLASSIFIER_TYPE,
-                ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_CLASSIFIER_NAME
+                ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_CLASSIFIER_NAME,
+                ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_RECORD_AUDIO,
+                ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_RECORD_LOCATION,
+                ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_RECORD_WATCH,
+                ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_HF_SENSOR_TYPES_TO_RECORD_JSON,
+                ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_LF_SENSOR_TYPES_TO_RECORD_JSON
         };
 
         Cursor cursor = db.query(ESDatabaseContract.ESSettingsEntry.TABLE_NAME,
@@ -213,136 +289,74 @@ public class ESDatabaseAccessor {
         return settings;
     }
 
-    synchronized ESSettings setSettings(int maxStoredExamples,int notificationInterval) {
-        SQLiteDatabase db = _dbHelper.getWritableDatabase();
+    // Settings setters:
 
+    synchronized  ESSettings setSettingsMaxStoredExamples(int maxStoredExamples) {
         ContentValues values = new ContentValues();
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_MAX_STORED_EXAMPLES,maxStoredExamples);
-        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_NOTIFICATION_INTERVAL_SECONDS,notificationInterval);
-
-        int affectedCount = db.update(ESDatabaseContract.ESSettingsEntry.TABLE_NAME,values,null,null);
-        if (affectedCount <= 0) {
-            Log.e(LOG_TAG,"Settings update affected no records in the DB");
-        }
-        if (affectedCount > 1) {
-            Log.e(LOG_TAG,"Settings update affected more than one record in the DB");
-        }
-
-        _dbHelper.close();
-
-        return getTheSettings();
+        return updateSettingsAndReturnUpdatedRecord(values);
     }
 
-    synchronized ESSettings setSettings(int numExamplesStoreBeforeSend) {
-        SQLiteDatabase db = _dbHelper.getWritableDatabase();
+    synchronized ESSettings setSettingsNotificationInterval(int notificationInterval) {
+        ContentValues values = new ContentValues();
+        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_NOTIFICATION_INTERVAL_SECONDS,notificationInterval);
+        return updateSettingsAndReturnUpdatedRecord(values);
+    }
 
+    synchronized ESSettings setSettingsNumExamplesStoredBeforeSend(int numExamplesStoreBeforeSend) {
         ContentValues values = new ContentValues();
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_NUM_EXAMPLES_STORE_BEFORE_SEND,numExamplesStoreBeforeSend);
-
-        int affectedCount = db.update(ESDatabaseContract.ESSettingsEntry.TABLE_NAME,values,null,null);
-        if (affectedCount <= 0) {
-            Log.e(LOG_TAG,"Settings update affected no records in the DB");
-        }
-        if (affectedCount > 1) {
-            Log.e(LOG_TAG,"Settings update affected more than one record in the DB");
-        }
-
-        _dbHelper.close();
-
-        return getTheSettings();
+        return updateSettingsAndReturnUpdatedRecord(values);
     }
 
     synchronized ESSettings setSettingsHomeSensing(boolean homeSensingUsed) {
-        SQLiteDatabase db = _dbHelper.getWritableDatabase();
-
         ContentValues values = new ContentValues();
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_HOME_SENSING,homeSensingUsed ? 1 : 0);
-
-        int affectedCount = db.update(ESDatabaseContract.ESSettingsEntry.TABLE_NAME,values,null,null);
-        if (affectedCount <= 0) {
-            Log.e(LOG_TAG,"Settings update affected no records in the DB");
-        }
-        if (affectedCount > 1) {
-            Log.e(LOG_TAG,"Settings update affected more than one record in the DB");
-        }
-
-        _dbHelper.close();
-
-        return getTheSettings();
+        return updateSettingsAndReturnUpdatedRecord(values);
     }
 
     synchronized  ESSettings setSettingsAllowCellular(boolean allowCellular) {
-        SQLiteDatabase db = _dbHelper.getWritableDatabase();
-
         ContentValues values = new ContentValues();
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_ALLOW_CELLULAR,allowCellular ? 1 : 0);
-
-        int affectedCount = db.update(ESDatabaseContract.ESSettingsEntry.TABLE_NAME,values,null,null);
-        if (affectedCount <= 0) {
-            Log.e(LOG_TAG, "Settings update affected no records in the DB");
-        }
-        if (affectedCount > 1) {
-            Log.e(LOG_TAG,"Settings update affected more than one record in the DB");
-        }
-
-        _dbHelper.close();
-
-        return getTheSettings();
+        return updateSettingsAndReturnUpdatedRecord(values);
     }
 
-    synchronized ESSettings setSettings(boolean locationBubbleUsed) {
-        SQLiteDatabase db = _dbHelper.getWritableDatabase();
-
+    synchronized ESSettings setSettingsUseLocationBubble(boolean locationBubbleUsed) {
         ContentValues values = new ContentValues();
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_USED,locationBubbleUsed ? 1 : 0);
-
-        int affectedCount = db.update(ESDatabaseContract.ESSettingsEntry.TABLE_NAME,values,null,null);
-        if (affectedCount <= 0) {
-            Log.e(LOG_TAG,"Settings update affected no records in the DB");
-        }
-        if (affectedCount > 1) {
-            Log.e(LOG_TAG,"Settings update affected more than one record in the DB");
-        }
-
-        _dbHelper.close();
-
-        return getTheSettings();
+        return updateSettingsAndReturnUpdatedRecord(values);
     }
 
-    synchronized ESSettings setSettings(double locationBubbleCenterLat, double locationBubbleCenterLong) {
-        SQLiteDatabase db = _dbHelper.getWritableDatabase();
-
+    synchronized ESSettings setSettingsLocationBubbleCenterCoordinates(double locationBubbleCenterLat, double locationBubbleCenterLong) {
         ContentValues values = new ContentValues();
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_CENTER_LAT,locationBubbleCenterLat);
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_CENTER_LONG,locationBubbleCenterLong);
-
-        int affectedCount = db.update(ESDatabaseContract.ESSettingsEntry.TABLE_NAME,values,null,null);
-        if (affectedCount <= 0) {
-            Log.e(LOG_TAG,"Settings update affected no records in the DB");
-        }
-        if (affectedCount > 1) {
-            Log.e(LOG_TAG,"Settings update affected more than one record in the DB");
-        }
-
-        _dbHelper.close();
-
-        return getTheSettings();
+        return updateSettingsAndReturnUpdatedRecord(values);
     }
 
-    synchronized ESSettings setSettings(Location locationBubbleCenter) {
+    synchronized ESSettings setSettingsLocationBubbleCenter(Location locationBubbleCenter) {
         double locationBubbleCenterLat = locationBubbleCenter == null ? LOCATION_BUBBLE_CENTER_LAT_DEFAULT : locationBubbleCenter.getLatitude();
         double locationBubbleCenterLong = locationBubbleCenter == null ? LOCATION_BUBBLE_CENTER_LONG_DEFAULT : locationBubbleCenter.getLongitude();
 
-        return setSettings(locationBubbleCenterLat,locationBubbleCenterLong);
+        return setSettingsLocationBubbleCenterCoordinates(locationBubbleCenterLat,locationBubbleCenterLong);
     }
 
     synchronized ESSettings setClassifierSettings(String classifierType,String classifierName) {
-        SQLiteDatabase db = _dbHelper.getWritableDatabase();
-
         ContentValues values = new ContentValues();
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_CLASSIFIER_TYPE,classifierType);
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_CLASSIFIER_NAME,classifierName);
+        return updateSettingsAndReturnUpdatedRecord(values);
+    }
 
+    synchronized ESSettings setRecordAudio(boolean recordAudio) {
+        ContentValues values = new ContentValues();
+        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_RECORD_AUDIO,recordAudio ? 1 : 0);
+
+        return updateSettingsAndReturnUpdatedRecord(values);
+    }
+
+    private synchronized ESSettings updateSettingsAndReturnUpdatedRecord(ContentValues values) {
+        SQLiteDatabase db = _dbHelper.getWritableDatabase();
         int affectedCount = db.update(ESDatabaseContract.ESSettingsEntry.TABLE_NAME,values,null,null);
         if (affectedCount <= 0) {
             Log.e(LOG_TAG,"Settings update affected no records in the DB");
@@ -355,6 +369,7 @@ public class ESDatabaseAccessor {
 
         return getTheSettings();
     }
+
 
     private String generateUUID() {
         return UUID.randomUUID().toString().toUpperCase();
@@ -389,8 +404,25 @@ public class ESDatabaseAccessor {
         String classifierType = cursor.getString(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_CLASSIFIER_TYPE));
         String classifierName = cursor.getString(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_CLASSIFIER_NAME));
 
-        return new ESSettings(uuid,maxStored,notificationInterval,numExamplesStoreBeforeSend,homeSensingUsed,allowCellular,locationBubbleUsed,locationBubbleCenter,classifierType,classifierName);
+        boolean recordAudio = cursor.getInt(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_RECORD_AUDIO)) > 0;
+        boolean recordLocation = cursor.getInt(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_RECORD_LOCATION)) > 0;
+        boolean recordWatch = cursor.getInt(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_RECORD_WATCH)) > 0;
+        String hfSensorsJson = cursor.getString(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_HF_SENSOR_TYPES_TO_RECORD_JSON));
+        int[] hfSensors = jsonArrayToIntArray(hfSensorsJson);
+        String lfSensorsJson = cursor.getString(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_LF_SENSOR_TYPES_TO_RECORD_JSON));
+        int[] lfSensors = jsonArrayToIntArray(lfSensorsJson);
+
+        return new ESSettings(uuid,maxStored,notificationInterval,numExamplesStoreBeforeSend,homeSensingUsed,allowCellular,
+                locationBubbleUsed,locationBubbleCenter,
+                classifierType,classifierName,
+                recordAudio,recordLocation,recordWatch,
+                hfSensors,lfSensors);
     }
+
+
+
+
+
 
     /**
      * The public data interface:

@@ -1,6 +1,5 @@
 package edu.ucsd.calab.extrasensory.data;
 
-import android.content.Context;
 import android.location.Location;
 import android.util.Log;
 
@@ -26,12 +25,19 @@ public class ESSettings {
     private Location _locationBubbleCenter;
     private String _classifierType;
     private String _classifierName;
+    private boolean _recordAudio;
+    private boolean _recordLocation;
+    private boolean _recordWatch;
+    private int[] _hfSensorTypesToRecord;
+    private int[] _lfSensorTypesToRecord;
 
     ESSettings(String uuid,int maxStoredExamples,int notificationIntervalInSeconds,
                int numExamplesStoreBeforeSend,
                boolean homeSensing,boolean allowCellular,
                boolean locationBubbleUsed, Location locationBubbleCenter,
-               String classifierType,String classifierName) {
+               String classifierType,String classifierName,
+               boolean recordAudio,boolean recordLocation,boolean recordWatch,
+               int[] hfSensorTypesToRecord,int[] lfSensorTypesToRecord) {
         _uuid = uuid;
         _maxStoredExamples = maxStoredExamples;
         _notificationIntervalInSeconds = notificationIntervalInSeconds;
@@ -42,6 +48,11 @@ public class ESSettings {
         _locationBubbleCenter = locationBubbleCenter;
         _classifierType = classifierType != null ? classifierType : "";
         _classifierName = classifierName != null ? classifierName : "";
+        _recordAudio = recordAudio;
+        _recordLocation = recordLocation;
+        _recordWatch = recordWatch;
+        _hfSensorTypesToRecord = hfSensorTypesToRecord != null ? hfSensorTypesToRecord : new int[0];
+        _lfSensorTypesToRecord = lfSensorTypesToRecord != null ? lfSensorTypesToRecord : new int[0];
     }
 
     private static ESSettings _settings = null;
@@ -131,12 +142,43 @@ public class ESSettings {
     public static String classifierName() { return getTheSettings()._classifierName; }
 
     /**
+     * Should the app (attempt to) record audio?
+     * @return
+     */
+    public static boolean shouldRecordAudio() { return  getTheSettings()._recordAudio; }
+
+    /**
+     * Should the app (attempt to) record location?
+     * @return
+     */
+    public static boolean shouldRecordLocation() { return  getTheSettings()._recordLocation; }
+
+    /**
+     * Should the app (attempt to) record from the watch?
+     * @return
+     */
+    public static boolean shouldRecordWatch() { return  getTheSettings()._recordWatch; }
+
+    /**
+     * What are the sensor types of the high-frequency sensors that the app should attempt to record?
+     * @return
+     */
+    public static int[] highFreqSensorTypesToRecord() { return  getTheSettings()._hfSensorTypesToRecord; }
+
+    /**
+     * What are the sensor types of the low-frequency sensors that the app should attempt to record?
+     * @return
+     */
+    public static int[] lowFreqSensorTypesToRecord() { return  getTheSettings()._lfSensorTypesToRecord; }
+
+
+    /**
      * Set the maximum allowed number of stored examples.
      *
      * @param maxStoredExamples The maximum allowed number of stored examples.
      */
     public static void setMaxStoredExamples(int maxStoredExamples) {
-        _settings = getTheDBAccessor().setSettings(maxStoredExamples,notificationIntervalInSeconds());
+        _settings = getTheDBAccessor().setSettingsMaxStoredExamples(maxStoredExamples);
     }
 
     /**
@@ -146,7 +188,7 @@ public class ESSettings {
      * @param notificationIntervalInSeconds The notification interval (in seconds)
      */
     public static void setNotificationIntervalInSeconds(int notificationIntervalInSeconds) {
-        _settings = getTheDBAccessor().setSettings(maxStoredExamples(),notificationIntervalInSeconds);
+        _settings = getTheDBAccessor().setSettingsNotificationInterval(notificationIntervalInSeconds);
         ((ESApplication)ESApplication.getTheAppContext()).checkShouldWeCollectDataAndManageAppropriately();
     }
 
@@ -155,7 +197,7 @@ public class ESSettings {
      * @param numExamplesStoreBeforeSend
      */
     public static void setNumExamplesStoreBeforeSend(int numExamplesStoreBeforeSend) {
-        _settings = getTheDBAccessor().setSettings(numExamplesStoreBeforeSend);
+        _settings = getTheDBAccessor().setSettingsNumExamplesStoredBeforeSend(numExamplesStoreBeforeSend);
     }
 
     /**
@@ -179,7 +221,7 @@ public class ESSettings {
      * @param useLocationBubble
      */
     public static void setLocationBubbleUsed(boolean useLocationBubble) {
-        _settings = getTheDBAccessor().setSettings(useLocationBubble);
+        _settings = getTheDBAccessor().setSettingsUseLocationBubble(useLocationBubble);
     }
 
     /**
@@ -188,7 +230,7 @@ public class ESSettings {
      * @param locationBubbleCenterLong The longitude coordinate
      */
     public static void setLocationBubbleCenter(double locationBubbleCenterLat, double locationBubbleCenterLong) {
-        _settings = getTheDBAccessor().setSettings(locationBubbleCenterLat,locationBubbleCenterLong);
+        _settings = getTheDBAccessor().setSettingsLocationBubbleCenterCoordinates(locationBubbleCenterLat,locationBubbleCenterLong);
         Log.i(LOG_TAG,String.format("Changed location bubble center to: <lat=%f,long=%f>",locationBubbleCenterLat,locationBubbleCenterLong));
     }
 
@@ -197,7 +239,7 @@ public class ESSettings {
      * @param locationBubbleCenter
      */
     public static void setLocationBubbleCenter(Location locationBubbleCenter) {
-        _settings = getTheDBAccessor().setSettings(locationBubbleCenter);
+        _settings = getTheDBAccessor().setSettingsLocationBubbleCenter(locationBubbleCenter);
     }
 
     /**
