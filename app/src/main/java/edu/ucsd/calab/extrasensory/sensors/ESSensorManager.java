@@ -372,26 +372,39 @@ public class ESSensorManager
         /////////////////////////
 
         // Start recording location:
-        int googleServicesResult = GooglePlayServicesUtil.isGooglePlayServicesAvailable(ESApplication.getTheAppContext());
-        if (googleServicesResult == ConnectionResult.SUCCESS) {
-            Log.i(LOG_TAG, "We have google play services");
-            _googleApiClient.connect();
+        if (ESSettings.shouldRecordLocation()) {
+            int googleServicesResult = GooglePlayServicesUtil.isGooglePlayServicesAvailable(ESApplication.getTheAppContext());
+            if (googleServicesResult == ConnectionResult.SUCCESS) {
+                Log.i(LOG_TAG, "We have google play services");
+                _googleApiClient.connect();
+            } else {
+                Log.i(LOG_TAG, "We don't have required google play services, so not using location services.");
+            }
         }
         else {
-            Log.i(LOG_TAG,"We don't have required google play services, so not using location services.");
+            Log.d(LOG_TAG,"As requested: not recording location.");
         }
 
         // Start recording audio:
-        try {
-            _audioProcessor.startRecordingSession();
+        if (ESSettings.shouldRecordAudio()) {
+            try {
+                _audioProcessor.startRecordingSession();
+            } catch (Exception exception) {
+                Log.e(LOG_TAG, "Failed to start audio recording session: " + exception.getMessage());
+            }
         }
-        catch (Exception exception) {
-            Log.e(LOG_TAG,"Failed to start audio recording session: " + exception.getMessage());
+        else {
+            Log.d(LOG_TAG,"As requested: not recording audio.");
         }
 
         // Start recording watch:
-        if (_watchProcessor.isWatchConnected()) {
-            _watchProcessor.startWatchCollection();
+        if (ESSettings.shouldRecordWatch()) {
+            if (_watchProcessor.isWatchConnected()) {
+                _watchProcessor.startWatchCollection();
+            }
+        }
+        else {
+            Log.d(LOG_TAG,"As requested: not recording from the watch.");
         }
 
         // Start recording hi-frequency sensors:
