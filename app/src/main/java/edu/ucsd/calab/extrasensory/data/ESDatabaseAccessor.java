@@ -42,11 +42,17 @@ public class ESDatabaseAccessor {
     private static final int MAX_STORED_EXAMPLES_DEFAULT = 600;
     private static final int NOTIFICATION_INTERVAL_DEFAULT = 600;
     private static final int NUM_EXAMPLES_STORE_BEFORE_SEND_DEFAULT = 0;
+    private static final int HOME_SENSING_DEFAULT = 0;
+    private static final int USE_CELLULAR_DATA_DEFAULT = 0;
+    private static final int USE_LOCATION_BUBBLE_DEFAULT = 0;
     private static final double LOCATION_BUBBLE_CENTER_LONG_DEFAULT = 0.0;
     private static final double LOCATION_BUBBLE_CENTER_LAT_DEFAULT = 0.0;
     private static final String LOCATION_BUBBLE_LOCATION_PROVIDER = "BubbleCenter";
     private static final String CLASSIFIER_TYPE_DEFAULT = "es_mlp";
     private static final String CLASSIFIER_NAME_DEFAULT = "es6sensors";
+    private static final int RECORD_AUDIO_DEFAULT = 1;
+    private static final int RECORD_LOCATION_DEFAULT = 1;
+    private static final int RECORD_WATCH_DEFAULT = 0;
 
     private static int[] defaultHFSensorsToRecordJSONString() {
         int[] highFreqSensorTypesToRecordDefault = new int[]{
@@ -202,16 +208,16 @@ public class ESDatabaseAccessor {
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_MAX_STORED_EXAMPLES, MAX_STORED_EXAMPLES_DEFAULT);
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_NOTIFICATION_INTERVAL_SECONDS,NOTIFICATION_INTERVAL_DEFAULT);
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_NUM_EXAMPLES_STORE_BEFORE_SEND,NUM_EXAMPLES_STORE_BEFORE_SEND_DEFAULT);
-        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_HOME_SENSING,0);
-        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_ALLOW_CELLULAR,0);
-        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_USED,0);
+        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_HOME_SENSING,HOME_SENSING_DEFAULT);
+        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_ALLOW_CELLULAR,USE_CELLULAR_DATA_DEFAULT);
+        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_USED,USE_LOCATION_BUBBLE_DEFAULT);
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_CENTER_LAT,LOCATION_BUBBLE_CENTER_LAT_DEFAULT);
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_CENTER_LONG,LOCATION_BUBBLE_CENTER_LONG_DEFAULT);
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_CLASSIFIER_TYPE,CLASSIFIER_TYPE_DEFAULT);
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_CLASSIFIER_NAME,CLASSIFIER_NAME_DEFAULT);
-        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_RECORD_AUDIO,0);
-        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_RECORD_LOCATION,0);
-        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_RECORD_WATCH,0);
+        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_RECORD_AUDIO,RECORD_AUDIO_DEFAULT);
+        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_RECORD_LOCATION,RECORD_LOCATION_DEFAULT);
+        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_RECORD_WATCH,RECORD_WATCH_DEFAULT);
         int[] defaultHFSensors = defaultHFSensorsToRecordJSONString();
         int[] defaultLFSensors = defaultLFSensorsToRecordJSONString();
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_HF_SENSOR_TYPES_TO_RECORD_JSON,intArrayToJsonStr(defaultHFSensors));

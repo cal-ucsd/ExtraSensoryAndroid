@@ -61,5 +61,9 @@
     <string name="classifier_settings_header">Classifier selection:</string>
     <string name="classifier_settings_off">keep</string>
     <string name="classifier_settings_on">edit</string>
+    <string name="record_audio_label">Audio</string>
+    <string name="should_we_record_label">Sensor-measurements to record:</string>
+    <string name="record_location_label">Location</string>
+    <string name="record_watch_label">Watch (acceleration and compass)</string>
 
 </resources>

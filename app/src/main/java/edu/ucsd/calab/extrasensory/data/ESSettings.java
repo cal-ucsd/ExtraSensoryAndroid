@@ -252,6 +252,30 @@ public class ESSettings {
         _settings = getTheDBAccessor().setClassifierSettings(classifierType,classifierName);
     }
 
+    /**
+     * Set should the app record audio
+     * @param shouldRecordAudio
+     */
+    public static void setShouldRecordAudio(boolean shouldRecordAudio) {
+        _settings = getTheDBAccessor().setRecordAudio(shouldRecordAudio);
+    }
+
+    /**
+     * Set should the app record location
+     * @param shouldRecordLocation
+     */
+    public static void setShouldRecordLocation(boolean shouldRecordLocation) {
+        _settings = getTheDBAccessor().setRecordLocation(shouldRecordLocation);
+    }
+
+    /**
+     * Set should the app record from the watch
+     * @param shouldRecordWatch
+     */
+    public static void setShouldRecordWatch(boolean shouldRecordWatch) {
+        _settings = getTheDBAccessor().setRecordWatch(shouldRecordWatch);
+    }
+
     private static ESDatabaseAccessor getTheDBAccessor() {
         return ESDatabaseAccessor.getESDatabaseAccessor();
     }

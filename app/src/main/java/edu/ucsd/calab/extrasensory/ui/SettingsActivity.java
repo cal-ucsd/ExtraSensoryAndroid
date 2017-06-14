@@ -9,6 +9,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.RadioGroup;
 import android.widget.SeekBar;
@@ -217,15 +219,13 @@ public class SettingsActivity extends BaseActivity {
         classifierTypeEdit.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
-                // Update the classifier type:
-//                ESSettings.setClassifierSettings(classifierTypeEdit.getText().toString(),ESSettings.classifierName());
+                // Do nothing
             }
         });
         classifierNameEdit.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
-                // Update the classifier name:
-//                ESSettings.setClassifierSettings(ESSettings.classifierType(),classifierNameEdit.getText().toString());
+                // Do nothing
             }
         });
         updateClassifierButton.setOnClickListener(new View.OnClickListener() {
@@ -235,6 +235,7 @@ public class SettingsActivity extends BaseActivity {
                 ESSettings.setClassifierSettings(classifierTypeEdit.getText().toString(),classifierNameEdit.getText().toString());
             }
         });
+
 
         setDisplayedContent();
     }
@@ -335,7 +336,15 @@ public class SettingsActivity extends BaseActivity {
         classifierNameEdit.setEnabled(false);
         updateClassifierButton.setEnabled(false);
 
+        // Which sensors to use:
+        CheckBox recordAudioCheckBox = (CheckBox)findViewById(R.id.checkbox_record_audio);
+        recordAudioCheckBox.setChecked(ESSettings.shouldRecordAudio());
 
+        CheckBox recordLocationCheckBox = (CheckBox)findViewById(R.id.checkbox_record_location);
+        recordLocationCheckBox.setChecked(ESSettings.shouldRecordLocation());
+
+        CheckBox recordWatchCheckBox = (CheckBox)findViewById(R.id.checkbox_record_watch);
+        recordWatchCheckBox.setChecked(ESSettings.shouldRecordWatch());
     }
 
     private void displayNotificationIntervalValue(int intervalMinutes) {
@@ -383,5 +392,25 @@ public class SettingsActivity extends BaseActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    void onCheckboxClicked(View view) {
+        // Is the view now checked?
+        boolean checked = ((CheckBox) view).isChecked();
+
+        // Check which checkbox was clicked
+        switch (view.getId()) {
+            case R.id.checkbox_record_audio:
+                ESSettings.setShouldRecordAudio(checked);
+                break;
+            case R.id.checkbox_record_location:
+                ESSettings.setShouldRecordLocation(checked);
+                break;
+            case R.id.checkbox_record_watch:
+                ESSettings.setShouldRecordWatch(checked);
+                break;
+            default:
+                Log.e(LOG_TAG,"onCheckboxClicked was called with unsupported view: " + view.toString());
+         }
     }
 }
