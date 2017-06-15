@@ -65,5 +65,7 @@
     <string name="should_we_record_label">Sensor-measurements to record:</string>
     <string name="record_location_label">Location</string>
     <string name="record_watch_label">Watch (acceleration and compass)</string>
+    <string name="high_freq_sensors_label">High frequency (40Hz):</string>
+    <string name="low_freq_sensors_label">Low frequency (once per minute):</string>
 
 </resources>

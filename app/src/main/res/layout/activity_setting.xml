@@ -250,7 +250,7 @@
 
             <View
                 android:layout_width="fill_parent"
-                android:layout_height="1dp"
+                android:layout_height="5dp"
                 android:background="@android:color/darker_gray"/>
 
             <TextView
@@ -374,8 +374,21 @@
             </LinearLayout>
 
 
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/high_freq_sensors_label"/>
             <ListView
                 android:id="@+id/listview_hf_sensors"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="10"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/low_freq_sensors_label"/>
+            <ListView
+                android:id="@+id/listview_lf_sensors"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="10"/>

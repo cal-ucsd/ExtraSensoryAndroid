@@ -1,18 +1,14 @@
 package edu.ucsd.calab.extrasensory.ui;
 
 import android.content.Context;
-import android.hardware.Sensor;
 import android.location.Location;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -25,9 +21,7 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import java.util.ArrayList;
-import java.util.Map;
 
-import edu.ucsd.calab.extrasensory.ESApplication;
 import edu.ucsd.calab.extrasensory.R;
 import edu.ucsd.calab.extrasensory.data.ESSettings;
 import edu.ucsd.calab.extrasensory.network.ESNetworkAccessor;
@@ -359,22 +353,34 @@ public class SettingsActivity extends BaseActivity {
         CheckBox recordWatchCheckBox = (CheckBox)findViewById(R.id.checkbox_record_watch);
         recordWatchCheckBox.setChecked(ESSettings.shouldRecordWatch());
 
-        displayHighFreqSensors();
+        displaySensorsChecks(true);
+        displaySensorsChecks(false);
     }
 
-    private void displayHighFreqSensors() {
+    private void displaySensorsChecks(boolean hf1lf0) {
 
-        ArrayList<Integer> registeredHFSensorTypes = ESSensorManager.getESSensorManager().getRegisteredHighFreqSensorTypes();
-        ArrayList<Integer> hfSensorTypesToRecord = ESSettings.highFreqSensorTypesToRecord();
+        ArrayList<Integer> registeredSensorTypes;
+        ArrayList<Integer> sensorTypesToRecord;
+        int listviewID;
+        if (hf1lf0) {
+            registeredSensorTypes = ESSensorManager.getESSensorManager().getRegisteredHighFreqSensorTypes();
+            sensorTypesToRecord = ESSettings.highFreqSensorTypesToRecord();
+            listviewID = R.id.listview_hf_sensors;
+        }
+        else {
+            registeredSensorTypes = ESSensorManager.getESSensorManager().getRegisteredLowFreqSensorTypes();
+            sensorTypesToRecord = ESSettings.lowFreqSensorTypesToRecord();
+            listviewID = R.id.listview_lf_sensors;
+        }
 
-        Log.d(LOG_TAG,"==== registered hf sensor types: " + registeredHFSensorTypes);
         SensorCheckAdapter adapter = new SensorCheckAdapter(
                 getBaseContext(),
-                true,registeredHFSensorTypes,hfSensorTypesToRecord);
-        ListView listView = (ListView)findViewById(R.id.listview_hf_sensors);
+                hf1lf0,registeredSensorTypes,sensorTypesToRecord);
+        ListView listView = (ListView)findViewById(listviewID);
         listView.setAdapter(adapter);
         setListViewHeightBasedOnChildren(listView);
     }
+
 
     public static void setListViewHeightBasedOnChildren(ListView listView) {
         ListAdapter listAdapter = listView.getAdapter();
