@@ -54,22 +54,20 @@ public class ESDatabaseAccessor {
     private static final int RECORD_LOCATION_DEFAULT = 1;
     private static final int RECORD_WATCH_DEFAULT = 0;
 
-    private static int[] defaultHFSensorsToRecordJSONString() {
-        int[] highFreqSensorTypesToRecordDefault = new int[]{
-                Sensor.TYPE_ACCELEROMETER,
-                Sensor.TYPE_GYROSCOPE,
-        };
+    private static ArrayList<Integer> defaultHFSensorsToRecordJSONString() {
+        ArrayList<Integer> highFreqSensorTypesToRecordDefault = new ArrayList<>(2);
+        highFreqSensorTypesToRecordDefault.add(Sensor.TYPE_ACCELEROMETER);
+        highFreqSensorTypesToRecordDefault.add(Sensor.TYPE_GYROSCOPE);
         return highFreqSensorTypesToRecordDefault;
     }
 
-    private static int[] defaultLFSensorsToRecordJSONString() {
-        int [] lowFreqSensorTypesToRecordDefault = new int[] {
-                Sensor.TYPE_AMBIENT_TEMPERATURE,
-                Sensor.TYPE_LIGHT,
-                Sensor.TYPE_PRESSURE,
-                Sensor.TYPE_PROXIMITY,
-                Sensor.TYPE_RELATIVE_HUMIDITY
-        };
+    private static ArrayList<Integer> defaultLFSensorsToRecordJSONString() {
+        ArrayList<Integer> lowFreqSensorTypesToRecordDefault = new ArrayList<>(10);
+        lowFreqSensorTypesToRecordDefault.add(Sensor.TYPE_AMBIENT_TEMPERATURE);
+        lowFreqSensorTypesToRecordDefault.add(Sensor.TYPE_LIGHT);
+        lowFreqSensorTypesToRecordDefault.add(Sensor.TYPE_PRESSURE);
+        lowFreqSensorTypesToRecordDefault.add(Sensor.TYPE_PROXIMITY);
+        lowFreqSensorTypesToRecordDefault.add(Sensor.TYPE_RELATIVE_HUMIDITY);
         return lowFreqSensorTypesToRecordDefault;
     }
 
@@ -166,29 +164,29 @@ public class ESDatabaseAccessor {
 
     // Settings:
 
-    private static String intArrayToJsonStr(int[] numbers) {
+    private static String intArrayToJsonStr(ArrayList<Integer> numbers) {
         if (numbers == null) {
-            numbers = new int[0];
+            numbers = new ArrayList<>();
         }
 
         JSONArray jsonArray = new JSONArray();
-        for (int i = 0; i < numbers.length; i ++) {
-            jsonArray.put(numbers[i]);
+        for (int i = 0; i < numbers.size(); i ++) {
+            jsonArray.put(numbers.get(i).intValue());
         }
         return jsonArray.toString();
     }
 
-    private static int[] jsonArrayToIntArray(String jsonStr) {
+    private static ArrayList<Integer> jsonArrayToIntArray(String jsonStr) {
         try {
             JSONArray jsonArray = new JSONArray(jsonStr);
-            int[] numbers = new int[jsonArray.length()];
+            ArrayList<Integer> numbers = new ArrayList<>(jsonArray.length());
             for (int i = 0; i < jsonArray.length(); i ++) {
-                numbers[i] = jsonArray.getInt(i);
+                numbers.add(jsonArray.getInt(i));
             }
             return numbers;
         } catch (JSONException e) {
             Log.e(LOG_TAG,"Failed to parse JSON as array of integers: " + jsonStr);
-            return new int[0];
+            return new ArrayList<>();
         }
     }
 
@@ -218,8 +216,8 @@ public class ESDatabaseAccessor {
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_RECORD_AUDIO,RECORD_AUDIO_DEFAULT);
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_RECORD_LOCATION,RECORD_LOCATION_DEFAULT);
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_RECORD_WATCH,RECORD_WATCH_DEFAULT);
-        int[] defaultHFSensors = defaultHFSensorsToRecordJSONString();
-        int[] defaultLFSensors = defaultLFSensorsToRecordJSONString();
+        ArrayList<Integer> defaultHFSensors = defaultHFSensorsToRecordJSONString();
+        ArrayList<Integer> defaultLFSensors = defaultLFSensorsToRecordJSONString();
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_HF_SENSOR_TYPES_TO_RECORD_JSON,intArrayToJsonStr(defaultHFSensors));
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_LF_SENSOR_TYPES_TO_RECORD_JSON,intArrayToJsonStr(defaultLFSensors));
 
@@ -372,14 +370,14 @@ public class ESDatabaseAccessor {
         return updateSettingsAndReturnUpdatedRecord(values);
     }
 
-    synchronized ESSettings setHighFreqSensorsToRecord(int[] hfSensorTypesToRecord) {
+    synchronized ESSettings setHighFreqSensorsToRecord(ArrayList<Integer> hfSensorTypesToRecord) {
         ContentValues values = new ContentValues();
         String hfSensorsJson = intArrayToJsonStr(hfSensorTypesToRecord);
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_HF_SENSOR_TYPES_TO_RECORD_JSON,hfSensorsJson);
         return updateSettingsAndReturnUpdatedRecord(values);
     }
 
-    synchronized ESSettings setLowFreqSensorsToRecord(int[] lfSensorTypesToRecord) {
+    synchronized ESSettings setLowFreqSensorsToRecord(ArrayList<Integer> lfSensorTypesToRecord) {
         ContentValues values = new ContentValues();
         String lfSensorsJson = intArrayToJsonStr(lfSensorTypesToRecord);
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_LF_SENSOR_TYPES_TO_RECORD_JSON,lfSensorsJson);
@@ -439,9 +437,9 @@ public class ESDatabaseAccessor {
         boolean recordLocation = cursor.getInt(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_RECORD_LOCATION)) > 0;
         boolean recordWatch = cursor.getInt(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_RECORD_WATCH)) > 0;
         String hfSensorsJson = cursor.getString(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_HF_SENSOR_TYPES_TO_RECORD_JSON));
-        int[] hfSensors = jsonArrayToIntArray(hfSensorsJson);
+        ArrayList<Integer> hfSensors = jsonArrayToIntArray(hfSensorsJson);
         String lfSensorsJson = cursor.getString(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_LF_SENSOR_TYPES_TO_RECORD_JSON));
-        int[] lfSensors = jsonArrayToIntArray(lfSensorsJson);
+        ArrayList<Integer> lfSensors = jsonArrayToIntArray(lfSensorsJson);
 
         return new ESSettings(uuid,maxStored,notificationInterval,numExamplesStoreBeforeSend,homeSensingUsed,allowCellular,
                 locationBubbleUsed,locationBubbleCenter,

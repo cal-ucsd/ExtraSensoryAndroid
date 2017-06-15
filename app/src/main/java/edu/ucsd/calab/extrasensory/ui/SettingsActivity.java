@@ -521,11 +521,27 @@ public class SettingsActivity extends BaseActivity {
             }
             CheckBox checkBox = (CheckBox)row.findViewById(R.id.checkbox_should_record_sensor);
 
-            int sensorType = _registeredSensors.get(position).intValue();
+            Integer sensorTypeInteger = _registeredSensors.get(position);
+            int sensorType = sensorTypeInteger.intValue();
             String sensorNiceName = ESSensorManager.getESSensorManager().getSensorNiceName(sensorType);
             checkBox.setText(sensorNiceName);
+            checkBox.setTag(sensorTypeInteger);
             boolean shouldRecord = _sensorsToRecord.contains(new Integer(sensorType));
             checkBox.setChecked(shouldRecord);
+
+            checkBox.setOnCheckedChangeListener(new CheckBox.OnCheckedChangeListener() {
+                /**
+                 * Called when the checked state of a compound button has changed.
+                 *
+                 * @param buttonView The compound button view whose state has changed.
+                 * @param isChecked  The new checked state of buttonView.
+                 */
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    Integer sensorTypeInteger = (Integer)buttonView.getTag();
+                    ESSettings.setShouldRecordSensor(sensorTypeInteger,isChecked,_hf1lf0);
+                }
+            });
             return row;
         }
 

@@ -31,8 +31,8 @@ public class ESSettings {
     private boolean _recordAudio;
     private boolean _recordLocation;
     private boolean _recordWatch;
-    private int[] _hfSensorTypesToRecord;
-    private int[] _lfSensorTypesToRecord;
+    private ArrayList<Integer> _hfSensorTypesToRecord;
+    private ArrayList<Integer> _lfSensorTypesToRecord;
 
     ESSettings(String uuid,int maxStoredExamples,int notificationIntervalInSeconds,
                int numExamplesStoreBeforeSend,
@@ -40,7 +40,7 @@ public class ESSettings {
                boolean locationBubbleUsed, Location locationBubbleCenter,
                String classifierType,String classifierName,
                boolean recordAudio,boolean recordLocation,boolean recordWatch,
-               int[] hfSensorTypesToRecord,int[] lfSensorTypesToRecord) {
+               ArrayList<Integer> hfSensorTypesToRecord,ArrayList<Integer> lfSensorTypesToRecord) {
         _uuid = uuid;
         _maxStoredExamples = maxStoredExamples;
         _notificationIntervalInSeconds = notificationIntervalInSeconds;
@@ -54,8 +54,8 @@ public class ESSettings {
         _recordAudio = recordAudio;
         _recordLocation = recordLocation;
         _recordWatch = recordWatch;
-        _hfSensorTypesToRecord = hfSensorTypesToRecord != null ? hfSensorTypesToRecord : new int[0];
-        _lfSensorTypesToRecord = lfSensorTypesToRecord != null ? lfSensorTypesToRecord : new int[0];
+        _hfSensorTypesToRecord = hfSensorTypesToRecord != null ? hfSensorTypesToRecord : new ArrayList<Integer>();
+        _lfSensorTypesToRecord = lfSensorTypesToRecord != null ? lfSensorTypesToRecord : new ArrayList<Integer>();
     }
 
     private static ESSettings _settings = null;
@@ -166,20 +166,13 @@ public class ESSettings {
      * What are the sensor types of the high-frequency sensors that the app should attempt to record?
      * @return
      */
-    public static ArrayList<Integer> highFreqSensorTypesToRecord() {
-        int[] hfSensorsTypes = getTheSettings()._hfSensorTypesToRecord;
-        ArrayList<Integer> hfSensorList = new ArrayList<>(10);
-        for (int sensorType : hfSensorsTypes) {
-            hfSensorList.add(new Integer(sensorType));
-        }
-        return hfSensorList;
-    }
+    public static ArrayList<Integer> highFreqSensorTypesToRecord() { return getTheSettings()._hfSensorTypesToRecord; }
 
     /**
      * What are the sensor types of the low-frequency sensors that the app should attempt to record?
      * @return
      */
-    public static int[] lowFreqSensorTypesToRecord() { return  getTheSettings()._lfSensorTypesToRecord; }
+    public static ArrayList<Integer> lowFreqSensorTypesToRecord() { return  getTheSettings()._lfSensorTypesToRecord; }
 
 
     /**
@@ -286,6 +279,27 @@ public class ESSettings {
         _settings = getTheDBAccessor().setRecordWatch(shouldRecordWatch);
     }
 
+    public static void setShouldRecordSensor(Integer sensorTypeInteger,boolean shouldRecord,boolean hf1lf0) {
+        // Get the current list of sensors to record:
+        ArrayList<Integer> sensorsToRecord = hf1lf0 ? highFreqSensorTypesToRecord() : lowFreqSensorTypesToRecord();
+        boolean sensorAlreadyInList = sensorsToRecord.contains(sensorTypeInteger);
+
+        // Make necessary changes, if needed:
+        if (shouldRecord && !sensorAlreadyInList) {
+            sensorsToRecord.add(sensorTypeInteger);
+        }
+        if (!shouldRecord && sensorAlreadyInList) {
+            sensorsToRecord.remove(sensorTypeInteger);
+        }
+
+        // Update the new list:
+        if (hf1lf0) {
+            _settings = getTheDBAccessor().setHighFreqSensorsToRecord(sensorsToRecord);
+        }
+        else {
+            _settings = getTheDBAccessor().setLowFreqSensorsToRecord(sensorsToRecord);
+        }
+    }
 
 
     private static ESDatabaseAccessor getTheDBAccessor() {
