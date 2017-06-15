@@ -481,12 +481,10 @@ public class SettingsActivity extends BaseActivity {
             this._registeredSensors = registeredSensors;
             this._sensorsToRecord = sensorsToRecord;
             _inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            Log.d(LOG_TAG,"=== in adapter constructor. got registered sensors: " + registeredSensors);
         }
 
         @Override
         public int getCount() {
-            Log.d(LOG_TAG,"=== in getcount. returning: " + _registeredSensors.size());
             return _registeredSensors.size();
         }
 
@@ -499,7 +497,6 @@ public class SettingsActivity extends BaseActivity {
          */
         @Override
         public Object getItem(int position) {
-            Log.d(LOG_TAG,"=== in getItem pos: " + position + ". returning: " + _registeredSensors.get(position));
             return _registeredSensors.get(position);
         }
 
@@ -511,13 +508,11 @@ public class SettingsActivity extends BaseActivity {
          */
         @Override
         public long getItemId(int position) {
-            Log.d(LOG_TAG,"=== in getitem id: " + position);
             return (long)(_registeredSensors.get(position).intValue());
         }
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-            Log.d(LOG_TAG,"=== in get view from pos: " + position);
             View row;
             if (convertView != null) {
                 row = convertView;

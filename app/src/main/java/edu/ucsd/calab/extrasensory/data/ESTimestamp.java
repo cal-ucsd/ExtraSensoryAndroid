@@ -137,7 +137,7 @@ public class ESTimestamp {
      * @param minusTime The timestamp to subtract from this ESTimestamp
      * @return
      */
-    int differenceInSeconds(ESTimestamp minusTime) {
+    public int differenceInSeconds(ESTimestamp minusTime) {
         if (minusTime == null) {
             String msg = "null ESTimestamp given as argument.";
             Log.e(LOG_TAG,msg);

@@ -76,6 +76,7 @@ public class ESSensorManager
     private static final long LOCATION_FASTEST_UPDATE_INTERVAL_MILLIS = 50;
     private static final float LOCATION_BUBBLE_RADIUS_METERS = 500.0f;
     private static final String HIGH_FREQ_DATA_FILENAME = "HF_DUR_DATA.txt";
+    private static final int MAX_TIME_RECORDING_IN_SECONDS = 30;
 
     // Raw motion sensors:
     private static final String RAW_ACC_X = "raw_acc_x";
@@ -226,6 +227,29 @@ public class ESSensorManager
         }
     }
 
+    private static String getSensorLeadingMeasurementKey(int sensorType) {
+        switch (sensorType) {
+            case Sensor.TYPE_ACCELEROMETER:
+                return RAW_ACC_X;
+            case Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED:
+                return RAW_MAGNET_X;
+            case Sensor.TYPE_GYROSCOPE_UNCALIBRATED:
+                return RAW_GYRO_X;
+            case Sensor.TYPE_GRAVITY:
+                return PROC_GRAV_X;
+            case Sensor.TYPE_LINEAR_ACCELERATION:
+                return PROC_ACC_X;
+            case Sensor.TYPE_MAGNETIC_FIELD:
+                return PROC_MAGNET_X;
+            case Sensor.TYPE_GYROSCOPE:
+                return PROC_GYRO_X;
+            case Sensor.TYPE_ROTATION_VECTOR:
+                return PROC_ROTATION_X;
+            default:
+                throw new UnknownError("Requested measurement key for unknown sensor, with type: " + sensorType + " with name: " + getESSensorManager().getSensorNiceName(sensorType));
+        }
+    }
+
     /**
      * Get the single instance of this class
      * @return
@@ -329,16 +353,8 @@ public class ESSensorManager
         tryToAddSensor(Sensor.TYPE_PROXIMITY,false,"proximity",PROXIMITY);
         tryToAddSensor(Sensor.TYPE_RELATIVE_HUMIDITY,false,"relative humidity",HUMIDITY);
 
-        // Prepare a list of sensors that we expect to get enough samples from:
-        _sensorKeysThatShouldGetEnoughSamples = new ArrayList<>(10);
-        for (String sensorName : _hiFreqSensorFeatureKeys) {
-            if (sensorName.equals(RAW_ACC_X)) {
-                _sensorKeysThatShouldGetEnoughSamples.add(sensorName);
-            }
-//            if (!sensorName.equals(PROC_ROTATION_X)) {
-//                _sensorKeysThatShouldGetEnoughSamples.add(sensorName);
-//            }
-        }
+        // This list can be prepared at every recording session, according to the sensors that should be recorded
+
         Log.v(LOG_TAG, "An instance of ESSensorManager was created.");
     }
 
@@ -440,13 +456,27 @@ public class ESSensorManager
         }
 
         // Start recording hi-frequency sensors:
+        ArrayList<Integer> hfSensorTypesToRecord = ESSettings.highFreqSensorTypesToRecord();
+        prepareListOfMeasurementsShouldGetEnoughSamples(hfSensorTypesToRecord);
         for (Sensor sensor : _hiFreqSensors) {
-            _sensorManager.registerListener(this,sensor,SAMPLE_PERIOD_MICROSECONDS);
+            if (hfSensorTypesToRecord.contains(new Integer(sensor.getType()))) {
+                _sensorManager.registerListener(this, sensor, SAMPLE_PERIOD_MICROSECONDS);
+                Log.d(LOG_TAG,"== Registring for recording HF sensor: " + getSensorNiceName(sensor.getType()));
+            }
+            else {
+                Log.d(LOG_TAG,"As requested: not recording HF sensor: " + getSensorNiceName(sensor.getType()));
+            }
         }
 
         // Start low-frequency sensors:
+        ArrayList<Integer> lfSensorTypesToRecord = ESSettings.lowFreqSensorTypesToRecord();
         for (Sensor sensor : _lowFreqSensors) {
-            _sensorManager.registerListener(this,sensor,LOW_FREQ_SAMPLE_PERIOD_MICROSECONDS);
+            if (lfSensorTypesToRecord.contains(new Integer(sensor.getType()))) {
+                _sensorManager.registerListener(this, sensor, LOW_FREQ_SAMPLE_PERIOD_MICROSECONDS);
+            }
+            else {
+                Log.d(LOG_TAG,"As requested: not recording LF sensor: " + getSensorNiceName(sensor.getType()));
+            }
         }
 
         // Get phone-state measurements:
@@ -454,6 +484,40 @@ public class ESSensorManager
 
         // Maybe the session is already done:
         finishSessionIfReady();
+    }
+
+    private void prepareListOfMeasurementsShouldGetEnoughSamples(ArrayList<Integer> hfSensorTypesToRecord) {
+        _sensorKeysThatShouldGetEnoughSamples = new ArrayList<>(10);
+        // In case there are no high frequency sensors to record,
+        // we shouldn't wait for any measurement-key to fill up with enough samples.
+        if (hfSensorTypesToRecord.size() <= 0) {
+            return;
+        }
+
+        // Otherwise, let's use the policy of having a single leading sensor (or several) that will determine when to stop the recording
+        // (whenever that sensor contributed enough samples for its leading measurement key).
+        // It is possible that accelerometer will reach the desired number of samples (e.g. 800) while gyroscope
+        // will only reach 600 samples. This is because the sensor-sampling systems of Android are not aligned
+        // among the sensors, and the sampling rates are not completely stable.
+        Integer[] leadingSensorPriority = new Integer[]{
+                Sensor.TYPE_ACCELEROMETER,Sensor.TYPE_LINEAR_ACCELERATION,Sensor.TYPE_GRAVITY,
+                Sensor.TYPE_MAGNETIC_FIELD,Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED
+        };
+        // Avoiding wating for sensors that tend to be slow samplers, like gyroscope.
+        for (Integer sensorTypeInteger : leadingSensorPriority) {
+            if (hfSensorTypesToRecord.contains(sensorTypeInteger)) {
+                // Then mark this single sensor as the one to wait for to get enough samples:
+                Log.d(LOG_TAG,"Marking the leading sensor (the one from which we'll wait to get enough measurements): " + getSensorNiceName(sensorTypeInteger));
+                _sensorKeysThatShouldGetEnoughSamples.add(getSensorLeadingMeasurementKey(sensorTypeInteger));
+                return;
+            }
+        }
+        // If we reached here, we have a risk:
+        // all the high frequency sensors to be recorded are those that we do not trust to sample quickly enough to reach
+        // the full number of samples. This can result in a situation where it will take more than a minute
+        // before the sensor gets enough samples, and then the new recording session will begin.
+        // To avoid this problem, we add an additional max-time-based mechanism to determain when to stop recording.
+        Log.w(LOG_TAG,"!!! We have no sensor to tell us when to stop recording.");
     }
 
     private void simulateRecordingSession() {
@@ -557,7 +621,8 @@ public class ESSensorManager
 
         _highFreqData.get(key).add(measurement);
 
-        if (RAW_ACC_X.equals(key) && (_highFreqData.get(key).size() % 100) == 0) {
+        //if (RAW_ACC_X.equals(key) && (_highFreqData.get(key).size() % 100) == 0) {
+        if ((_highFreqData.get(key).size() % 100) == 0) {
             logCurrentSampleSize();
         }
 
@@ -580,6 +645,15 @@ public class ESSensorManager
         }
 
         Log.i(LOG_TAG,"Collected acc:" + accSize + ",magnet:" + magnetSize + ",gyro:" + gyroSize);
+    }
+
+    private void finishIfTooMuchTimeRecording() {
+        ESTimestamp now = new ESTimestamp();
+        int timeRecording = now.differenceInSeconds(_timestamp);
+        if (timeRecording >= MAX_TIME_RECORDING_IN_SECONDS) {
+            Log.d(LOG_TAG,"Finishing this recording because it is already too long, num seconds: " + timeRecording);
+            finishSession();
+        }
     }
 
     private void finishSessionIfReady() {
@@ -1011,11 +1085,12 @@ public class ESSensorManager
                     Log.e(LOG_TAG, "Got event from unsupported sensor with type " + event.sensor.getType());
             }
 
+            finishIfTooMuchTimeRecording();
             if (sensorCollectedEnough) {
                 // Then we've collected enough samples from accelerometer,
                 // and we can stop listening to it.
+                Log.d(LOG_TAG,"=========== unregistering sensor: " + event.sensor.getName());
                 _sensorManager.unregisterListener(this, event.sensor);
-                Log.d(LOG_TAG,"=========== unregistered sensor: " + event.sensor.getName());
                 finishSessionIfReady();
             }
 
