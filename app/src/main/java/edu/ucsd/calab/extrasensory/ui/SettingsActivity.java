@@ -1,24 +1,37 @@
 package edu.ucsd.calab.extrasensory.ui;
 
+import android.content.Context;
+import android.hardware.Sensor;
 import android.location.Location;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.ListAdapter;
+import android.widget.ListView;
 import android.widget.RadioGroup;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import java.util.ArrayList;
+import java.util.Map;
+
+import edu.ucsd.calab.extrasensory.ESApplication;
 import edu.ucsd.calab.extrasensory.R;
 import edu.ucsd.calab.extrasensory.data.ESSettings;
 import edu.ucsd.calab.extrasensory.network.ESNetworkAccessor;
+import edu.ucsd.calab.extrasensory.sensors.ESSensorManager;
 
 public class SettingsActivity extends BaseActivity {
 
@@ -345,6 +358,43 @@ public class SettingsActivity extends BaseActivity {
 
         CheckBox recordWatchCheckBox = (CheckBox)findViewById(R.id.checkbox_record_watch);
         recordWatchCheckBox.setChecked(ESSettings.shouldRecordWatch());
+
+        displayHighFreqSensors();
+    }
+
+    private void displayHighFreqSensors() {
+
+        ArrayList<Integer> registeredHFSensorTypes = ESSensorManager.getESSensorManager().getRegisteredHighFreqSensorTypes();
+        ArrayList<Integer> hfSensorTypesToRecord = ESSettings.highFreqSensorTypesToRecord();
+
+        Log.d(LOG_TAG,"==== registered hf sensor types: " + registeredHFSensorTypes);
+        SensorCheckAdapter adapter = new SensorCheckAdapter(
+                getBaseContext(),
+                true,registeredHFSensorTypes,hfSensorTypesToRecord);
+        ListView listView = (ListView)findViewById(R.id.listview_hf_sensors);
+        listView.setAdapter(adapter);
+        setListViewHeightBasedOnChildren(listView);
+    }
+
+    public static void setListViewHeightBasedOnChildren(ListView listView) {
+        ListAdapter listAdapter = listView.getAdapter();
+        if (listAdapter == null)
+            return;
+
+        int desiredWidth = View.MeasureSpec.makeMeasureSpec(listView.getWidth(), View.MeasureSpec.UNSPECIFIED);
+        int totalHeight = 0;
+        View view = null;
+        for (int i = 0; i < listAdapter.getCount(); i++) {
+            view = listAdapter.getView(i, view, listView);
+            if (i == 0)
+                view.setLayoutParams(new ViewGroup.LayoutParams(desiredWidth, ViewGroup.LayoutParams.WRAP_CONTENT));
+
+            view.measure(desiredWidth, View.MeasureSpec.UNSPECIFIED);
+            totalHeight += view.getMeasuredHeight();
+        }
+        ViewGroup.LayoutParams params = listView.getLayoutParams();
+        params.height = totalHeight + (listView.getDividerHeight() * (listAdapter.getCount() - 1));
+        listView.setLayoutParams(params);
     }
 
     private void displayNotificationIntervalValue(int intervalMinutes) {
@@ -412,5 +462,72 @@ public class SettingsActivity extends BaseActivity {
             default:
                 Log.e(LOG_TAG,"onCheckboxClicked was called with unsupported view: " + view.toString());
          }
+    }
+
+    private static class SensorCheckAdapter extends BaseAdapter {
+        private boolean _hf1lf0;
+        private ArrayList<Integer> _registeredSensors;
+        private ArrayList<Integer> _sensorsToRecord;
+        private LayoutInflater _inflater;
+
+        public SensorCheckAdapter(Context context,boolean hf1lf0,ArrayList<Integer> registeredSensors,ArrayList<Integer> sensorsToRecord) {
+            this._hf1lf0 = hf1lf0;
+            this._registeredSensors = registeredSensors;
+            this._sensorsToRecord = sensorsToRecord;
+            _inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            Log.d(LOG_TAG,"=== in adapter constructor. got registered sensors: " + registeredSensors);
+        }
+
+        @Override
+        public int getCount() {
+            Log.d(LOG_TAG,"=== in getcount. returning: " + _registeredSensors.size());
+            return _registeredSensors.size();
+        }
+
+        /**
+         * Get the data item associated with the specified position in the data set.
+         *
+         * @param position Position of the item whose data we want within the adapter's
+         *                 data set.
+         * @return The data at the specified position.
+         */
+        @Override
+        public Object getItem(int position) {
+            Log.d(LOG_TAG,"=== in getItem pos: " + position + ". returning: " + _registeredSensors.get(position));
+            return _registeredSensors.get(position);
+        }
+
+        /**
+         * Get the row id associated with the specified position in the list.
+         *
+         * @param position The position of the item within the adapter's data set whose row id we want.
+         * @return The id of the item at the specified position.
+         */
+        @Override
+        public long getItemId(int position) {
+            Log.d(LOG_TAG,"=== in getitem id: " + position);
+            return (long)(_registeredSensors.get(position).intValue());
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            Log.d(LOG_TAG,"=== in get view from pos: " + position);
+            View row;
+            if (convertView != null) {
+                row = convertView;
+            }
+            else {
+                row = _inflater.inflate(R.layout.row_settings_should_record_sensor_or_not, null, false);
+            }
+            CheckBox checkBox = (CheckBox)row.findViewById(R.id.checkbox_should_record_sensor);
+
+            int sensorType = _registeredSensors.get(position).intValue();
+            String sensorNiceName = ESSensorManager.getESSensorManager().getSensorNiceName(sensorType);
+            checkBox.setText(sensorNiceName);
+            boolean shouldRecord = _sensorsToRecord.contains(new Integer(sensorType));
+            checkBox.setChecked(shouldRecord);
+            return row;
+        }
+
     }
 }

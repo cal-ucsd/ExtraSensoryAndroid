@@ -227,56 +227,6 @@
                 android:layout_height="wrap_content"
                 android:text="@string/location_bubble_update_button_label"/>
 
-            <View
-                android:layout_width="fill_parent"
-                android:layout_height="1dp"
-                android:background="@android:color/darker_gray"/>
-
-
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/should_we_record_label"/>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-                <CheckBox android:id="@+id/checkbox_record_audio"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/record_audio_label"
-                    android:onClick="onCheckboxClicked"/>
-            </LinearLayout>
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-                <CheckBox android:id="@+id/checkbox_record_location"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/record_location_label"
-                    android:onClick="onCheckboxClicked"/>
-            </LinearLayout>
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-                <CheckBox android:id="@+id/checkbox_record_watch"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/record_watch_label"
-                    android:onClick="onCheckboxClicked"/>
-            </LinearLayout>
-
-
-            <ListView
-                android:id="@+id/listview_hf_sensors"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="10"/>
-
 
 
 
@@ -379,6 +329,57 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/classifier_update_button_label"/>
+
+            <View
+                android:layout_width="fill_parent"
+                android:layout_height="1dp"
+                android:background="@android:color/darker_gray"/>
+
+
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/should_we_record_label"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <CheckBox android:id="@+id/checkbox_record_audio"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/record_audio_label"
+                    android:onClick="onCheckboxClicked"/>
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <CheckBox android:id="@+id/checkbox_record_location"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/record_location_label"
+                    android:onClick="onCheckboxClicked"/>
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <CheckBox android:id="@+id/checkbox_record_watch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/record_watch_label"
+                    android:onClick="onCheckboxClicked"/>
+            </LinearLayout>
+
+
+            <ListView
+                android:id="@+id/listview_hf_sensors"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="10"/>
+
 
         </LinearLayout>
     </ScrollView>

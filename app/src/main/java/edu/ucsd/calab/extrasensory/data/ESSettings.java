@@ -3,6 +3,9 @@ package edu.ucsd.calab.extrasensory.data;
 import android.location.Location;
 import android.util.Log;
 
+import java.util.ArrayList;
+import java.util.InputMismatchException;
+
 import edu.ucsd.calab.extrasensory.ESApplication;
 
 /**
@@ -163,7 +166,14 @@ public class ESSettings {
      * What are the sensor types of the high-frequency sensors that the app should attempt to record?
      * @return
      */
-    public static int[] highFreqSensorTypesToRecord() { return  getTheSettings()._hfSensorTypesToRecord; }
+    public static ArrayList<Integer> highFreqSensorTypesToRecord() {
+        int[] hfSensorsTypes = getTheSettings()._hfSensorTypesToRecord;
+        ArrayList<Integer> hfSensorList = new ArrayList<>(10);
+        for (int sensorType : hfSensorsTypes) {
+            hfSensorList.add(new Integer(sensorType));
+        }
+        return hfSensorList;
+    }
 
     /**
      * What are the sensor types of the low-frequency sensors that the app should attempt to record?
@@ -275,6 +285,8 @@ public class ESSettings {
     public static void setShouldRecordWatch(boolean shouldRecordWatch) {
         _settings = getTheDBAccessor().setRecordWatch(shouldRecordWatch);
     }
+
+
 
     private static ESDatabaseAccessor getTheDBAccessor() {
         return ESDatabaseAccessor.getESDatabaseAccessor();

@@ -254,6 +254,7 @@ public class ESSensorManager
     private ArrayList<String> _sensorKeysThatShouldGetEnoughSamples;
     private ArrayList<Sensor> _lowFreqSensors;
     private ArrayList<String> _lowFreqSensorFeatureKeys;
+    private Map<Integer,String> _sensorTypeToNiceName;
 
     private boolean _recordingRightNow = false;
 
@@ -263,6 +264,16 @@ public class ESSensorManager
 
     public boolean is_recordingRightNow() {
         return _recordingRightNow;
+    }
+
+    public String getSensorNiceName(int sensorType) {
+        Integer type = new Integer(sensorType);
+        if (_sensorTypeToNiceName.containsKey(type)) {
+            return _sensorTypeToNiceName.get(type);
+        }
+        else {
+            return ""+sensorType;
+        }
     }
 
     private void set_recordingRightNow(boolean recordingRightNow) {
@@ -289,6 +300,7 @@ public class ESSensorManager
         _lowFreqSensors = new ArrayList<>(10);
         _lowFreqSensorFeatureKeys = new ArrayList<>(10);
         _timestamp = new ESTimestamp(0);
+        _sensorTypeToNiceName = new HashMap<>(10);
 
         // Audio processor:
         _audioProcessor = new ESAudioProcessor();
@@ -330,25 +342,45 @@ public class ESSensorManager
         Log.v(LOG_TAG, "An instance of ESSensorManager was created.");
     }
 
-    private boolean tryToAddSensor(int sensorType,boolean isHighFreqSensor, String nameForLog,String featureKey) {
+    private boolean tryToAddSensor(int sensorType,boolean isHighFreqSensor, String niceName,String featureKey) {
         Sensor sensor = _sensorManager.getDefaultSensor(sensorType);
         if (sensor == null) {
-            Log.i(LOG_TAG,"No available sensor: " + nameForLog);
+            Log.i(LOG_TAG,"No available sensor: " + niceName);
             return false;
         }
         else {
+            _sensorTypeToNiceName.put(new Integer(sensorType),niceName);
             if (isHighFreqSensor) {
-                Log.i(LOG_TAG, "Adding hi-freq sensor: " + nameForLog);
+                Log.i(LOG_TAG, "Adding hi-freq sensor: " + niceName);
                 _hiFreqSensors.add(sensor);
                 _hiFreqSensorFeatureKeys.add(featureKey);
             }
             else {
-                Log.i(LOG_TAG, "Adding low-freq sensor: " + nameForLog);
+                Log.i(LOG_TAG, "Adding low-freq sensor: " + niceName);
                 _lowFreqSensors.add(sensor);
                 _lowFreqSensorFeatureKeys.add(featureKey);
             }
             return true;
         }
+    }
+
+    private ArrayList<Integer> getSensorTypesFromSensors(ArrayList<Sensor> sensors) {
+        if (sensors == null) {
+            return new ArrayList<Integer>(10);
+        }
+        ArrayList<Integer> sensorTypes = new ArrayList<>(sensors.size());
+        for (Sensor sensor : sensors) {
+            sensorTypes.add(new Integer(sensor.getType()));
+        }
+        return sensorTypes;
+    }
+
+    public ArrayList<Integer> getRegisteredHighFreqSensorTypes() {
+        return getSensorTypesFromSensors(_hiFreqSensors);
+    }
+
+    public ArrayList<Integer> getRegisteredLowFreqSensorTypes() {
+        return getSensorTypesFromSensors(_lowFreqSensors);
     }
 
     /**
