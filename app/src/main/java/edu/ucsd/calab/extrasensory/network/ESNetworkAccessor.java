@@ -9,6 +9,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
+import android.os.Environment;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
@@ -559,8 +560,21 @@ public class ESNetworkAccessor {
             }
         }
 
+        // Write the prediction information to file that will be accessible to other apps:
+        writeServerPredictionToPublicFile(timestamp,predictedLabelNames,predictedLabelProbs);
+
         // Mark network is available:
         markNetworkIsNotBusy();
+    }
+
+    private void writeServerPredictionToPublicFile(ESTimestamp timestamp,String[] predictedLabelName,double[] predictedLabelProbs) {
+        String state = Environment.getExternalStorageState();
+        if (!Environment.MEDIA_MOUNTED.equals(state)) {
+            Log.e(LOG_TAG,"!!! Cannot save prediction file to external data storate, which is not mounted right now. Not savind predictions for timestamp: " + timestamp);
+            return;
+        }
+
+
     }
 
     private String adjustPredictedActivity(String predictedMainActivity) {

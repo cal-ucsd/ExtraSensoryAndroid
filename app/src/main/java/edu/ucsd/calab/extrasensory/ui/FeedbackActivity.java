@@ -263,9 +263,12 @@ public class FeedbackActivity extends BaseActivity {
                         intent.putExtra(SelectionFromListActivity.PRESELECTED_LABELS_KEY,_labelStruct._secondaryActivities);
                         frequentLabels = ESDatabaseAccessor.getESDatabaseAccessor().getFrequentlyUsedLabels(null , ESDatabaseAccessor.ESLabelType.ES_LABEL_TYPE_SECONDARY);
                         intent.putExtra(SelectionFromListActivity.FREQUENTLY_USED_LABELS_KEY, frequentLabels);
-                        List<Map.Entry<String,Double>> sortedPredLabelsAndProbs = _parameters._continuousActivityToEdit.getPredictionLabelsSortedByProb();
-                        intent.putStringArrayListExtra(SelectionFromListActivity.PREDICTED_LABEL_NAMES_KEY,extractLabelNames(sortedPredLabelsAndProbs));
-                        intent.putExtra(SelectionFromListActivity.PREDICTED_LABEL_PROBS_KEY,extractLabelProbs(sortedPredLabelsAndProbs));
+                        if (_parameters != null && _parameters._continuousActivityToEdit != null) {
+                            List<Map.Entry<String, Double>> sortedPredLabelsAndProbs = _parameters._continuousActivityToEdit.getPredictionLabelsSortedByProb();
+                            intent.putStringArrayListExtra(SelectionFromListActivity.PREDICTED_LABEL_NAMES_KEY, extractLabelNames(sortedPredLabelsAndProbs));
+                            intent.putExtra(SelectionFromListActivity.PREDICTED_LABEL_PROBS_KEY, extractLabelProbs(sortedPredLabelsAndProbs));
+                        }
+
                         startActivityForResult(intent, ROW_SECONDARY);
                         break;
                     case ROW_MOOD:
