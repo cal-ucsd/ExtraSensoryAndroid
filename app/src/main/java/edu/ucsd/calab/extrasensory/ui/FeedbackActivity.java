@@ -15,6 +15,7 @@ import android.widget.AdapterView;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
 
+import java.lang.reflect.Array;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -199,7 +200,12 @@ public class FeedbackActivity extends BaseActivity {
 
         HashMap<String,String> secondaryDatum = new HashMap<>(2);
         secondaryDatum.put(KEY_ROW_HEADER,ROW_HEADERS[ROW_SECONDARY]);
-        secondaryDatum.put(KEY_ROW_DETAIL,joinByComma(_labelStruct._secondaryActivities));
+        if (_parameters._continuousActivityToEdit.hasUserProvidedLabels()) {
+            secondaryDatum.put(KEY_ROW_DETAIL, joinByComma(_labelStruct._secondaryActivities));
+        }
+        else {
+            secondaryDatum.put(KEY_ROW_DETAIL,joinPredictedLabels(_parameters._continuousActivityToEdit.getPredictionLabelNamesPredictedYes(),100));
+        }
         data.add(secondaryDatum);
 
         HashMap<String,String> moodDatum = new HashMap<>(2);
@@ -253,6 +259,9 @@ public class FeedbackActivity extends BaseActivity {
                         intent.putExtra(SelectionFromListActivity.PRESELECTED_LABELS_KEY,_labelStruct._secondaryActivities);
                         frequentLabels = ESDatabaseAccessor.getESDatabaseAccessor().getFrequentlyUsedLabels(null , ESDatabaseAccessor.ESLabelType.ES_LABEL_TYPE_SECONDARY);
                         intent.putExtra(SelectionFromListActivity.FREQUENTLY_USED_LABELS_KEY, frequentLabels);
+                        List<Map.Entry<String,Double>> sortedPredLabelsAndProbs = _parameters._continuousActivityToEdit.getPredictionLabelsSortedByProb();
+                        intent.putStringArrayListExtra(SelectionFromListActivity.PREDICTED_LABEL_NAMES_KEY,extractLabelNames(sortedPredLabelsAndProbs));
+                        intent.putExtra(SelectionFromListActivity.PREDICTED_LABEL_PROBS_KEY,extractLabelProbs(sortedPredLabelsAndProbs));
                         startActivityForResult(intent, ROW_SECONDARY);
                         break;
                     case ROW_MOOD:
@@ -388,16 +397,53 @@ public class FeedbackActivity extends BaseActivity {
 
     }
 
+    private static String joinPredictedLabels(String[] labels,int maxChars) {
+        String joint = joinByDelimiter(labels,"? ") + "?";
+        if (joint.length() > maxChars) {
+            joint = joint.substring(0,maxChars) + "...";
+        }
+        return joint;
+    }
+
     private static String joinByComma(String[] labels) {
+        return joinByDelimiter(labels,",");
+    }
+
+    private static String joinByDelimiter(String[] labels,String delimiter) {
         if (labels == null || labels.length <= 0) {
             return "";
         }
 
         String singleString = labels[0];
         for (int i=1; i < labels.length; i ++) {
-            singleString += "," + labels[i];
+            singleString += delimiter + labels[i];
         }
 
         return singleString;
     }
+
+    private static ArrayList<String> extractLabelNames(List<Map.Entry<String,Double>> labelNamesAndProbs) {
+        if (labelNamesAndProbs == null) {
+            return new ArrayList<>();
+        }
+
+        ArrayList<String> labelNames = new ArrayList<>(labelNamesAndProbs.size());
+        for (int i = 0; i < labelNamesAndProbs.size(); i ++) {
+            labelNames.add(labelNamesAndProbs.get(i).getKey());
+        }
+        return labelNames;
+    }
+
+    private static double[] extractLabelProbs(List<Map.Entry<String,Double>> labelNamesAndProbs) {
+        if (labelNamesAndProbs == null) {
+            return new double[0];
+        }
+
+        double[] labelProbs = new double[labelNamesAndProbs.size()];
+        for (int i = 0; i < labelNamesAndProbs.size(); i ++) {
+            labelProbs[i] = labelNamesAndProbs.get(i).getValue();
+        }
+        return labelProbs;
+    }
+
 }

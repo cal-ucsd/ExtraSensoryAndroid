@@ -53,11 +53,15 @@ public class SelectionFromListActivity extends BaseActivity {
     public static final String ADD_DONT_REMEMBER_LABEL_KEY = "edu.ucsd.calab.extrasensory.key.add_dont_remember";
     public static final String PRESELECTED_LABELS_KEY = "edu.ucsd.calab.extrasensory.key.preselected_labels";
     public static final String FREQUENTLY_USED_LABELS_KEY = "edu.ucsd.calab.extrasensory.key.frequently_used_labels";
+    public static final String PREDICTED_LABEL_NAMES_KEY = "edu.ucsd.calab.extrasensory.key.predicted_label_names";
+    public static final String PREDICTED_LABEL_PROBS_KEY = "edu.ucsd.calab.extrasensory.key.predicted_label_probs";
 
     public static final String SELECTED_LABELS_OUTPUT_KEY = "edu.ucsd.calab.extrasensory.key.selected_labels";
 
     private static final String SELECTED_LABELS_HEADER = "Selected labels";
     private static final String SELECTED_LABELS_INDEX_TITLE = "Selected";
+    private static final String SERVER_GUESS_HEADER = "Server guess (with probability)";
+    private static final String SERVER_GUESS_INDEX_TITLE = "Server guess";
     private static final String FREQUENT_LABELS_HEADER = "Frequently used";
     private static final String FREQUENT_LABELS_INDEX_TITLE = "Frequent";
     private static final String MAIN_ACTIVITY_HEADER = "Main Activity";
@@ -87,6 +91,9 @@ public class SelectionFromListActivity extends BaseActivity {
     private String _allLabelsSectionHeader = ALL_LABELS;
     private boolean _allowMultiSelection = false;
     private boolean _useIndex = false;
+    private List<String> _sortedPredLabelNames = new ArrayList<>();
+    private Map<String,Double> _predLabelNameToProbMap = new HashMap<>();
+
     private View.OnClickListener _onClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View view) {
@@ -205,6 +212,24 @@ public class SelectionFromListActivity extends BaseActivity {
             _selectedLabels = new HashSet<>(10);
         }
 
+        if (inputParameters.hasExtra(PREDICTED_LABEL_NAMES_KEY) && (inputParameters.getStringArrayListExtra(PREDICTED_LABEL_NAMES_KEY) != null)) {
+            ArrayList<String> predLabelNames = inputParameters.getStringArrayListExtra(PREDICTED_LABEL_NAMES_KEY);
+            // We expect there to be also an array of probabilities with the same length:
+            if (inputParameters.hasExtra(PREDICTED_LABEL_PROBS_KEY) &&
+                    (inputParameters.getDoubleArrayExtra(PREDICTED_LABEL_PROBS_KEY) != null) &&
+                    (inputParameters.getDoubleArrayExtra(PREDICTED_LABEL_PROBS_KEY).length == predLabelNames.size())) {
+                double[] predLabelProbs = inputParameters.getDoubleArrayExtra(PREDICTED_LABEL_PROBS_KEY);
+                _sortedPredLabelNames = predLabelNames;
+                _predLabelNameToProbMap = new HashMap<>(_sortedPredLabelNames.size());
+                for (int i = 0; i < _sortedPredLabelNames.size(); i ++) {
+                    _predLabelNameToProbMap.put(_sortedPredLabelNames.get(i),predLabelProbs[i]);
+                }
+            }
+            else {
+                Log.e(LOG_TAG,"Got input parameters with mismatch between predicted label names and label probs");
+            }
+        }
+
         if (inputParameters.hasExtra(FREQUENTLY_USED_LABELS_KEY) && (inputParameters.getStringArrayExtra(FREQUENTLY_USED_LABELS_KEY) != null)) {
             String[] frequentLabels = inputParameters.getStringArrayExtra(FREQUENTLY_USED_LABELS_KEY);
             _frequentlyUsedLabels = new ArrayList<>(frequentLabels.length);
@@ -237,10 +262,13 @@ public class SelectionFromListActivity extends BaseActivity {
         if (_useIndex && _frequentlyUsedLabels != null && !_frequentlyUsedLabels.isEmpty()) {
             addLabelsSection(itemsList,_frequentlyUsedLabels.toArray(new String[_frequentlyUsedLabels.size()]),FREQUENT_LABELS_HEADER,FREQUENT_LABELS_INDEX_TITLE);
         }
+        if (_useIndex && _sortedPredLabelNames != null && !_sortedPredLabelNames.isEmpty()) {
+            addLabelsSection(itemsList,_sortedPredLabelNames.toArray(new String[_sortedPredLabelNames.size()]),SERVER_GUESS_HEADER,SERVER_GUESS_INDEX_TITLE);
+        }
 
         if (_labelsPerSubject != null) {
             for (String subject : _labelsPerSubject.keySet()) {
-                String[] labels = (String[])_labelsPerSubject.get(subject);
+                String[] labels = _labelsPerSubject.get(subject);
                 addLabelsSection(itemsList,labels,subject,subject);
             }
         }
@@ -271,7 +299,13 @@ public class SelectionFromListActivity extends BaseActivity {
 
         // Add the subject's labels:
         for (String label : labels) {
-            itemsList.add(new ChoiceItem(label));
+            if (_sortedPredLabelNames.contains(label)) {
+                // Then this label has a prediction from the server.
+                itemsList.add(new ChoiceItem(label,false,_predLabelNameToProbMap.get(label)));
+            }
+            else {
+                itemsList.add(new ChoiceItem(label));
+            }
         }
     }
 
@@ -332,9 +366,15 @@ public class SelectionFromListActivity extends BaseActivity {
     private static class ChoiceItem {
         public String _label;
         public boolean _isSectionHeader;
-        public ChoiceItem(String label,boolean isSectionHeader) {
+        public Double _predictionProbability;
+
+        public ChoiceItem(String label,boolean isSectionHeader,Double predictionProbability) {
             _label = label;
             _isSectionHeader = isSectionHeader;
+            _predictionProbability = predictionProbability;
+        }
+        public ChoiceItem(String label,boolean isSectionHeader) {
+            this(label,isSectionHeader,null);
         }
         public ChoiceItem(String label) {
             this(label,false);
@@ -381,14 +421,22 @@ public class SelectionFromListActivity extends BaseActivity {
             View rowView =  super.getView(position,convertView,parent);
             ChoiceItem item = getItem(position);
             ImageView imageView = (ImageView)rowView.findViewById(R.id.image_mark_for_selection_choice);
+            TextView predText = (TextView) rowView.findViewById(R.id.text_label_pred_prob_in_selection_choice);
             if (item._isSectionHeader) {
                 rowView.setBackgroundColor(Color.YELLOW);
                 imageView.setImageBitmap(null);
+                predText.setText("");
                 rowView.setEnabled(false);
                 rowView.setOnClickListener(null);
                 return rowView;
             }
 
+            if (item._predictionProbability != null) {
+                predText.setText(String.format("p=%.2f",item._predictionProbability.doubleValue()));
+            }
+            else {
+                predText.setText("");
+            }
             rowView.setBackgroundColor(Color.WHITE);
             rowView.setEnabled(true);
             rowView.setOnClickListener(_handler._onClickListener);

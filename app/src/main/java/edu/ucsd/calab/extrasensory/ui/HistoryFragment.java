@@ -461,7 +461,7 @@ public class HistoryFragment extends BaseTabFragment {
                 }
             }
 
-            String[] sec = null;
+            String[] sec;
             String delim = ",";
             String suffix = "";
             if (continuousActivity.hasUserProvidedLabels()) {

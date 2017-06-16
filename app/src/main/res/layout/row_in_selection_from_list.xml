@@ -11,6 +11,13 @@
         android:layout_height="wrap_content"
         android:textColor="#000000"
         />
+    <TextView
+        android:id="@+id/text_label_pred_prob_in_selection_choice"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="#777777"
+        android:text=""
+        />
     <ImageView
         android:id="@+id/image_mark_for_selection_choice"
         android:layout_width="0dp"
