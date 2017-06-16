@@ -40,9 +40,10 @@ public class ESLabelStrings {
         float[] hsv = new float[3];
         hsv[1] = 1;
         hsv[2] = 1;
+        int alpha = 100;
         for (int i = 0; i < numColors; i ++) {
             hsv[0] = maxHue - i*decrement;
-            _mainActivity2color.put(mainActivities[i], Color.HSVToColor(hsv));
+            _mainActivity2color.put(mainActivities[i], Color.HSVToColor(alpha,hsv));
         }
     }
 

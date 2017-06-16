@@ -47,7 +47,7 @@ import edu.ucsd.calab.extrasensory.data.ESSettings;
  */
 public class SelectionFromListActivity extends BaseActivity {
 
-    private static final String LOG_TAG = "[SelectionFromListActivity]";
+    private static final String LOG_TAG = "[SelectionList]";
 
     public static final String LIST_TYPE_KEY = "edu.ucsd.calab.extrasensory.key.list_type";
     public static final String ADD_DONT_REMEMBER_LABEL_KEY = "edu.ucsd.calab.extrasensory.key.add_dont_remember";
