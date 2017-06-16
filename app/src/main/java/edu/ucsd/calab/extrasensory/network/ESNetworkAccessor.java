@@ -78,7 +78,7 @@ public class ESNetworkAccessor {
 
     private static final String LOG_TAG = "[ESNetworkAccessor]";
     private static final long WAIT_TIME_AFTER_UPLOAD_IN_MILLIS = 15000;
-    private static final String SERVER_HOSTNAME = "calab3.ucsd.edu";
+    private static final String SERVER_HOSTNAME = readServerHostname();
     private static final String HTTP_PREFIX = "http://";
     private static final String HTTPS_PREFIX = "https://";
     private static final String HTTP_PORT = "80";
@@ -156,6 +156,20 @@ public class ESNetworkAccessor {
         }
     }
 
+    private static String readServerHostname() {
+        String hostname = "missing.server.hostname";
+        Context context = ESApplication.getTheAppContext();
+        InputStream inputStream = context.getResources().openRawResource(R.raw.server_hostname);
+        try {
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+            String line = bufferedReader.readLine();
+            hostname = line.trim();
+            bufferedReader.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return hostname;
+    }
 
     private ArrayList<String> _uploadQueue;
     private ESFeedbackQueue _feedbackQueue;
