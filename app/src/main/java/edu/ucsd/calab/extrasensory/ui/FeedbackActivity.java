@@ -65,6 +65,8 @@ public class FeedbackActivity extends BaseActivity {
     private String _validFor = SelectionFromListActivity.getValidForValues()[0];
     private int _validForHowManyMinutes = 0;
     private String _historyValidFor = "";
+    private boolean _presentServerGuesses;
+
     /**
      * This parameter type is to be used to transfer parameters to the feedback view,
      * that indicate what kind of feedback to perform and pass relevant data.
@@ -132,6 +134,8 @@ public class FeedbackActivity extends BaseActivity {
             String timeLabelStart = new SimpleDateFormat("EEE, dd MMM, hh:mm a").format(start);
             String timeLabelEnd = new SimpleDateFormat("hh:mm a").format(end);
             _historyValidFor = timeLabelStart + " - " + timeLabelEnd;
+
+            _presentServerGuesses = !_parameters._continuousActivityToEdit.hasUserProvidedLabels();
         }
 
         feedbackFlag = false;
@@ -200,11 +204,11 @@ public class FeedbackActivity extends BaseActivity {
 
         HashMap<String,String> secondaryDatum = new HashMap<>(2);
         secondaryDatum.put(KEY_ROW_HEADER,ROW_HEADERS[ROW_SECONDARY]);
-        if (_parameters._continuousActivityToEdit.hasUserProvidedLabels()) {
-            secondaryDatum.put(KEY_ROW_DETAIL, joinByComma(_labelStruct._secondaryActivities));
+        if (_presentServerGuesses) {
+            secondaryDatum.put(KEY_ROW_DETAIL,joinPredictedLabels(_parameters._continuousActivityToEdit.getPredictionLabelNamesPredictedYes(),100));
         }
         else {
-            secondaryDatum.put(KEY_ROW_DETAIL,joinPredictedLabels(_parameters._continuousActivityToEdit.getPredictionLabelNamesPredictedYes(),100));
+            secondaryDatum.put(KEY_ROW_DETAIL, joinByComma(_labelStruct._secondaryActivities));
         }
         data.add(secondaryDatum);
 
@@ -382,6 +386,7 @@ public class FeedbackActivity extends BaseActivity {
                 break;
             case ROW_SECONDARY:
                 _labelStruct._secondaryActivities = selected;
+                _presentServerGuesses = false;
                 break;
             case ROW_MOOD:
                 _labelStruct._moods = selected;
