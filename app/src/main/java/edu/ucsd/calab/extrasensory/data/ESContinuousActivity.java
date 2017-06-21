@@ -5,6 +5,7 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -213,16 +214,53 @@ public class ESContinuousActivity {
             return null;
         }
 
+        Map<String,Double> maxProbMap = new HashMap<>(10);
+        Map<String,Double> sumProbMap = new HashMap<>(10);
+        Map<String,Integer> countProbMap = new HashMap<>(10);
         for (ESActivity minuteActivity : _minuteActivities) {
             if (minuteActivity != null) {
                 Map<String,Double> probMap = minuteActivity.get_predictedLabelNameAndProbPairs();
-                if (probMap != null) {
-                    return probMap;
+                if (probMap == null) {
+                    continue;
+                }
+
+                for (Map.Entry<String,Double> labelAndProb : probMap.entrySet()) {
+                    String label = labelAndProb.getKey();
+                    Double prob = labelAndProb.getValue();
+
+                    int newCount;
+                    double newMaxProb;
+                    double newSumProb;
+                    if (!countProbMap.containsKey(label)) {
+                        // Add this label to the cummulators:
+                        newCount = 1;
+                        newMaxProb = prob;
+                        newSumProb = prob;
+                    }
+                    else {
+                        // Adjust the cummulative values:
+                        newCount = countProbMap.get(label) + 1;
+                        newMaxProb = Math.max(maxProbMap.get(label),prob);
+                        newSumProb = sumProbMap.get(label) + prob;
+                    }
+
+                    countProbMap.put(label,newCount);
+                    maxProbMap.put(label,newMaxProb);
+                    sumProbMap.put(label,newSumProb);
                 }
             }
+
         }
 
-        return null;
+        Map<String,Double> avrProbMap = new HashMap<>(countProbMap.size());
+        for (Map.Entry<String,Double> labelAndSumProb : sumProbMap.entrySet()) {
+            String label = labelAndSumProb.getKey();
+            double sum = labelAndSumProb.getValue().doubleValue();
+            double count = (double) countProbMap.get(label).intValue();
+            avrProbMap.put(label,sum/count);
+        }
+
+        return avrProbMap;
     }
 
     public List<Map.Entry<String,Double>> getPredictionLabelsSortedByProb() {
