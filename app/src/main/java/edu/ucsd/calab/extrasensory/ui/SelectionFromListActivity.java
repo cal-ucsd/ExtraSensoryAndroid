@@ -60,7 +60,7 @@ public class SelectionFromListActivity extends BaseActivity {
 
     private static final String SELECTED_LABELS_HEADER = "Selected labels";
     private static final String SELECTED_LABELS_INDEX_TITLE = "Selected";
-    private static final String SERVER_GUESS_HEADER = "Server guess (with probability)";
+    private static final String SERVER_GUESS_HEADER = "Server guess (with confidence)";
     private static final String SERVER_GUESS_INDEX_TITLE = "Server guess";
     private static final String FREQUENT_LABELS_HEADER = "Frequently used";
     private static final String FREQUENT_LABELS_INDEX_TITLE = "Frequent";
@@ -432,7 +432,7 @@ public class SelectionFromListActivity extends BaseActivity {
             }
 
             if (item._predictionProbability != null) {
-                predText.setText(String.format("p=%.2f",item._predictionProbability.doubleValue()));
+                predText.setText(String.format("%.0f%%",100*item._predictionProbability.doubleValue()));
             }
             else {
                 predText.setText("");
