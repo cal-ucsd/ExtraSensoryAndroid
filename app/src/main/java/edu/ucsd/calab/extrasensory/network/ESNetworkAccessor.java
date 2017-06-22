@@ -562,7 +562,12 @@ public class ESNetworkAccessor {
         }
 
         // Write the prediction information to file that will be accessible to other apps:
-        ESDataFilesAccessor.writeServerPredictions(timestamp,predictedLabelNames,predictedLabelProbs);
+        if (ESSettings.savePredictionFiles()) {
+            ESDataFilesAccessor.writeServerPredictions(timestamp, predictedLabelNames, predictedLabelProbs);
+        }
+        else {
+            Log.d(LOG_TAG,"Requested to not save prediction files, so not saving.");
+        }
 
         // Mark network is available:
         markNetworkIsNotBusy();

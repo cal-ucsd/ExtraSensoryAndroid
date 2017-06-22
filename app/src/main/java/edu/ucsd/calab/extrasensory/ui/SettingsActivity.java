@@ -39,7 +39,7 @@ public class SettingsActivity extends BaseActivity {
         setContentView(R.layout.activity_setting);
 
         // Notification interval:
-        SeekBar notificationIntervalSeekBar = (SeekBar)findViewById(R.id.notification_interval_seek_bar);
+        final SeekBar notificationIntervalSeekBar = (SeekBar)findViewById(R.id.notification_interval_seek_bar);
         notificationIntervalSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -60,6 +60,26 @@ public class SettingsActivity extends BaseActivity {
 
             }
         });
+        // Use notifications:
+        RadioGroup useNotificationsRG = (RadioGroup)findViewById(R.id.radio_group_use_notifications);
+        useNotificationsRG.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                switch (checkedId) {
+                    case R.id.radio_use_notifications_on:
+                        ESSettings.setUseNotifications(true);
+                        notificationIntervalSeekBar.setEnabled(true);
+                        break;
+                    case R.id.radio_use_notifications_off:
+                        ESSettings.setUseNotifications(false);
+                        notificationIntervalSeekBar.setEnabled(false);
+                        break;
+                    default:
+                        Log.e(LOG_TAG,"got unexpected id for radio group of use-notifications");
+                }
+            }
+        });
+
 
         // Num examples stored before sending:
         SeekBar numExamplesStoreBeforeSendSeekBar = (SeekBar)findViewById(R.id.num_examples_store_before_send_seek_bar);
@@ -195,6 +215,25 @@ public class SettingsActivity extends BaseActivity {
         });
 
 
+        // Save prediction files:
+        RadioGroup savePredFilesRG = (RadioGroup)findViewById(R.id.radio_group_save_pred_files);
+        savePredFilesRG.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                switch (checkedId) {
+                    case R.id.radio_save_pred_files_on:
+                        ESSettings.setSavePredictionFiles(true);
+                        break;
+                    case R.id.radio_save_pred_files_off:
+                        ESSettings.setSavePredictionFiles(false);
+                        break;
+                    default:
+                        Log.e(LOG_TAG,"got unexpected id for radio group of save-prediction-files");
+                }
+            }
+        });
+
+
         // Classifier settings:
         RadioGroup classifierSettingsRG = (RadioGroup)findViewById(R.id.radio_group_classifier_setting);
         final EditText classifierTypeEdit = (EditText)findViewById(R.id.edit_classifier_type);
@@ -263,6 +302,18 @@ public class SettingsActivity extends BaseActivity {
         SeekBar intervalSeekBar = (SeekBar)findViewById(R.id.notification_interval_seek_bar);
         intervalSeekBar.setProgress(intervalMinutes);
 
+        // Set should use notifications or not:
+        boolean useNotifications = ESSettings.useNotifications();
+        RadioGroup useNotificationsRG = (RadioGroup)findViewById(R.id.radio_group_use_notifications);
+        if (useNotifications) {
+            useNotificationsRG.check(R.id.radio_use_notifications_on);
+            intervalSeekBar.setEnabled(true);
+        }
+        else {
+            useNotificationsRG.check(R.id.radio_use_notifications_off);
+            intervalSeekBar.setEnabled(false);
+        }
+
         // Set the number of examples stored before sending:
         int numExamplesStoreBeforeSend = ESSettings.numExamplesStoreBeforeSend();
         displayNumExamplesStoreBeforeSend(numExamplesStoreBeforeSend);
@@ -328,6 +379,15 @@ public class SettingsActivity extends BaseActivity {
         // Set the UUID:
         TextView uuid_text = (TextView)findViewById(R.id.uuid_content);
         uuid_text.setText(ESSettings.uuid());
+
+        // should save prediction files:
+        RadioGroup savePredFilesRG = (RadioGroup)findViewById(R.id.radio_group_save_pred_files);
+        if (ESSettings.savePredictionFiles()) {
+            savePredFilesRG.check(R.id.radio_save_pred_files_on);
+        }
+        else {
+            savePredFilesRG.check(R.id.radio_save_pred_files_off);
+        }
 
         // Classifier settings:
         EditText classifierTypeEdit = (EditText)findViewById(R.id.edit_classifier_type);

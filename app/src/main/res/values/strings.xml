@@ -67,5 +67,11 @@
     <string name="record_watch_label">Watch (acceleration and compass)</string>
     <string name="high_freq_sensors_label">High frequency (40Hz):</string>
     <string name="low_freq_sensors_label">Low frequency (once per minute):</string>
+    <string name="use_notifications">Notifications:</string>
+    <string name="notifications_on">on</string>
+    <string name="notifications_off">off</string>
+    <string name="save_pred_files">Save prediction files:</string>
+    <string name="save_pred_files_on">on</string>
+    <string name="save_pred_files_off">off</string>
 
 </resources>

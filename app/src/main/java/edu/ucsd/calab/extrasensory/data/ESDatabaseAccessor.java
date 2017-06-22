@@ -40,7 +40,7 @@ public class ESDatabaseAccessor {
 
     private static final String LOG_TAG = "[ESDatabaseAccessor]";
     private static final int MAX_STORED_EXAMPLES_DEFAULT = 600;
-    private static final boolean USE_NOTIFICATIONS_DEFAULT = false;
+    private static final boolean USE_NOTIFICATIONS_DEFAULT = true;
     private static final int NOTIFICATION_INTERVAL_DEFAULT = 1800;
     private static final int NUM_EXAMPLES_STORE_BEFORE_SEND_DEFAULT = 0;
     private static final boolean HOME_SENSING_DEFAULT = false;

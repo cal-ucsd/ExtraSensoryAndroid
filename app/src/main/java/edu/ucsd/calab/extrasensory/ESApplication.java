@@ -301,9 +301,8 @@ public class ESApplication extends Application {
     }
 
     private void startNotificationSchedule() {
-        boolean unlabeled = false;
-        if (unlabeled) {
-            Log.d(LOG_TAG, "Ignoring notification schedule, because this is the unlabeled version");
+        if (!ESSettings.useNotifications()) {
+            Log.d(LOG_TAG, "Requested to not use notifications, so not starting notification schedule.");
             return;
         }
         if (_alarmManager == null) {
