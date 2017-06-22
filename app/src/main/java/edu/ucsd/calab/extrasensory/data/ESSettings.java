@@ -20,6 +20,7 @@ public class ESSettings {
 
     private String _uuid;
     private int _maxStoredExamples;
+    private boolean _useNotifications;
     private int _notificationIntervalInSeconds;
     private int _numExamplesStoreBeforeSend;
     private boolean _homeSensing;
@@ -33,16 +34,20 @@ public class ESSettings {
     private boolean _recordWatch;
     private ArrayList<Integer> _hfSensorTypesToRecord;
     private ArrayList<Integer> _lfSensorTypesToRecord;
+    private boolean _savePredictionFiles;
 
-    ESSettings(String uuid,int maxStoredExamples,int notificationIntervalInSeconds,
+    ESSettings(String uuid,int maxStoredExamples,
+               boolean useNotifications,int notificationIntervalInSeconds,
                int numExamplesStoreBeforeSend,
                boolean homeSensing,boolean allowCellular,
                boolean locationBubbleUsed, Location locationBubbleCenter,
                String classifierType,String classifierName,
                boolean recordAudio,boolean recordLocation,boolean recordWatch,
-               ArrayList<Integer> hfSensorTypesToRecord,ArrayList<Integer> lfSensorTypesToRecord) {
+               ArrayList<Integer> hfSensorTypesToRecord,ArrayList<Integer> lfSensorTypesToRecord,
+               boolean savePredictionFiles) {
         _uuid = uuid;
         _maxStoredExamples = maxStoredExamples;
+        _useNotifications = useNotifications;
         _notificationIntervalInSeconds = notificationIntervalInSeconds;
         _numExamplesStoreBeforeSend = numExamplesStoreBeforeSend;
         _homeSensing = homeSensing;
@@ -56,6 +61,7 @@ public class ESSettings {
         _recordWatch = recordWatch;
         _hfSensorTypesToRecord = hfSensorTypesToRecord != null ? hfSensorTypesToRecord : new ArrayList<Integer>();
         _lfSensorTypesToRecord = lfSensorTypesToRecord != null ? lfSensorTypesToRecord : new ArrayList<Integer>();
+        _savePredictionFiles = savePredictionFiles;
     }
 
     private static ESSettings _settings = null;
@@ -83,6 +89,12 @@ public class ESSettings {
     public static int maxStoredExamples() {
         return getTheSettings()._maxStoredExamples;
     }
+
+    /**
+     * Should the app use the notification mechanism?
+     * @return Use notifications or not
+     */
+    public static boolean useNotifications() { return getTheSettings()._useNotifications; }
 
     /**
      * Get the notification interval - the time interval between scheduled notification checks.
@@ -174,6 +186,15 @@ public class ESSettings {
      */
     public static ArrayList<Integer> lowFreqSensorTypesToRecord() { return  getTheSettings()._lfSensorTypesToRecord; }
 
+    /**
+     * Should the app save to files the predictions it gets from the server.
+     * These files will be available for other apps to read.
+     * @return Save prediction files or not?
+     */
+    public static boolean savePredictionFiles() { return getTheSettings()._savePredictionFiles; }
+
+
+    // Setters:
 
     /**
      * Set the maximum allowed number of stored examples.
@@ -182,6 +203,14 @@ public class ESSettings {
      */
     public static void setMaxStoredExamples(int maxStoredExamples) {
         _settings = getTheDBAccessor().setSettingsMaxStoredExamples(maxStoredExamples);
+    }
+
+    /**
+     * Set should the app use the notification mechanism
+     * @param useNotifications Use notifications or not?
+     */
+    public static void setUseNotifications(boolean useNotifications) {
+        _settings = getTheDBAccessor().setSettingsUseNotifications(useNotifications);
     }
 
     /**
@@ -301,6 +330,14 @@ public class ESSettings {
         }
     }
 
+    /**
+     * Set whether or not the app should save to files the predictions it gets from the server.
+     * These files can be accessed by other apps.
+     * @param savePredictionFiles Save predictions to files or not?
+     */
+    public static void setSavePredictionFiles(boolean savePredictionFiles) {
+        _settings = getTheDBAccessor().setSettingsSavePredictionFiles(savePredictionFiles);
+    }
 
     private static ESDatabaseAccessor getTheDBAccessor() {
         return ESDatabaseAccessor.getESDatabaseAccessor();

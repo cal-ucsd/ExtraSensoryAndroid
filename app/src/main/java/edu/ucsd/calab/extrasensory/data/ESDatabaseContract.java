@@ -34,6 +34,7 @@ final class ESDatabaseContract {
         public static final String TABLE_NAME = "es_settings";
         public static final String COLUMN_NAME_UUID = "uuid";
         public static final String COLUMN_NAME_MAX_STORED_EXAMPLES = "max_stored_examples";
+        public static final String COLUMN_NAME_USE_NOTIFICATIONS = "use_notifications";
         public static final String COLUMN_NAME_NOTIFICATION_INTERVAL_SECONDS = "notification_interval";
         public static final String COLUMN_NAME_NUM_EXAMPLES_STORE_BEFORE_SEND = "num_examples_store_before_send";
         public static final String COLUMN_NAME_HOME_SENSING = "home_sensing";
@@ -48,5 +49,6 @@ final class ESDatabaseContract {
         public static final String COLUMN_NAME_RECORD_WATCH = "record_watch";
         public static final String COLUMN_NAME_HF_SENSOR_TYPES_TO_RECORD_JSON = "hf_sensors_to_record";
         public static final String COLUMN_NAME_LF_SENSOR_TYPES_TO_RECORD_JSON = "lf_sensors_to_record";
+        public static final String COLUMN_NAME_SAVE_PREDICTION_FILES = "save_prediction_files";
     }
 }

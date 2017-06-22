@@ -40,19 +40,21 @@ public class ESDatabaseAccessor {
 
     private static final String LOG_TAG = "[ESDatabaseAccessor]";
     private static final int MAX_STORED_EXAMPLES_DEFAULT = 600;
-    private static final int NOTIFICATION_INTERVAL_DEFAULT = 600;
+    private static final boolean USE_NOTIFICATIONS_DEFAULT = false;
+    private static final int NOTIFICATION_INTERVAL_DEFAULT = 1800;
     private static final int NUM_EXAMPLES_STORE_BEFORE_SEND_DEFAULT = 0;
-    private static final int HOME_SENSING_DEFAULT = 0;
-    private static final int USE_CELLULAR_DATA_DEFAULT = 0;
-    private static final int USE_LOCATION_BUBBLE_DEFAULT = 0;
+    private static final boolean HOME_SENSING_DEFAULT = false;
+    private static final boolean USE_CELLULAR_DATA_DEFAULT = false;
+    private static final boolean USE_LOCATION_BUBBLE_DEFAULT = false;
     private static final double LOCATION_BUBBLE_CENTER_LONG_DEFAULT = 0.0;
     private static final double LOCATION_BUBBLE_CENTER_LAT_DEFAULT = 0.0;
     private static final String LOCATION_BUBBLE_LOCATION_PROVIDER = "BubbleCenter";
     private static final String CLASSIFIER_TYPE_DEFAULT = "es_mlp";
     private static final String CLASSIFIER_NAME_DEFAULT = "es6sensors";
-    private static final int RECORD_AUDIO_DEFAULT = 1;
-    private static final int RECORD_LOCATION_DEFAULT = 1;
-    private static final int RECORD_WATCH_DEFAULT = 0;
+    private static final boolean RECORD_AUDIO_DEFAULT = true;
+    private static final boolean RECORD_LOCATION_DEFAULT = true;
+    private static final boolean RECORD_WATCH_DEFAULT = false;
+    private static final boolean SAVE_PREDICTION_FILES_DEFAULT = false;
 
     private static ArrayList<Integer> defaultHFSensorsToRecordJSONString() {
         ArrayList<Integer> highFreqSensorTypesToRecordDefault = new ArrayList<>(2);
@@ -123,6 +125,7 @@ public class ESDatabaseAccessor {
                         " (" +
                         ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_UUID + " TEXT PRIMARY KEY," +
                         ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_MAX_STORED_EXAMPLES + " INTEGER," +
+                        ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_USE_NOTIFICATIONS + " INTEGER," +
                         ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_NOTIFICATION_INTERVAL_SECONDS + " INTEGER," +
                         ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_NUM_EXAMPLES_STORE_BEFORE_SEND + " INTEGER," +
                         ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_ALLOW_CELLULAR + " INTEGER," +
@@ -136,7 +139,8 @@ public class ESDatabaseAccessor {
                         ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_RECORD_LOCATION + " INTEGER," +
                         ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_RECORD_WATCH + " INTEGER," +
                         ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_HF_SENSOR_TYPES_TO_RECORD_JSON + " TEXT," +
-                        ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_LF_SENSOR_TYPES_TO_RECORD_JSON + " TEXT" +
+                        ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_LF_SENSOR_TYPES_TO_RECORD_JSON + " TEXT," +
+                        ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_SAVE_PREDICTION_FILES + " INTEGER" +
                         ")";
         private static final String SQL_DELETE_ES_SETTINGS_TABLE =
                 "DROP TABLE IF EXISTS " + ESDatabaseContract.ESSettingsEntry.TABLE_NAME;
@@ -204,22 +208,24 @@ public class ESDatabaseAccessor {
         ContentValues values = new ContentValues();
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_UUID,uuid);
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_MAX_STORED_EXAMPLES, MAX_STORED_EXAMPLES_DEFAULT);
+        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_USE_NOTIFICATIONS,USE_NOTIFICATIONS_DEFAULT ? 1 : 0);
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_NOTIFICATION_INTERVAL_SECONDS,NOTIFICATION_INTERVAL_DEFAULT);
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_NUM_EXAMPLES_STORE_BEFORE_SEND,NUM_EXAMPLES_STORE_BEFORE_SEND_DEFAULT);
-        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_HOME_SENSING,HOME_SENSING_DEFAULT);
-        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_ALLOW_CELLULAR,USE_CELLULAR_DATA_DEFAULT);
-        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_USED,USE_LOCATION_BUBBLE_DEFAULT);
+        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_HOME_SENSING,HOME_SENSING_DEFAULT ? 1 : 0);
+        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_ALLOW_CELLULAR,USE_CELLULAR_DATA_DEFAULT ? 1 : 0);
+        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_USED,USE_LOCATION_BUBBLE_DEFAULT ? 1 : 0);
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_CENTER_LAT,LOCATION_BUBBLE_CENTER_LAT_DEFAULT);
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_CENTER_LONG,LOCATION_BUBBLE_CENTER_LONG_DEFAULT);
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_CLASSIFIER_TYPE,CLASSIFIER_TYPE_DEFAULT);
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_CLASSIFIER_NAME,CLASSIFIER_NAME_DEFAULT);
-        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_RECORD_AUDIO,RECORD_AUDIO_DEFAULT);
-        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_RECORD_LOCATION,RECORD_LOCATION_DEFAULT);
-        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_RECORD_WATCH,RECORD_WATCH_DEFAULT);
+        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_RECORD_AUDIO,RECORD_AUDIO_DEFAULT ? 1 : 0);
+        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_RECORD_LOCATION,RECORD_LOCATION_DEFAULT ? 1 : 0);
+        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_RECORD_WATCH,RECORD_WATCH_DEFAULT ? 1 : 0);
         ArrayList<Integer> defaultHFSensors = defaultHFSensorsToRecordJSONString();
         ArrayList<Integer> defaultLFSensors = defaultLFSensorsToRecordJSONString();
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_HF_SENSOR_TYPES_TO_RECORD_JSON,intArrayToJsonStr(defaultHFSensors));
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_LF_SENSOR_TYPES_TO_RECORD_JSON,intArrayToJsonStr(defaultLFSensors));
+        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_SAVE_PREDICTION_FILES,SAVE_PREDICTION_FILES_DEFAULT ? 1 : 0);
 
         db.insert(ESDatabaseContract.ESSettingsEntry.TABLE_NAME,null,values);
         Location bubbleCenter = new Location(LOCATION_BUBBLE_LOCATION_PROVIDER);
@@ -228,13 +234,14 @@ public class ESDatabaseAccessor {
         ESSettings settings = new ESSettings(
                 uuid,
                 MAX_STORED_EXAMPLES_DEFAULT,
-                NOTIFICATION_INTERVAL_DEFAULT,
+                USE_NOTIFICATIONS_DEFAULT,NOTIFICATION_INTERVAL_DEFAULT,
                 NUM_EXAMPLES_STORE_BEFORE_SEND_DEFAULT,
-                false,false,false,
+                HOME_SENSING_DEFAULT,USE_CELLULAR_DATA_DEFAULT,USE_LOCATION_BUBBLE_DEFAULT,
                 bubbleCenter,
                 CLASSIFIER_TYPE_DEFAULT,CLASSIFIER_NAME_DEFAULT,
-                false,false,false,
-                defaultHFSensors,defaultLFSensors
+                RECORD_AUDIO_DEFAULT,RECORD_LOCATION_DEFAULT,RECORD_WATCH_DEFAULT,
+                defaultHFSensors,defaultLFSensors,
+                SAVE_PREDICTION_FILES_DEFAULT
                 );
 
         _dbHelper.close();
@@ -254,6 +261,7 @@ public class ESDatabaseAccessor {
         String[] projection = {
                 ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_UUID,
                 ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_MAX_STORED_EXAMPLES,
+                ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_USE_NOTIFICATIONS,
                 ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_NOTIFICATION_INTERVAL_SECONDS,
                 ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_NUM_EXAMPLES_STORE_BEFORE_SEND,
                 ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_HOME_SENSING,
@@ -267,7 +275,8 @@ public class ESDatabaseAccessor {
                 ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_RECORD_LOCATION,
                 ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_RECORD_WATCH,
                 ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_HF_SENSOR_TYPES_TO_RECORD_JSON,
-                ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_LF_SENSOR_TYPES_TO_RECORD_JSON
+                ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_LF_SENSOR_TYPES_TO_RECORD_JSON,
+                ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_SAVE_PREDICTION_FILES
         };
 
         Cursor cursor = db.query(ESDatabaseContract.ESSettingsEntry.TABLE_NAME,
@@ -298,6 +307,12 @@ public class ESDatabaseAccessor {
     synchronized  ESSettings setSettingsMaxStoredExamples(int maxStoredExamples) {
         ContentValues values = new ContentValues();
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_MAX_STORED_EXAMPLES,maxStoredExamples);
+        return updateSettingsAndReturnUpdatedRecord(values);
+    }
+
+    synchronized ESSettings setSettingsUseNotifications(boolean useNotifications) {
+        ContentValues values = new ContentValues();
+        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_USE_NOTIFICATIONS,useNotifications ? 1 : 0);
         return updateSettingsAndReturnUpdatedRecord(values);
     }
 
@@ -384,6 +399,14 @@ public class ESDatabaseAccessor {
         return updateSettingsAndReturnUpdatedRecord(values);
     }
 
+    synchronized ESSettings setSettingsSavePredictionFiles(boolean savePredictionFiles) {
+        ContentValues values = new ContentValues();
+        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_SAVE_PREDICTION_FILES,savePredictionFiles ? 1 : 0);
+        return updateSettingsAndReturnUpdatedRecord(values);
+    }
+
+
+
     private synchronized ESSettings updateSettingsAndReturnUpdatedRecord(ContentValues values) {
         SQLiteDatabase db = _dbHelper.getWritableDatabase();
         int affectedCount = db.update(ESDatabaseContract.ESSettingsEntry.TABLE_NAME,values,null,null);
@@ -418,6 +441,7 @@ public class ESDatabaseAccessor {
 
         String uuid = cursor.getString(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_UUID));
         int maxStored = cursor.getInt(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_MAX_STORED_EXAMPLES));
+        boolean useNotifications = cursor.getInt(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_USE_NOTIFICATIONS)) > 0;
         int notificationInterval = cursor.getInt(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_NOTIFICATION_INTERVAL_SECONDS));
         int numExamplesStoreBeforeSend = cursor.getInt(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_NUM_EXAMPLES_STORE_BEFORE_SEND));
         boolean homeSensingUsed = cursor.getInt(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_HOME_SENSING)) > 0;
@@ -441,11 +465,16 @@ public class ESDatabaseAccessor {
         String lfSensorsJson = cursor.getString(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_LF_SENSOR_TYPES_TO_RECORD_JSON));
         ArrayList<Integer> lfSensors = jsonArrayToIntArray(lfSensorsJson);
 
-        return new ESSettings(uuid,maxStored,notificationInterval,numExamplesStoreBeforeSend,homeSensingUsed,allowCellular,
+        boolean savePredictionFiles = cursor.getInt(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_SAVE_PREDICTION_FILES)) > 0;
+
+        return new ESSettings(uuid,maxStored,
+                useNotifications,notificationInterval,
+                numExamplesStoreBeforeSend,homeSensingUsed,allowCellular,
                 locationBubbleUsed,locationBubbleCenter,
                 classifierType,classifierName,
                 recordAudio,recordLocation,recordWatch,
-                hfSensors,lfSensors);
+                hfSensors,lfSensors,
+                savePredictionFiles);
     }
 
 
