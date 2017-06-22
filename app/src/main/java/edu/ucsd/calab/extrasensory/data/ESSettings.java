@@ -211,6 +211,7 @@ public class ESSettings {
      */
     public static void setUseNotifications(boolean useNotifications) {
         _settings = getTheDBAccessor().setSettingsUseNotifications(useNotifications);
+        ((ESApplication)ESApplication.getTheAppContext()).checkShouldWeCollectDataAndManageAppropriately();
     }
 
     /**

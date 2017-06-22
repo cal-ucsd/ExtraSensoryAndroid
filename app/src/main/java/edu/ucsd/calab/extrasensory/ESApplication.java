@@ -301,10 +301,6 @@ public class ESApplication extends Application {
     }
 
     private void startNotificationSchedule() {
-        if (!ESSettings.useNotifications()) {
-            Log.d(LOG_TAG, "Requested to not use notifications, so not starting notification schedule.");
-            return;
-        }
         if (_alarmManager == null) {
             Log.e(LOG_TAG,"Alarm manager is null");
             return;
@@ -313,6 +309,11 @@ public class ESApplication extends Application {
         PendingIntent pendingIntent = createESPendingIntent(ESIntentService.ACTION_NOTIFICATION_CHECKUP);
         // Before registering the repeating alarm, make sure that any similar alarm is canceled:
         _alarmManager.cancel(pendingIntent);
+        // Check whether we should start a new notification schedule or simply leave it canceled:
+        if (!ESSettings.useNotifications()) {
+            Log.d(LOG_TAG, "Requested to not use notifications, so not starting notification schedule.");
+            return;
+        }
 
         int notificationIntervalSeconds = ESSettings.notificationIntervalInSeconds();
         long notificationIntervalMillis = 1000*notificationIntervalSeconds;
