@@ -401,7 +401,7 @@ public class HistoryFragment extends BaseTabFragment {
                 int gapSeconds = continuousActivity.gapDurationSeconds();
                 int gapMinutes = gapSeconds / 60;
                 int gapHours = gapSeconds / 3600;
-                String gapDurStr = (gapHours > 1) ? "" + gapHours + " hours" : "" + gapMinutes + " minutes";
+                String gapDurStr = (gapHours >= 1) ? "" + gapHours + " hours" : "" + gapMinutes + " minutes";
                 activityLabel = "Gap ~" + gapDurStr;
                 mainActivityForColor = null;
             }
