@@ -24,7 +24,6 @@ public class ESLabelStrings {
     private static String[] _mainActivities = null;
     private static String[] _secondaryActivities = null;
     private static String[] _moods = null;
-    private static String[] _homeSensingLabels = null;
     private static TreeMap<String,String[]> _secondaryActivitiesPerSubject = null;
     private static HashMap<String,Integer> _mainActivity2color = null;
 
@@ -91,13 +90,6 @@ public class ESLabelStrings {
         return _moods;
     }
 
-    public static String[] getHomeSensingLabels() {
-        if (_homeSensingLabels == null) {
-            _homeSensingLabels = readLabelsFromFile(R.raw.home_sensing_labels_list,null);
-        }
-
-        return _homeSensingLabels;
-    }
 
     /**
      * Create a single String representation of the labels in the array, using Comma Separated Values.

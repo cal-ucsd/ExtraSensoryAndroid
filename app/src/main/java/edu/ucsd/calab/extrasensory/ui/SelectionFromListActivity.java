@@ -70,7 +70,6 @@ public class SelectionFromListActivity extends BaseActivity {
     private static final String VALID_FOR_HEADER = "Valid For";
     private static final String ALL_LABELS = "All labels";
     public static final String DONT_REMEMBER = "don't remember";
-    private static final String HOME_SENSING_HEADER = "Household";
 
     private static final int LIST_TYPE_MISSING = -1;
     public static final int LIST_TYPE_MAIN_ACTIVITY = 0;
@@ -175,9 +174,6 @@ public class SelectionFromListActivity extends BaseActivity {
             case LIST_TYPE_SECONDARY_ACTIVITIES:
                 _labelChoices = ESLabelStrings.getSecondaryActivities();
                 _labelsPerSubject = ESLabelStrings.getSecondaryActivitiesPerSubject();
-                if (ESSettings.isHomeSensingRelevant()) {
-                    _labelsPerSubject.put(HOME_SENSING_HEADER,ESLabelStrings.getHomeSensingLabels());
-                }
                 _allowMultiSelection = true;
                 _useIndex = true;
                 _allLabelsSectionHeader = SECONDARY_ACTIVITIES_HEADER;

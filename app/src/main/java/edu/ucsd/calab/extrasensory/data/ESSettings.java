@@ -23,7 +23,6 @@ public class ESSettings {
     private boolean _useNotifications;
     private int _notificationIntervalInSeconds;
     private int _numExamplesStoreBeforeSend;
-    private boolean _homeSensing;
     private boolean _allowCellular;
     private boolean _locationBubbleUsed;
     private Location _locationBubbleCenter;
@@ -39,7 +38,7 @@ public class ESSettings {
     ESSettings(String uuid,int maxStoredExamples,
                boolean useNotifications,int notificationIntervalInSeconds,
                int numExamplesStoreBeforeSend,
-               boolean homeSensing,boolean allowCellular,
+               boolean allowCellular,
                boolean locationBubbleUsed, Location locationBubbleCenter,
                String classifierType,String classifierName,
                boolean recordAudio,boolean recordLocation,boolean recordWatch,
@@ -50,7 +49,6 @@ public class ESSettings {
         _useNotifications = useNotifications;
         _notificationIntervalInSeconds = notificationIntervalInSeconds;
         _numExamplesStoreBeforeSend = numExamplesStoreBeforeSend;
-        _homeSensing = homeSensing;
         _allowCellular = allowCellular;
         _locationBubbleUsed = locationBubbleUsed;
         _locationBubbleCenter = locationBubbleCenter;
@@ -115,12 +113,6 @@ public class ESSettings {
     public static int numExamplesStoreBeforeSend() {
         return getTheSettings()._numExamplesStoreBeforeSend;
     }
-
-    /**
-     * Does the user participate in home sensing?
-     * @return
-     */
-    public static boolean isHomeSensingRelevant() { return getTheSettings()._homeSensing; }
 
     /**
      * Does the user allow using cellular network communication (as opposed to "just WiFi")?
@@ -231,14 +223,6 @@ public class ESSettings {
      */
     public static void setNumExamplesStoreBeforeSend(int numExamplesStoreBeforeSend) {
         _settings = getTheDBAccessor().setSettingsNumExamplesStoredBeforeSend(numExamplesStoreBeforeSend);
-    }
-
-    /**
-     * Set is the user participating in home sensing
-     * @param homeSensingUsed
-     */
-    public static void setHomeSensingUsed(boolean homeSensingUsed) {
-        _settings = getTheDBAccessor().setSettingsHomeSensing(homeSensingUsed);
     }
 
     /**

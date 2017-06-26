@@ -121,25 +121,6 @@ public class SettingsActivity extends BaseActivity {
         });
 
 
-        // Home sensing:
-        RadioGroup useHomeSensingRG = (RadioGroup)findViewById(R.id.radio_group_home_sensing);
-        useHomeSensingRG.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(RadioGroup group, int checkedId) {
-                switch (checkedId) {
-                    case R.id.radio_home_sensing_on:
-                        ESSettings.setHomeSensingUsed(true);
-                        break;
-                    case R.id.radio_home_sensing_off:
-                        ESSettings.setHomeSensingUsed(false);
-                        break;
-                    default:
-                        Log.e(LOG_TAG,"got unexpected id for radio group of home sensing");
-                }
-            }
-        });
-
-
         // Cellular communication:
         RadioGroup allowCellularRG = (RadioGroup)findViewById(R.id.radio_group_allow_cellular);
         allowCellularRG.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
@@ -153,7 +134,7 @@ public class SettingsActivity extends BaseActivity {
                         ESSettings.setAllowCellular(false);
                         break;
                     default:
-                        Log.e(LOG_TAG,"got unexpected id for radio group of home sensing");
+                        Log.e(LOG_TAG,"got unexpected id for radio group of cellular communication");
                 }
             }
         });
@@ -328,16 +309,6 @@ public class SettingsActivity extends BaseActivity {
         }
         else {
             useHttpsRG.check(R.id.radio_https_off);
-        }
-
-        // Home sensing:
-        boolean useHomeSensing = ESSettings.isHomeSensingRelevant();
-        RadioGroup useHomeSensingRG = (RadioGroup)findViewById(R.id.radio_group_home_sensing);
-        if (useHomeSensing) {
-            useHomeSensingRG.check(R.id.radio_home_sensing_on);
-        }
-        else {
-            useHomeSensingRG.check(R.id.radio_home_sensing_off);
         }
 
         // Cellular communication:

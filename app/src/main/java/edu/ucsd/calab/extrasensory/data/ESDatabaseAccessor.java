@@ -129,7 +129,6 @@ public class ESDatabaseAccessor {
                         ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_NOTIFICATION_INTERVAL_SECONDS + " INTEGER," +
                         ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_NUM_EXAMPLES_STORE_BEFORE_SEND + " INTEGER," +
                         ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_ALLOW_CELLULAR + " INTEGER," +
-                        ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_HOME_SENSING + " INTEGER," +
                         ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_USED + " INTEGER," +
                         ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_CENTER_LAT + " DOUBLE PRECISION," +
                         ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_CENTER_LONG + " DOUBLE PRECISION," +
@@ -211,7 +210,6 @@ public class ESDatabaseAccessor {
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_USE_NOTIFICATIONS,USE_NOTIFICATIONS_DEFAULT ? 1 : 0);
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_NOTIFICATION_INTERVAL_SECONDS,NOTIFICATION_INTERVAL_DEFAULT);
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_NUM_EXAMPLES_STORE_BEFORE_SEND,NUM_EXAMPLES_STORE_BEFORE_SEND_DEFAULT);
-        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_HOME_SENSING,HOME_SENSING_DEFAULT ? 1 : 0);
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_ALLOW_CELLULAR,USE_CELLULAR_DATA_DEFAULT ? 1 : 0);
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_USED,USE_LOCATION_BUBBLE_DEFAULT ? 1 : 0);
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_CENTER_LAT,LOCATION_BUBBLE_CENTER_LAT_DEFAULT);
@@ -236,7 +234,7 @@ public class ESDatabaseAccessor {
                 MAX_STORED_EXAMPLES_DEFAULT,
                 USE_NOTIFICATIONS_DEFAULT,NOTIFICATION_INTERVAL_DEFAULT,
                 NUM_EXAMPLES_STORE_BEFORE_SEND_DEFAULT,
-                HOME_SENSING_DEFAULT,USE_CELLULAR_DATA_DEFAULT,USE_LOCATION_BUBBLE_DEFAULT,
+                USE_CELLULAR_DATA_DEFAULT,USE_LOCATION_BUBBLE_DEFAULT,
                 bubbleCenter,
                 CLASSIFIER_TYPE_DEFAULT,CLASSIFIER_NAME_DEFAULT,
                 RECORD_AUDIO_DEFAULT,RECORD_LOCATION_DEFAULT,RECORD_WATCH_DEFAULT,
@@ -264,7 +262,6 @@ public class ESDatabaseAccessor {
                 ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_USE_NOTIFICATIONS,
                 ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_NOTIFICATION_INTERVAL_SECONDS,
                 ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_NUM_EXAMPLES_STORE_BEFORE_SEND,
-                ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_HOME_SENSING,
                 ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_ALLOW_CELLULAR,
                 ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_USED,
                 ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_CENTER_LAT,
@@ -325,12 +322,6 @@ public class ESDatabaseAccessor {
     synchronized ESSettings setSettingsNumExamplesStoredBeforeSend(int numExamplesStoreBeforeSend) {
         ContentValues values = new ContentValues();
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_NUM_EXAMPLES_STORE_BEFORE_SEND,numExamplesStoreBeforeSend);
-        return updateSettingsAndReturnUpdatedRecord(values);
-    }
-
-    synchronized ESSettings setSettingsHomeSensing(boolean homeSensingUsed) {
-        ContentValues values = new ContentValues();
-        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_HOME_SENSING,homeSensingUsed ? 1 : 0);
         return updateSettingsAndReturnUpdatedRecord(values);
     }
 
@@ -444,7 +435,6 @@ public class ESDatabaseAccessor {
         boolean useNotifications = cursor.getInt(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_USE_NOTIFICATIONS)) > 0;
         int notificationInterval = cursor.getInt(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_NOTIFICATION_INTERVAL_SECONDS));
         int numExamplesStoreBeforeSend = cursor.getInt(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_NUM_EXAMPLES_STORE_BEFORE_SEND));
-        boolean homeSensingUsed = cursor.getInt(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_HOME_SENSING)) > 0;
         boolean allowCellular = cursor.getInt(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_ALLOW_CELLULAR)) > 0;
         boolean locationBubbleUsed = cursor.getInt(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_USED)) > 0;
         double locationBubbleCenterLat = cursor.getDouble(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_BUBBLE_CENTER_LAT));
@@ -469,7 +459,7 @@ public class ESDatabaseAccessor {
 
         return new ESSettings(uuid,maxStored,
                 useNotifications,notificationInterval,
-                numExamplesStoreBeforeSend,homeSensingUsed,allowCellular,
+                numExamplesStoreBeforeSend,allowCellular,
                 locationBubbleUsed,locationBubbleCenter,
                 classifierType,classifierName,
                 recordAudio,recordLocation,recordWatch,
