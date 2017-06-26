@@ -695,11 +695,12 @@ public class ESDatabaseAccessor {
      *
      * @param fromTimestamp The earliest time in the desired range
      * @param toTimestamp The latest time in the desired range
+     * @param addGapDummies Should we add dummy-activities to represent the gaps between continuous activities that are well separated in time?
      * @return An array of continuous activities from the desired time range, in ascending order of time
      */
-    public synchronized ESContinuousActivity[] getContinuousActivitiesFromTimeRange(ESTimestamp fromTimestamp,ESTimestamp toTimestamp) {
+    public synchronized ESContinuousActivity[] getContinuousActivitiesFromTimeRange(ESTimestamp fromTimestamp,ESTimestamp toTimestamp,boolean addGapDummies) {
         ESActivity[] minuteActivities = getActivitiesFromTimeRange(fromTimestamp,toTimestamp);
-        return ESContinuousActivity.mergeContinuousActivities(minuteActivities);
+        return ESContinuousActivity.mergeContinuousActivities(minuteActivities,addGapDummies);
     }
 
     /**

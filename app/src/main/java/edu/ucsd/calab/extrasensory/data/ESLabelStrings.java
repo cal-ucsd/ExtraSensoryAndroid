@@ -21,6 +21,7 @@ import edu.ucsd.calab.extrasensory.R;
  */
 public class ESLabelStrings {
 
+    private static final int COLOR_FOR_NULL_ACTIVITY = Color.GRAY;
     private static String[] _mainActivities = null;
     private static String[] _secondaryActivities = null;
     private static String[] _moods = null;
@@ -47,6 +48,10 @@ public class ESLabelStrings {
     }
 
     public static int getColorForMainActivity(String mainActivity) {
+        if (mainActivity == null) {
+            return COLOR_FOR_NULL_ACTIVITY;
+        }
+
         if (_mainActivity2color == null) {
             initializeColorMap();
         }

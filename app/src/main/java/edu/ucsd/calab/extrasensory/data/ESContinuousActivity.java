@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * ESContinuousActivity represents an activity that has a duration longer than a minute,
+ * ESContinuousActivity represents an event that has a duration longer than a minute,
  * and corresponds to an array of consecutive ESActivity records/objects
  * that all have exactly the same labels (main, secondary and mood).
  * In case the activities have user-correction main activity label, the server prediction will be disregarded.
@@ -25,9 +25,23 @@ public class ESContinuousActivity {
     private static final int MAX_TIME_GAP_FOR_MERGING_ACTIVITIES = 370;
 
     private ESActivity[] _minuteActivities;
+    private boolean _isUnrecordedGap;
+    private int _gapDurationSeconds;
+
     ESContinuousActivity(ESActivity[] minuteActivities) {
         _minuteActivities = minuteActivities;
+        _isUnrecordedGap = false;
+        _gapDurationSeconds = -1;
     }
+    ESContinuousActivity(int gapDurationSeconds) {
+        _minuteActivities = null;
+        _isUnrecordedGap = true;
+        _gapDurationSeconds = gapDurationSeconds;
+    }
+
+    public boolean isUnrecordedGap() { return _isUnrecordedGap; }
+
+    public int gapDurationSeconds() { return _gapDurationSeconds; }
 
     /**
      * Is the continuous activity empty (representing no activity)?
@@ -323,9 +337,10 @@ public class ESContinuousActivity {
      * will be considered as belonging to two separate continuous activities.
      *
      * @param minuteActivities The sequence of atomic activities (assumed sorted in ascending order of timestamp)
+     * @param addGapDummies Should we add dummy-activities to represent the gaps between continuous activities that are well separated in time?
      * @return The sequence of continuous activities, sorted in ascending order of start-timestamp
      */
-    public static ESContinuousActivity[] mergeContinuousActivities(ESActivity[] minuteActivities) {
+    public static ESContinuousActivity[] mergeContinuousActivities(ESActivity[] minuteActivities,boolean addGapDummies) {
         ArrayList<ESContinuousActivity> continuousActivities = new ArrayList<ESContinuousActivity>(minuteActivities.length);
         ArrayList<ESActivity> mergedActivities = new ArrayList<ESActivity>(minuteActivities.length);
 
@@ -336,14 +351,24 @@ public class ESContinuousActivity {
                 continue;
             }
 
-            // Collected activities are not empty, so compare new activity to the last one:
-            if (shouldMergeTwoAtomicActivities(mergedActivities.get(mergedActivities.size() - 1), minuteActivity)) {
+            // Currently-merged activities are not empty, so compare new activity to the latest one:
+            ESActivity latestActivity = mergedActivities.get(mergedActivities.size() - 1);
+            if (shouldMergeTwoAtomicActivities(latestActivity, minuteActivity)) {
                 mergedActivities.add(minuteActivity);
             } else {
                 // Then we should close the sequence of minute activities so far, and start a new one:
                 ESActivity[] activities = mergedActivities.toArray(new ESActivity[mergedActivities.size()]);
                 ESContinuousActivity continuousActivity = new ESContinuousActivity(activities);
                 continuousActivities.add(continuousActivity);
+
+                // Should we insert a dummy-activity representing a gap?
+                if (addGapDummies) {
+                    int timeGap = minuteActivity.get_timestamp().differenceInSeconds(latestActivity.get_timestamp());
+                    if (timeGap > MAX_TIME_GAP_FOR_MERGING_ACTIVITIES) {
+                        ESContinuousActivity dummy = new ESContinuousActivity(timeGap);
+                        continuousActivities.add(dummy);
+                    }
+                }
 
                 // Start the new sequence of minute activities:
                 mergedActivities.clear();

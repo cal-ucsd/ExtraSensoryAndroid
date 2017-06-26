@@ -13,6 +13,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import java.text.SimpleDateFormat;
@@ -114,8 +115,9 @@ public class HistoryFragment extends BaseTabFragment {
 
         Log.d(LOG_TAG, "getting activities from " + focusDayStartTime.infoString() + " to " + focusDayEndTime.infoString());
 
+        boolean addGapDummies = true;
         _activityArray = ESDatabaseAccessor.getESDatabaseAccessor().
-                getContinuousActivitiesFromTimeRange(focusDayStartTime, focusDayEndTime);
+                getContinuousActivitiesFromTimeRange(focusDayStartTime, focusDayEndTime, addGapDummies);
         presentHistoryContent();
     }
 
@@ -215,6 +217,10 @@ public class HistoryFragment extends BaseTabFragment {
 
         boolean foundUserProvidedLabels = false;
         for (ESContinuousActivity continuousActivity : _activityArray) {
+            if (continuousActivity.isUnrecordedGap()) {
+                // Ignore this dummy-activity:
+                continue;
+            }
             if (continuousActivity.getStartTimestamp().isEarlierThan(_markZoneStartTimestamp)) {
                 continue;
             }
@@ -359,8 +365,25 @@ public class HistoryFragment extends BaseTabFragment {
 
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
+            //get one activity from the array
+            final ESContinuousActivity continuousActivity = _items.get(position);
+
             ESContinuousActivityHolder holder = null;
             View row = super.getView(position,convertView,parent);
+/*
+            View row;
+            if (convertView == null) {
+                if (continuousActivity.isUnrecordedGap()) {
+                    row = LayoutInflater.from(getContext()).inflate(R.layout.history_gap_rowlayout,null);
+                }
+                else {
+                    row = LayoutInflater.from(getContext()).inflate(R.layout.history_rowlayout,null);
+                }
+            }
+            else {
+                row = convertView;
+            }
+*/
 
             //linking labels to xml view
             holder = new ESContinuousActivityHolder();
@@ -374,10 +397,15 @@ public class HistoryFragment extends BaseTabFragment {
             String endTimeLabel = "";
             Date date;
 
-            //get one activity from the array
-            final ESContinuousActivity continuousActivity = _items.get(position);
-
-            if(continuousActivity.getMainActivityUserCorrection() != null){
+            if (continuousActivity.isUnrecordedGap()) {
+                int gapSeconds = continuousActivity.gapDurationSeconds();
+                int gapMinutes = gapSeconds / 60;
+                int gapHours = gapSeconds / 3600;
+                String gapDurStr = (gapHours > 1) ? "" + gapHours + " hours" : "" + gapMinutes + " minutes";
+                activityLabel = "Gap ~" + gapDurStr;
+                mainActivityForColor = null;
+            }
+            else if(continuousActivity.getMainActivityUserCorrection() != null){
                 activityLabel = continuousActivity.getMainActivityUserCorrection();
                 mainActivityForColor = activityLabel;
             }
@@ -385,13 +413,19 @@ public class HistoryFragment extends BaseTabFragment {
                 mainActivityForColor = continuousActivity.getMainActivityServerPrediction();
                 activityLabel = mainActivityForColor + "?";
             }
+
             //setting time label
-            date = continuousActivity.getStartTimestamp().getDateOfTimestamp();
-            timeLabel = new SimpleDateFormat("hh:mm a").format(date);
-            date = continuousActivity.getEndTimestamp().getDateOfTimestamp();
-            endTimeLabel = new SimpleDateFormat("hh:mm a").format(date);
-            if (!endTimeLabel.equals(timeLabel)) {
-                timeLabel = timeLabel + " - " + endTimeLabel;
+            if (continuousActivity.isUnrecordedGap()) {
+                timeLabel = "";
+            }
+            else {
+                date = continuousActivity.getStartTimestamp().getDateOfTimestamp();
+                timeLabel = new SimpleDateFormat("hh:mm a").format(date);
+                date = continuousActivity.getEndTimestamp().getDateOfTimestamp();
+                endTimeLabel = new SimpleDateFormat("hh:mm a").format(date);
+                if (!endTimeLabel.equals(timeLabel)) {
+                    timeLabel = timeLabel + " - " + endTimeLabel;
+                }
             }
 
             //setting activity label
@@ -400,13 +434,18 @@ public class HistoryFragment extends BaseTabFragment {
 
             // Setting the details label:
             TextView detailsText = (TextView)row.findViewById(R.id.text_details_in_history_row);
-            detailsText.setText(getDetailsString(continuousActivity));
+            if (continuousActivity.isUnrecordedGap()) {
+                detailsText.setText(null);
+            }
+            else {
+                detailsText.setText(getDetailsString(continuousActivity));
+            }
 
             row.setBackgroundColor(ESLabelStrings.getColorForMainActivity(mainActivityForColor));
-
+            
             // Is this row marked for merging?
             ImageView chckmarkView = (ImageView)row.findViewById(R.id.image_mark_for_merge_in_history);
-            if (_handler.isActivityInTheMergeMarkZone(continuousActivity)) {
+            if (!continuousActivity.isUnrecordedGap() && _handler.isActivityInTheMergeMarkZone(continuousActivity)) {
                 chckmarkView.setImageResource(R.drawable.checkmark_in_circle);
             }
             else {
@@ -414,7 +453,7 @@ public class HistoryFragment extends BaseTabFragment {
             }
 
             // If allowed to edit activities, define the listener for click and swipes:
-            if (_handler.allowedToEditDaysActivities()) {
+            if (!continuousActivity.isUnrecordedGap() && _handler.allowedToEditDaysActivities()) {
                 // Setting the click listener:
                 row.setOnClickListener(new View.OnClickListener() {
                     @Override
