@@ -22,7 +22,7 @@
                 android:orientation="horizontal">
                 <TextView
                     android:layout_width="0dp"
-                    android:layout_weight="1"
+                    android:layout_weight="3"
                     android:layout_height="wrap_content"
                     android:text="@string/use_notifications"/>
                 <RadioGroup xmlns:android="http://schemas.android.com/apk/res/android"
@@ -101,7 +101,7 @@
                 android:orientation="horizontal">
                 <TextView
                     android:layout_width="0dp"
-                    android:layout_weight="1"
+                    android:layout_weight="3"
                     android:layout_height="wrap_content"
                     android:text="@string/allow_cellular"/>
                 <RadioGroup xmlns:android="http://schemas.android.com/apk/res/android"
@@ -131,7 +131,7 @@
                 android:orientation="horizontal">
                 <TextView
                     android:layout_width="0dp"
-                    android:layout_weight="1"
+                    android:layout_weight="3"
                     android:layout_height="wrap_content"
                     android:text="@string/use_secure_communication"/>
                 <RadioGroup xmlns:android="http://schemas.android.com/apk/res/android"
@@ -161,7 +161,7 @@
                 android:orientation="horizontal">
                 <TextView
                     android:layout_width="0dp"
-                    android:layout_weight="1"
+                    android:layout_weight="3"
                     android:layout_height="wrap_content"
                     android:text="@string/use_home_sensing"/>
                 <RadioGroup xmlns:android="http://schemas.android.com/apk/res/android"
@@ -294,7 +294,7 @@
                 android:orientation="horizontal">
                 <TextView
                     android:layout_width="0dp"
-                    android:layout_weight="1"
+                    android:layout_weight="3"
                     android:layout_height="wrap_content"
                     android:text="@string/save_pred_files"/>
                 <RadioGroup xmlns:android="http://schemas.android.com/apk/res/android"
