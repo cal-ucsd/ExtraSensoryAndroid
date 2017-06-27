@@ -1,21 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
-    android:layout_height="?android:attr/listPreferredItemHeight"
+    android:layout_height="wrap_content"
     android:padding="6dip"
+    android:background="#cccccc"
     android:id="@+id/relativeView">
 
     <TextView
-        android:id="@+id/text_main_activity_in_history_row"
+        android:id="@+id/text_gap_in_history_dummy_row"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
         android:focusable="false"
         android:clickable="false"
         android:ellipsize="marquee"
-        android:singleLine="true"
-        android:gravity="center_vertical"
-        android:text="Activity"
-        android:textSize="14sp" />
+        android:gravity="center_horizontal"
+        android:text="Gap..."
+        android:textSize="12sp" />
 
-</RelativeLayout>
+</LinearLayout>

@@ -16,6 +16,9 @@ import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import org.w3c.dom.Text;
+
+import java.security.InvalidParameterException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -347,6 +350,9 @@ public class HistoryFragment extends BaseTabFragment {
 
     private static class HistoryAdapter extends ArrayAdapter {
 
+        private static final int ITEM_TYPE_DUMMY = 0;
+        private static final int ITEM_TYPE_ACTUAL = 1;
+
         private ArrayList<ESContinuousActivity> _items;
         private HistoryFragment _handler;
 
@@ -364,48 +370,66 @@ public class HistoryFragment extends BaseTabFragment {
         }
 
         @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            //get one activity from the array
-            final ESContinuousActivity continuousActivity = _items.get(position);
+        public int getViewTypeCount() { return 2; }
 
+        @Override
+        public int getItemViewType(int position) {
+            return _items.get(position).isUnrecordedGap() ? ITEM_TYPE_DUMMY : ITEM_TYPE_ACTUAL;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            int rowType = getItemViewType(position);
             ESContinuousActivityHolder holder = null;
-            View row = super.getView(position,convertView,parent);
-/*
+
             View row;
             if (convertView == null) {
-                if (continuousActivity.isUnrecordedGap()) {
-                    row = LayoutInflater.from(getContext()).inflate(R.layout.history_gap_rowlayout,null);
+                holder = new ESContinuousActivityHolder();
+                switch (rowType) {
+                    case ITEM_TYPE_DUMMY:
+                        row = LayoutInflater.from(getContext()).inflate(R.layout.history_gap_rowlayout,null);
+                        holder.gapTime = (TextView)row.findViewById(R.id.text_gap_in_history_dummy_row);
+                        break;
+                    case ITEM_TYPE_ACTUAL:
+                        row = super.getView(position,convertView,parent);
+                        //row = LayoutInflater.from(getContext()).inflate(R.layout.history_rowlayout,null);
+                        holder.time = (TextView)row.findViewById(R.id.text_time_in_history_row);
+                        holder.mainActivity = (TextView)row.findViewById(R.id.text_main_activity_in_history_row);
+                        holder.details = (TextView)row.findViewById(R.id.text_details_in_history_row);
+                        break;
+                    default:
+                        throw new InvalidParameterException("Got unsupported history row type: " + rowType);
                 }
-                else {
-                    row = LayoutInflater.from(getContext()).inflate(R.layout.history_rowlayout,null);
-                }
+                row.setTag(holder);
             }
             else {
                 row = convertView;
+                holder = (ESContinuousActivityHolder)row.getTag();
             }
-*/
 
-            //linking labels to xml view
-            holder = new ESContinuousActivityHolder();
-            holder.time = (TextView)row.findViewById(R.id.text_time_in_history_row);
-            holder.mainActivity = (TextView)row.findViewById(R.id.text_main_activity_in_history_row);
-            row.setTag(holder);
+            //get one activity from the array
+            final ESContinuousActivity continuousActivity = _items.get(position);
 
+            // Set the values for the row:
+            if (rowType == ITEM_TYPE_DUMMY) {
+                int gapSeconds = continuousActivity.gapDurationSeconds();
+                int gapMinutes = gapSeconds / 60;
+                int gapHours = gapSeconds / 3600;
+                String gapDurStr = (gapHours >= 1) ? "" + gapHours + " hours" : "" + gapMinutes + " minutes";
+                String gapStr = "Gap ~" + gapDurStr;
+
+                holder.gapTime.setText(gapStr);
+                return row;
+            }
+
+            // Assume now we have a regular actual continuous activity row:
             String activityLabel = "";
             String mainActivityForColor = "";
             String timeLabel = "";
             String endTimeLabel = "";
             Date date;
 
-            if (continuousActivity.isUnrecordedGap()) {
-                int gapSeconds = continuousActivity.gapDurationSeconds();
-                int gapMinutes = gapSeconds / 60;
-                int gapHours = gapSeconds / 3600;
-                String gapDurStr = (gapHours >= 1) ? "" + gapHours + " hours" : "" + gapMinutes + " minutes";
-                activityLabel = "Gap ~" + gapDurStr;
-                mainActivityForColor = null;
-            }
-            else if(continuousActivity.getMainActivityUserCorrection() != null){
+            if(continuousActivity.getMainActivityUserCorrection() != null){
                 activityLabel = continuousActivity.getMainActivityUserCorrection();
                 mainActivityForColor = activityLabel;
             }
@@ -415,17 +439,12 @@ public class HistoryFragment extends BaseTabFragment {
             }
 
             //setting time label
-            if (continuousActivity.isUnrecordedGap()) {
-                timeLabel = "";
-            }
-            else {
-                date = continuousActivity.getStartTimestamp().getDateOfTimestamp();
-                timeLabel = new SimpleDateFormat("hh:mm a").format(date);
-                date = continuousActivity.getEndTimestamp().getDateOfTimestamp();
-                endTimeLabel = new SimpleDateFormat("hh:mm a").format(date);
-                if (!endTimeLabel.equals(timeLabel)) {
-                    timeLabel = timeLabel + " - " + endTimeLabel;
-                }
+            date = continuousActivity.getStartTimestamp().getDateOfTimestamp();
+            timeLabel = new SimpleDateFormat("hh:mm a").format(date);
+            date = continuousActivity.getEndTimestamp().getDateOfTimestamp();
+            endTimeLabel = new SimpleDateFormat("hh:mm a").format(date);
+            if (!endTimeLabel.equals(timeLabel)) {
+                timeLabel = timeLabel + " - " + endTimeLabel;
             }
 
             //setting activity label
@@ -433,19 +452,13 @@ public class HistoryFragment extends BaseTabFragment {
             holder.time.setText(timeLabel);
 
             // Setting the details label:
-            TextView detailsText = (TextView)row.findViewById(R.id.text_details_in_history_row);
-            if (continuousActivity.isUnrecordedGap()) {
-                detailsText.setText(null);
-            }
-            else {
-                detailsText.setText(getDetailsString(continuousActivity));
-            }
+            holder.details.setText(getDetailsString(continuousActivity));
 
             row.setBackgroundColor(ESLabelStrings.getColorForMainActivity(mainActivityForColor));
             
             // Is this row marked for merging?
             ImageView chckmarkView = (ImageView)row.findViewById(R.id.image_mark_for_merge_in_history);
-            if (!continuousActivity.isUnrecordedGap() && _handler.isActivityInTheMergeMarkZone(continuousActivity)) {
+            if (_handler.isActivityInTheMergeMarkZone(continuousActivity)) {
                 chckmarkView.setImageResource(R.drawable.checkmark_in_circle);
             }
             else {
@@ -453,7 +466,7 @@ public class HistoryFragment extends BaseTabFragment {
             }
 
             // If allowed to edit activities, define the listener for click and swipes:
-            if (!continuousActivity.isUnrecordedGap() && _handler.allowedToEditDaysActivities()) {
+            if (_handler.allowedToEditDaysActivities()) {
                 // Setting the click listener:
                 row.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -535,6 +548,12 @@ public class HistoryFragment extends BaseTabFragment {
         {
             TextView time;
             TextView mainActivity;
+            TextView details;
+            TextView gapTime;
+
+            public String toString() {
+                return "time: " + time + ". main: " + mainActivity + ". details: " + details + ". gap: " + gapTime;
+            }
         }
     }
 
