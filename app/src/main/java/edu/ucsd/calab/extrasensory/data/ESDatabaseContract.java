@@ -25,6 +25,7 @@ final class ESDatabaseContract {
         public static final String COLUMN_NAME_LABEL_SOURCE = "label_source";
         public static final String COLUMN_NAME_PREDICTED_LABEL_NAMES_CSV = "predicted_label_names";
         public static final String COLUMN_NAME_PREDICTED_LABEL_PROBS_CSV = "predicted_label_probs";
+        public static final String COLUMN_NAME_LOCATION_REPRESENTATIVE_LAT_LONG_CSV = "location_rep_lat_long";
     }
 
     /**

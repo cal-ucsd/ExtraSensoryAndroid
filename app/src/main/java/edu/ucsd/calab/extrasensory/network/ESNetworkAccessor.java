@@ -537,7 +537,8 @@ public class ESNetworkAccessor {
 
 
     private void handleUploadedZip(ESTimestamp timestamp,String zipFilename,String predictedMainActivity,
-                                   String[] predictedLabelNames,double[] predictedLabelProbs) {
+                                   String[] predictedLabelNames,double[] predictedLabelProbs,
+                                   double[] locationLatLong) {
         // Since zip uploaded successfully, can remove it from network queue and delete the file:
         deleteZipFileAndRemoveFromUploadQueue(zipFilename);
         // Update the ESActivity record:
@@ -552,7 +553,7 @@ public class ESNetworkAccessor {
             }
             else {
                 predictedMainActivity = adjustPredictedActivity(predictedMainActivity);
-                dba.setESActivityServerPrediction(activity, predictedMainActivity,predictedLabelNames,predictedLabelProbs);
+                dba.setESActivityServerPrediction(activity, predictedMainActivity,predictedLabelNames,predictedLabelProbs,locationLatLong);
                 Log.i(LOG_TAG, "After getting server prediction, activity is now: " + activity);
 
                 // If there is already user labels, send feedback to server:
@@ -637,6 +638,7 @@ public class ESNetworkAccessor {
         private static final String RESPONSE_FIELD_PREDICTED_MAIN_ACTIVITY = "predicted_activity";
         private static final String RESPONSE_FIELD_PREDICTED_LABEL_NAMES = "label_names";
         private static final String RESPONSE_FIELD_PREDICTED_LABEL_PROBS = "label_probs";
+        private static final String RESPONSE_FIELD_LOCATION_LAT_LONG = "location_lat_long";
 
         private static String[] parseJSONArrayOfStrings(JSONArray jsona) {
             try {
@@ -883,6 +885,7 @@ public class ESNetworkAccessor {
                 String predictedMainActivity = null;
                 String[] predictedLabelNames = null;
                 double[] predictedLabelProbs = null;
+                double[] locationLatLong = null;
                 JSONObject response = getServerResponseAndDisconnect(conn,"upload");
                 if (response != null) {
                     timestamp = new ESTimestamp(response.getInt(RESPONSE_FIELD_TIMESTAMP));
@@ -894,11 +897,13 @@ public class ESNetworkAccessor {
                     if (predictedLabelNames.length != predictedLabelProbs.length) {
                         Log.e(LOG_TAG,"Server responded with prediction label names and label probabilities of inconsistent sizes. Changing them both to empty.");
                     }
+
+                    locationLatLong = parseJSONArrayOfNumbers(response.getJSONArray(RESPONSE_FIELD_LOCATION_LAT_LONG));
                 }
 
                 conn.disconnect();
                 params._requester.handleUploadedZip(timestamp, responseZipFilename, predictedMainActivity,
-                        predictedLabelNames,predictedLabelProbs);
+                        predictedLabelNames,predictedLabelProbs,locationLatLong);
 
             } catch (MalformedURLException e) {
                 Log.e(LOG_TAG,"Failed with creating URI for uploading zip");

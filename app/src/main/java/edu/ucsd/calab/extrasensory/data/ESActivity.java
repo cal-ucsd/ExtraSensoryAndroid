@@ -65,6 +65,7 @@ public class ESActivity {
     private String[] _moods;
     private String[] _predictedLabelNames;
     private double[] _predictedLabelProbs;
+    private double[] _locationLatLong;
 
     // Constructors available only inside the package:
     ESActivity(ESTimestamp timestamp) {
@@ -76,12 +77,14 @@ public class ESActivity {
         _moods = null;
         _predictedLabelNames = null;
         _predictedLabelProbs = null;
+        _locationLatLong = null;
     }
 
     ESActivity(ESTimestamp timestamp, ESLabelSource labelSource,
                String mainActivityServerPrediction, String mainActivityUserCorrection,
                String[] secondaryActivities, String[] moods,
-               String[] predictedLabelNames, double[] predictedLabelProbs) {
+               String[] predictedLabelNames, double[] predictedLabelProbs,
+               double[] locationLatLong) {
         _timestamp = timestamp;
         _labelSource = labelSource;
         _mainActivityServerPrediction = mainActivityServerPrediction;
@@ -101,6 +104,13 @@ public class ESActivity {
         else {
             _predictedLabelNames = predictedLabelNames;
             _predictedLabelProbs = predictedLabelProbs;
+        }
+
+        if (locationLatLong == null) {
+            _locationLatLong = new double[0];
+        }
+        else {
+            _locationLatLong = locationLatLong;
         }
     }
 
@@ -133,6 +143,8 @@ public class ESActivity {
 
     public double[] get_predictedLabelProbs() { return _predictedLabelProbs; }
 
+    public double[] get_locationLatLong() { return _locationLatLong; }
+
     public Map<String,Double> get_predictedLabelNameAndProbPairs() {
         Map<String,Double> map = new HashMap<>(_predictedLabelNames.length);
         for (int i = 0; i < _predictedLabelNames.length; i ++) {
@@ -158,6 +170,7 @@ public class ESActivity {
                 ",mood: {" + _moods + "}" +
                 ",predicted label names: {" + _predictedLabelNames + "}" +
                 ",predicted label probs: {" + _predictedLabelProbs + "}" +
+                ",location lat long: (" + _locationLatLong + ")" +
                 ">";
     }
 

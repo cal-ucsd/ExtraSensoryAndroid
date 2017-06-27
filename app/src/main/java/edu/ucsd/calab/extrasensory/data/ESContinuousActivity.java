@@ -308,6 +308,13 @@ public class ESContinuousActivity {
         return positiveLabels;
     }
 
+    public double[] getLocationLatLongFromFirstInstance() {
+        if (_minuteActivities == null || _minuteActivities.length <= 0) {
+            return null;
+        }
+        return _minuteActivities[0].get_locationLatLong();
+    }
+
     /**
      * Get the minute (atomic) activities that are included in this continuous activity
      * @return The minute activities in this continuous activity

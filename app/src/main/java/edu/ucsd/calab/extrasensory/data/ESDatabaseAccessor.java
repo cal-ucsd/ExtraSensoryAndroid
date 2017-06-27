@@ -43,7 +43,6 @@ public class ESDatabaseAccessor {
     private static final boolean USE_NOTIFICATIONS_DEFAULT = true;
     private static final int NOTIFICATION_INTERVAL_DEFAULT = 1800;
     private static final int NUM_EXAMPLES_STORE_BEFORE_SEND_DEFAULT = 0;
-    private static final boolean HOME_SENSING_DEFAULT = false;
     private static final boolean USE_CELLULAR_DATA_DEFAULT = false;
     private static final boolean USE_LOCATION_BUBBLE_DEFAULT = false;
     private static final double LOCATION_BUBBLE_CENTER_LONG_DEFAULT = 0.0;
@@ -56,14 +55,14 @@ public class ESDatabaseAccessor {
     private static final boolean RECORD_WATCH_DEFAULT = false;
     private static final boolean SAVE_PREDICTION_FILES_DEFAULT = false;
 
-    private static ArrayList<Integer> defaultHFSensorsToRecordJSONString() {
+    private static ArrayList<Integer> defaultHFSensorsToRecord() {
         ArrayList<Integer> highFreqSensorTypesToRecordDefault = new ArrayList<>(2);
         highFreqSensorTypesToRecordDefault.add(Sensor.TYPE_ACCELEROMETER);
         highFreqSensorTypesToRecordDefault.add(Sensor.TYPE_GYROSCOPE);
         return highFreqSensorTypesToRecordDefault;
     }
 
-    private static ArrayList<Integer> defaultLFSensorsToRecordJSONString() {
+    private static ArrayList<Integer> defaultLFSensorsToRecord() {
         ArrayList<Integer> lowFreqSensorTypesToRecordDefault = new ArrayList<>(10);
         lowFreqSensorTypesToRecordDefault.add(Sensor.TYPE_AMBIENT_TEMPERATURE);
         lowFreqSensorTypesToRecordDefault.add(Sensor.TYPE_LIGHT);
@@ -115,7 +114,8 @@ public class ESDatabaseAccessor {
                         ESDatabaseContract.ESActivityEntry.COLUMN_NAME_SECONDARY_ACTIVITIES_CSV + " TEXT," +
                         ESDatabaseContract.ESActivityEntry.COLUMN_NAME_MOODS_CSV + " TEXT," +
                         ESDatabaseContract.ESActivityEntry.COLUMN_NAME_PREDICTED_LABEL_NAMES_CSV + " TEXT," +
-                        ESDatabaseContract.ESActivityEntry.COLUMN_NAME_PREDICTED_LABEL_PROBS_CSV + " TEXT" +
+                        ESDatabaseContract.ESActivityEntry.COLUMN_NAME_PREDICTED_LABEL_PROBS_CSV + " TEXT," +
+                        ESDatabaseContract.ESActivityEntry.COLUMN_NAME_LOCATION_REPRESENTATIVE_LAT_LONG_CSV + " TEXT" +
                         ")";
         private static final String SQL_DELETE_ES_ACTIVITY_TABLE =
                 "DROP TABLE IF EXISTS " + ESDatabaseContract.ESActivityEntry.TABLE_NAME;
@@ -219,8 +219,8 @@ public class ESDatabaseAccessor {
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_RECORD_AUDIO,RECORD_AUDIO_DEFAULT ? 1 : 0);
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_RECORD_LOCATION,RECORD_LOCATION_DEFAULT ? 1 : 0);
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_RECORD_WATCH,RECORD_WATCH_DEFAULT ? 1 : 0);
-        ArrayList<Integer> defaultHFSensors = defaultHFSensorsToRecordJSONString();
-        ArrayList<Integer> defaultLFSensors = defaultLFSensorsToRecordJSONString();
+        ArrayList<Integer> defaultHFSensors = defaultHFSensorsToRecord();
+        ArrayList<Integer> defaultLFSensors = defaultLFSensorsToRecord();
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_HF_SENSOR_TYPES_TO_RECORD_JSON,intArrayToJsonStr(defaultHFSensors));
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_LF_SENSOR_TYPES_TO_RECORD_JSON,intArrayToJsonStr(defaultLFSensors));
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_SAVE_PREDICTION_FILES,SAVE_PREDICTION_FILES_DEFAULT ? 1 : 0);
@@ -502,6 +502,7 @@ public class ESDatabaseAccessor {
         values.put(ESDatabaseContract.ESActivityEntry.COLUMN_NAME_MOODS_CSV,"");
         values.put(ESDatabaseContract.ESActivityEntry.COLUMN_NAME_PREDICTED_LABEL_NAMES_CSV,"");
         values.put(ESDatabaseContract.ESActivityEntry.COLUMN_NAME_PREDICTED_LABEL_PROBS_CSV,"");
+        values.put(ESDatabaseContract.ESActivityEntry.COLUMN_NAME_LOCATION_REPRESENTATIVE_LAT_LONG_CSV,"");
 
         db.insert(ESDatabaseContract.ESActivityEntry.TABLE_NAME,null,values);
         ESActivity newActivity = new ESActivity(timestamp);
@@ -532,7 +533,8 @@ public class ESDatabaseAccessor {
                 ESDatabaseContract.ESActivityEntry.COLUMN_NAME_SECONDARY_ACTIVITIES_CSV,
                 ESDatabaseContract.ESActivityEntry.COLUMN_NAME_MOODS_CSV,
                 ESDatabaseContract.ESActivityEntry.COLUMN_NAME_PREDICTED_LABEL_NAMES_CSV,
-                ESDatabaseContract.ESActivityEntry.COLUMN_NAME_PREDICTED_LABEL_PROBS_CSV
+                ESDatabaseContract.ESActivityEntry.COLUMN_NAME_PREDICTED_LABEL_PROBS_CSV,
+                ESDatabaseContract.ESActivityEntry.COLUMN_NAME_LOCATION_REPRESENTATIVE_LAT_LONG_CSV
         };
 
         String selection = ESDatabaseContract.ESActivityEntry.COLUMN_NAME_TIMESTAMP + " = " + timestamp.get_secondsSinceEpoch();
@@ -564,7 +566,8 @@ public class ESDatabaseAccessor {
      * @param mainActivityServerPrediction The server prediction to assign to the activity
      */
     public synchronized void setESActivityServerPrediction(ESActivity activity,String mainActivityServerPrediction,
-                                                           String[] predictedLabelNames,double[] predictedLabelProbs) {
+                                                           String[] predictedLabelNames,double[] predictedLabelProbs,
+                                                           double[] locationLatLong) {
         setESActivityValuesAndPossiblySendFeedback(activity,
                 activity.get_labelSource(),
                 mainActivityServerPrediction,
@@ -572,6 +575,7 @@ public class ESDatabaseAccessor {
                 activity.get_secondaryActivities(),
                 activity.get_moods(),
                 predictedLabelNames,predictedLabelProbs,
+                locationLatLong,
                 false);
     }
 
@@ -615,7 +619,9 @@ public class ESDatabaseAccessor {
         setESActivityValuesAndPossiblySendFeedback(activity,labelSource,
                 activity.get_mainActivityServerPrediction(),mainActivityUserCorrection,
                 secondaryActivities,moods,
-                activity.get_predictedLabelNames(),activity.get_predictedLabelProbs(),sendFeedback);
+                activity.get_predictedLabelNames(),activity.get_predictedLabelProbs(),
+                activity.get_locationLatLong(),
+                sendFeedback);
     }
 
     /**
@@ -638,6 +644,7 @@ public class ESDatabaseAccessor {
                                                                         String mainActivityServerPrediction,String mainActivityUserCorrection,
                                                                         String[] secondaryActivities,String[] moods,
                                                                         String[] predictedLabelNames,double[] predictedLabelProbs,
+                                                                        double[] locationLatLong,
                                                                         boolean sendFeedback) {
 
         SQLiteDatabase db = _dbHelper.getWritableDatabase();
@@ -659,6 +666,9 @@ public class ESDatabaseAccessor {
 
         String predictedLabelProbsCSV = ESLabelStrings.makeCSV(predictedLabelProbs);
         values.put(ESDatabaseContract.ESActivityEntry.COLUMN_NAME_PREDICTED_LABEL_PROBS_CSV,predictedLabelProbsCSV);
+
+        String locationLatLongCSV = ESLabelStrings.makeCSV(locationLatLong);
+        values.put(ESDatabaseContract.ESActivityEntry.COLUMN_NAME_LOCATION_REPRESENTATIVE_LAT_LONG_CSV,locationLatLongCSV);
 
         String selection = ESDatabaseContract.ESActivityEntry.COLUMN_NAME_TIMESTAMP + " = " + activity.get_timestamp().get_secondsSinceEpoch();
 
@@ -742,7 +752,8 @@ public class ESDatabaseAccessor {
                 ESDatabaseContract.ESActivityEntry.COLUMN_NAME_SECONDARY_ACTIVITIES_CSV,
                 ESDatabaseContract.ESActivityEntry.COLUMN_NAME_MOODS_CSV,
                 ESDatabaseContract.ESActivityEntry.COLUMN_NAME_PREDICTED_LABEL_NAMES_CSV,
-                ESDatabaseContract.ESActivityEntry.COLUMN_NAME_PREDICTED_LABEL_PROBS_CSV
+                ESDatabaseContract.ESActivityEntry.COLUMN_NAME_PREDICTED_LABEL_PROBS_CSV,
+                ESDatabaseContract.ESActivityEntry.COLUMN_NAME_LOCATION_REPRESENTATIVE_LAT_LONG_CSV
         };
 
         String selection = ESDatabaseContract.ESActivityEntry.COLUMN_NAME_TIMESTAMP + " >= " + fromTimestamp.get_secondsSinceEpoch() +
@@ -801,7 +812,10 @@ public class ESDatabaseAccessor {
         String predictedLabelProbsCSV = cursor.getString(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESActivityEntry.COLUMN_NAME_PREDICTED_LABEL_PROBS_CSV));
         double[] predictedLabelProbs = parseCSVOfNumbers(predictedLabelProbsCSV);
 
-        return new ESActivity(timestamp,labelSource,serverMain,userMain,secondaryActivities,moods,predictedLabelNames,predictedLabelProbs);
+        String locationLatLongCSV = cursor.getString(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESActivityEntry.COLUMN_NAME_LOCATION_REPRESENTATIVE_LAT_LONG_CSV));
+        double[] locationLatLong = parseCSVOfNumbers(locationLatLongCSV);
+
+        return new ESActivity(timestamp,labelSource,serverMain,userMain,secondaryActivities,moods,predictedLabelNames,predictedLabelProbs,locationLatLong);
     }
 
     /**
