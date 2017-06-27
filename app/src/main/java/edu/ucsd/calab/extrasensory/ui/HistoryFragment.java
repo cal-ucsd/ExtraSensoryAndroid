@@ -438,6 +438,9 @@ public class HistoryFragment extends BaseTabFragment {
                 activityLabel = mainActivityForColor + "?";
             }
 
+            // Add location coordinates (each instance may have a representative location point):
+//            activityLabel += " loc: " + ESLabelStrings.makeCSV(continuousActivity.getLocationLatLongFromFirstInstance());
+
             //setting time label
             date = continuousActivity.getStartTimestamp().getDateOfTimestamp();
             timeLabel = new SimpleDateFormat("hh:mm a").format(date);

@@ -898,7 +898,12 @@ public class ESNetworkAccessor {
                         Log.e(LOG_TAG,"Server responded with prediction label names and label probabilities of inconsistent sizes. Changing them both to empty.");
                     }
 
-                    locationLatLong = parseJSONArrayOfNumbers(response.getJSONArray(RESPONSE_FIELD_LOCATION_LAT_LONG));
+                    if (response.isNull(RESPONSE_FIELD_LOCATION_LAT_LONG)) {
+                        locationLatLong = null;
+                    }
+                    else {
+                        locationLatLong = parseJSONArrayOfNumbers(response.getJSONArray(RESPONSE_FIELD_LOCATION_LAT_LONG));
+                    }
                 }
 
                 conn.disconnect();
