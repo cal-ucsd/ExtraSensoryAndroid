@@ -170,6 +170,9 @@ public class ESSensorManager
     private static final String SCREEN_BRIGHT = "screen_brightness";
     private static final String RINGER_MODE = "ringer_mode";
 
+    private static final String HOUR_OF_DAY = "hour_of_day";
+    private static final String MINUTE_IN_HOUR = "minute_in_hour";
+
     // Values of discrete properties:
     private static final String MISSING_VALUE_STR = "missing";
 
@@ -986,6 +989,18 @@ public class ESSensorManager
             _lowFreqData.put(RINGER_MODE,getStringValueForRingerMode(audioManager.getRingerMode()));
         }
         catch (JSONException e) {
+            Log.e(LOG_TAG,e.getMessage());
+        }
+
+        // Time:
+        try {
+            int hour = _timestamp.getHourOfDayOutOf24();
+            int minute = _timestamp.getMinuteOfHour();
+            _lowFreqData.put(HOUR_OF_DAY,hour);
+            _lowFreqData.put(MINUTE_IN_HOUR,minute);
+            Log.d(LOG_TAG,"== Timestamp " + _timestamp + ": " + _timestamp.infoString());
+            Log.d(LOG_TAG,"== Timestamp hour: " + hour + ". minute: " + minute);
+        } catch (JSONException e) {
             Log.e(LOG_TAG,e.getMessage());
         }
     }

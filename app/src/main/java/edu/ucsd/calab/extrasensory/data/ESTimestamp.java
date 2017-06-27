@@ -6,6 +6,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
+import java.util.TimeZone;
 
 /**
  * This class represents a timepoint with the relevant resolution for our application
@@ -80,6 +81,20 @@ public class ESTimestamp {
     @Override
     public String toString() {
         return "" + _secondsSinceEpoch;
+    }
+
+    public Calendar toCalendar() {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(MILLISECONDS_IN_SECOND * _secondsSinceEpoch);
+        return calendar;
+    }
+
+    public int getHourOfDayOutOf24() {
+        return toCalendar().get(Calendar.HOUR_OF_DAY);
+    }
+
+    public int getMinuteOfHour() {
+        return toCalendar().get(Calendar.MINUTE);
     }
 
     public String infoString() {

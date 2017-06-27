@@ -44,6 +44,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.TimeZone;
 import java.util.TreeMap;
 
 import javax.net.ssl.HostnameVerifier;
@@ -627,6 +628,7 @@ public class ESNetworkAccessor {
 
         private static final String REQUEST_FIELD_CLASSIFIER_TYPE = "classifier_type";
         private static final String REQUEST_FIELD_CLASSIFIER_NAME = "classifier_name";
+        private static final String REQUEST_FIELD_TIMEZONE_NAME = "timezone_name";
 
         private static final String RESPONSE_FIELD_TIMESTAMP = "timestamp";
         private static final String RESPONSE_FIELD_SUCCESS = "success";
@@ -635,8 +637,6 @@ public class ESNetworkAccessor {
         private static final String RESPONSE_FIELD_PREDICTED_MAIN_ACTIVITY = "predicted_activity";
         private static final String RESPONSE_FIELD_PREDICTED_LABEL_NAMES = "label_names";
         private static final String RESPONSE_FIELD_PREDICTED_LABEL_PROBS = "label_probs";
-        private static final String RESPONSE_FIELD_CLASSIFIER_TYPE = "classifier_type";
-        private static final String RESPONSE_FIELD_CLASSIFIER_NAME = "classifier_name";
 
         private static String[] parseJSONArrayOfStrings(JSONArray jsona) {
             try {
@@ -818,6 +818,7 @@ public class ESNetworkAccessor {
                     return;
                 }
 
+                String timeZoneName = TimeZone.getDefault().getDisplayName(false,TimeZone.LONG);
                 String urlString = (params._requester.shouldSendWithHttps() ? SERVER_HTTPS_API_PREFIX : SERVER_HTTP_API_PREFIX)
                         + resources.getString(R.string.api_upload_zip) +
                         "?" + REQUEST_FIELD_CLASSIFIER_TYPE + "=" + ESSettings.classifierType() +
