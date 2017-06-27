@@ -22,6 +22,7 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.Locale;
 
 import edu.ucsd.calab.extrasensory.R;
 import edu.ucsd.calab.extrasensory.data.ESSettings;
@@ -31,8 +32,6 @@ import edu.ucsd.calab.extrasensory.sensors.ESSensorManager;
 public class SettingsActivity extends BaseActivity {
 
     private static final String LOG_TAG = "[SettingsActivity]";
-
-    private static final float EXAMPLE_SIZE_IN_MEGABYTES = 0.24f;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -438,13 +437,13 @@ public class SettingsActivity extends BaseActivity {
 
     private void displayNotificationIntervalValue(int intervalMinutes) {
         TextView intervalValueView = (TextView)findViewById(R.id.notification_interval_value);
-        String intervalString = String.format("%d min",intervalMinutes);
+        String intervalString = String.format(Locale.US,"%d min",intervalMinutes);
         intervalValueView.setText(intervalString);
     }
 
     private void displayNumExamplesStoreBeforeSend(int numExamplesStoreBeforeSend) {
         TextView textView = (TextView)findViewById(R.id.num_examples_store_before_send_value);
-        String numStr = String.format("%d",numExamplesStoreBeforeSend);
+        String numStr = String.format(Locale.US,"%d",numExamplesStoreBeforeSend);
         textView.setText(numStr);
     }
 
@@ -509,7 +508,7 @@ public class SettingsActivity extends BaseActivity {
         private ArrayList<Integer> _sensorsToRecord;
         private LayoutInflater _inflater;
 
-        public SensorCheckAdapter(Context context,boolean hf1lf0,ArrayList<Integer> registeredSensors,ArrayList<Integer> sensorsToRecord) {
+        SensorCheckAdapter(Context context,boolean hf1lf0,ArrayList<Integer> registeredSensors,ArrayList<Integer> sensorsToRecord) {
             this._hf1lf0 = hf1lf0;
             this._registeredSensors = registeredSensors;
             this._sensorsToRecord = sensorsToRecord;
@@ -541,7 +540,7 @@ public class SettingsActivity extends BaseActivity {
          */
         @Override
         public long getItemId(int position) {
-            return (long)(_registeredSensors.get(position).intValue());
+            return (long)(_registeredSensors.get(position));
         }
 
         @Override
@@ -556,11 +555,11 @@ public class SettingsActivity extends BaseActivity {
             CheckBox checkBox = (CheckBox)row.findViewById(R.id.checkbox_should_record_sensor);
 
             Integer sensorTypeInteger = _registeredSensors.get(position);
-            int sensorType = sensorTypeInteger.intValue();
+            int sensorType = sensorTypeInteger;
             String sensorNiceName = ESSensorManager.getESSensorManager().getSensorNiceName(sensorType);
             checkBox.setText(sensorNiceName);
             checkBox.setTag(sensorTypeInteger);
-            boolean shouldRecord = _sensorsToRecord.contains(new Integer(sensorType));
+            boolean shouldRecord = _sensorsToRecord.contains(sensorType);
             checkBox.setChecked(shouldRecord);
 
             checkBox.setOnCheckedChangeListener(new CheckBox.OnCheckedChangeListener() {
