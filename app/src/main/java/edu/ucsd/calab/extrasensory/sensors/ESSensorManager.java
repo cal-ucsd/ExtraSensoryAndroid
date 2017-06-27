@@ -37,6 +37,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -172,6 +173,7 @@ public class ESSensorManager
 
     private static final String HOUR_OF_DAY = "hour_of_day";
     private static final String MINUTE_IN_HOUR = "minute_in_hour";
+    private static final String TIMEZONE_LONG_NAME = "timezone_long_name";
 
     // Values of discrete properties:
     private static final String MISSING_VALUE_STR = "missing";
@@ -994,10 +996,12 @@ public class ESSensorManager
 
         // Time:
         try {
+            String timeZoneName = TimeZone.getDefault().getDisplayName(false,TimeZone.LONG);
             int hour = _timestamp.getHourOfDayOutOf24();
             int minute = _timestamp.getMinuteOfHour();
             _lowFreqData.put(HOUR_OF_DAY,hour);
             _lowFreqData.put(MINUTE_IN_HOUR,minute);
+            _lowFreqData.put(TIMEZONE_LONG_NAME,timeZoneName);
             Log.d(LOG_TAG,"== Timestamp " + _timestamp + ": " + _timestamp.infoString());
             Log.d(LOG_TAG,"== Timestamp hour: " + hour + ". minute: " + minute);
         } catch (JSONException e) {

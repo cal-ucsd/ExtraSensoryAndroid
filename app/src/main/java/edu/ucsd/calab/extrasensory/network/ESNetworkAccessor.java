@@ -818,7 +818,6 @@ public class ESNetworkAccessor {
                     return;
                 }
 
-                String timeZoneName = TimeZone.getDefault().getDisplayName(false,TimeZone.LONG);
                 String urlString = (params._requester.shouldSendWithHttps() ? SERVER_HTTPS_API_PREFIX : SERVER_HTTP_API_PREFIX)
                         + resources.getString(R.string.api_upload_zip) +
                         "?" + REQUEST_FIELD_CLASSIFIER_TYPE + "=" + ESSettings.classifierType() +
