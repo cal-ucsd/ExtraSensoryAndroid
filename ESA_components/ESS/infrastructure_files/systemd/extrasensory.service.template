@@ -1,0 +1,8 @@
+[Unit]
+Description=uWSGI instance to serve the ExtraSensoryServer app
+
+[Service]
+User=user
+Group=www-data
+
+ExecStart=/bin/sh /home/user/ESS/start_extrasensory_server.sh /home/user/ESS

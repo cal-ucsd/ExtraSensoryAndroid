@@ -1,0 +1,13 @@
+server {
+	listen 80;
+	listen 443 ssl;
+    ssl_certificate ssh/server_certificate.crt;
+    ssl_certificate_key ssh/lab.univ.edu.private.key;
+	server_name lab.univ.edu;
+
+	location /extrasensory {
+		include uwsgi_params;
+		uwsgi_pass unix:/home/user/ESS/ess.sock;
+	}
+	
+}
