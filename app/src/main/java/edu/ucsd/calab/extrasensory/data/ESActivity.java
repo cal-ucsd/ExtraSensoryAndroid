@@ -6,6 +6,8 @@ import java.security.InvalidParameterException;
 import java.util.HashMap;
 import java.util.Map;
 
+import edu.ucsd.calab.extrasensory.ui.SelectionFromListActivity;
+
 /**
  * This class represents a single instance (roughly representing 1 minute) and describes the labels
  * relevant to this instance.
@@ -158,6 +160,22 @@ public class ESActivity {
     public boolean hasUserProvidedLabels() {return hasUserCorrectedMainLabel(); }
     public boolean hasUserCorrectedMainLabel() {
         return (_mainActivityUserCorrection != null);
+    }
+
+    public boolean hasUserReportedNondummyMainLabel() {
+        return (_mainActivityUserCorrection != null) && (!_mainActivityUserCorrection.equals(SelectionFromListActivity.NOT_SURE));
+    }
+
+    public boolean hasUserReportedSecondaryLabels() {
+        return (_secondaryActivities != null) && (_secondaryActivities.length > 0);
+    }
+
+    public boolean hasUserReportedMoodLabels() {
+        return (_moods != null) && (_moods.length > 0);
+    }
+
+    public boolean hasAnyUserReportedLabelsNotDummyLabel() {
+        return hasUserReportedNondummyMainLabel() || hasUserReportedSecondaryLabels() || hasUserReportedMoodLabels();
     }
 
     @Override

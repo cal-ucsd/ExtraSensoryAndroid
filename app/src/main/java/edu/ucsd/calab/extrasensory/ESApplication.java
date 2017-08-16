@@ -1,23 +1,19 @@
 package edu.ucsd.calab.extrasensory;
 
 import android.app.Activity;
-import android.app.ActivityManager;
 import android.app.AlarmManager;
-import android.app.AlertDialog;
 import android.app.Application;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
 import android.media.RingtoneManager;
 import android.os.Bundle;
 import android.os.SystemClock;
-import android.provider.Settings;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
@@ -25,12 +21,9 @@ import android.util.Log;
 import java.io.File;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 
 import edu.ucsd.calab.extrasensory.data.ESActivity;
-import edu.ucsd.calab.extrasensory.data.ESContinuousActivity;
 import edu.ucsd.calab.extrasensory.data.ESDatabaseAccessor;
-import edu.ucsd.calab.extrasensory.data.ESLabelStrings;
 import edu.ucsd.calab.extrasensory.data.ESLabelStruct;
 import edu.ucsd.calab.extrasensory.data.ESSettings;
 import edu.ucsd.calab.extrasensory.data.ESTimestamp;
@@ -39,7 +32,6 @@ import edu.ucsd.calab.extrasensory.sensors.ESSensorManager;
 import edu.ucsd.calab.extrasensory.sensors.WatchProcessing.ESWatchProcessor;
 import edu.ucsd.calab.extrasensory.ui.FeedbackActivity;
 import edu.ucsd.calab.extrasensory.ui.MainActivity;
-import edu.ucsd.calab.extrasensory.ui.SelectionFromListActivity;
 
 /**
  * This class serves as a central location to manage various aspects of the application,
@@ -310,7 +302,7 @@ public class ESApplication extends Application {
         // Before registering the repeating alarm, make sure that any similar alarm is canceled:
         _alarmManager.cancel(pendingIntent);
         // Check whether we should start a new notification schedule or simply leave it canceled:
-        if (!ESSettings.useNotifications()) {
+        if (!ESSettings.useAnyTypeOfNotifications()) {
             Log.d(LOG_TAG, "Requested to not use notifications, so not starting notification schedule.");
             return;
         }
@@ -402,9 +394,14 @@ public class ESApplication extends Application {
 
         ESActivity latestVerifiedActivity = ESDatabaseAccessor.getESDatabaseAccessor().getLatestVerifiedActivity(lookBackFrom);
 
-        if (latestVerifiedActivity == null || SelectionFromListActivity.NOT_SURE.equals(latestVerifiedActivity.get_mainActivityUserCorrection())) {
+//        if (latestVerifiedActivity == null || SelectionFromListActivity.NOT_SURE.equals(latestVerifiedActivity.get_mainActivityUserCorrection())) {
+        if (latestVerifiedActivity == null || !latestVerifiedActivity.hasAnyUserReportedLabelsNotDummyLabel()) {
             // Then there hasn't been a verified activity in a long time. Need to call for active feedback
             Log.i(LOG_TAG,"Notification: Latest activity was too long ago. Need to prompt for active feedback.");
+            if (!ESSettings.useNearFutureNotifications()) {
+                Log.d(LOG_TAG,"Notification: near-future notifications are disabled.");
+                return;
+            }
             if (isAppInForeground()) {
                 // Don't deal with notifications. Send broadcast to show alert:
                 Intent broadcast = new Intent(ACTION_ALERT_ACTIVE_FEEDBACK);
@@ -435,6 +432,10 @@ public class ESApplication extends Application {
         else {
             // Then use this verified activity's labels to ask if still doing the same
             Log.i(LOG_TAG,"Notification: Found latest verified activity. Need to ask user if was doing the same until now.");
+            if (!ESSettings.useNearPastNotifications()) {
+                Log.d(LOG_TAG,"Notification: near-past notifications are disabled.");
+                return;
+            }
             ESTimestamp nowTimestamp = new ESTimestamp(now);
             long millisPassed = now.getTime() - latestVerifiedActivity.get_timestamp().getDateOfTimestamp().getTime();
             int minutesPassed = (int)(millisPassed / ESApplication.MILLISECONDS_IN_MINUTE);
@@ -509,7 +510,8 @@ public class ESApplication extends Application {
     }
 
     private static String getAlertQuestion(ESActivity latestVerifiedActivity,int minutesPassed) {
-        String question = "In the past " + minutesPassed + " minutes were you still " + latestVerifiedActivity.get_mainActivityUserCorrection();
+        String mainActivityStr = latestVerifiedActivity.hasUserReportedNondummyMainLabel() ? latestVerifiedActivity.get_mainActivityUserCorrection() : "";
+        String question = "In the past " + minutesPassed + " minutes were you still" + mainActivityStr;
 
         String[] secondaries = latestVerifiedActivity.get_secondaryActivities();
         if (secondaries != null && secondaries.length > 0) {
@@ -522,7 +524,7 @@ public class ESApplication extends Application {
 
         String[] moods = latestVerifiedActivity.get_moods();
         if (moods != null && moods.length > 0) {
-            question += " and feeling " + moods[0];
+            question += " feeling " + moods[0];
             for (int i = 1; i < moods.length; i ++) {
                 question += ", " + moods[i];
             }
@@ -595,7 +597,7 @@ public class ESApplication extends Application {
             // Is the app now in the background:
             if (!isAppInForeground()) {
                 // Then probably the app just now moved to the background, when this activity was stopped:
-                Log.i(LOG_TAG_LIFE_CYCLE,String.format("App switched to background (%s just stopped)",activityName));
+                Log.i(LOG_TAG_LIFE_CYCLE,String.format("Now background (%s just stopped)",activityName));
 //                Notification notification = createNotification("bella",PendingIntent.getActivity(getTheAppContext(),13,new Intent("testing.calab.ucsd.edu"),0));
 //                ((NotificationManager)getTheAppContext().getSystemService(Context.NOTIFICATION_SERVICE)).notify(NOTIFICATION_ID,notification);
             }

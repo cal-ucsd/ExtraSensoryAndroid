@@ -20,7 +20,8 @@ public class ESSettings {
 
     private String _uuid;
     private int _maxStoredExamples;
-    private boolean _useNotifications;
+    private boolean _useNearPastNotifications;
+    private boolean _useNearFutureNotifications;
     private int _notificationIntervalInSeconds;
     private int _numExamplesStoreBeforeSend;
     private boolean _allowCellular;
@@ -34,19 +35,21 @@ public class ESSettings {
     private ArrayList<Integer> _hfSensorTypesToRecord;
     private ArrayList<Integer> _lfSensorTypesToRecord;
     private boolean _savePredictionFiles;
+    private boolean _saveUserLabelsFiles;
 
     ESSettings(String uuid,int maxStoredExamples,
-               boolean useNotifications,int notificationIntervalInSeconds,
+               boolean useNearPastNotifications,boolean useNearFutureNotifications,int notificationIntervalInSeconds,
                int numExamplesStoreBeforeSend,
                boolean allowCellular,
                boolean locationBubbleUsed, Location locationBubbleCenter,
                String classifierType,String classifierName,
                boolean recordAudio,boolean recordLocation,boolean recordWatch,
                ArrayList<Integer> hfSensorTypesToRecord,ArrayList<Integer> lfSensorTypesToRecord,
-               boolean savePredictionFiles) {
+               boolean savePredictionFiles,boolean saveUserLabelsFiles) {
         _uuid = uuid;
         _maxStoredExamples = maxStoredExamples;
-        _useNotifications = useNotifications;
+        _useNearPastNotifications = useNearPastNotifications;
+        _useNearFutureNotifications = useNearFutureNotifications;
         _notificationIntervalInSeconds = notificationIntervalInSeconds;
         _numExamplesStoreBeforeSend = numExamplesStoreBeforeSend;
         _allowCellular = allowCellular;
@@ -60,6 +63,7 @@ public class ESSettings {
         _hfSensorTypesToRecord = hfSensorTypesToRecord != null ? hfSensorTypesToRecord : new ArrayList<Integer>();
         _lfSensorTypesToRecord = lfSensorTypesToRecord != null ? lfSensorTypesToRecord : new ArrayList<Integer>();
         _savePredictionFiles = savePredictionFiles;
+        _saveUserLabelsFiles = saveUserLabelsFiles;
     }
 
     private static ESSettings _settings = null;
@@ -89,11 +93,21 @@ public class ESSettings {
     }
 
     /**
-     * Should the app use the notification mechanism?
-     * @return Use notifications or not
+     * Should the app use the notification mechanism for near-past context?
+     * @return Use near-past notifications or not
      */
-    public static boolean useNotifications() { return getTheSettings()._useNotifications; }
+    public static boolean useNearPastNotifications() { return getTheSettings()._useNearPastNotifications; }
 
+    /**
+     * Should the app use the notification mechanism for near-future context?
+     * @return Use near-future notifications or not
+     */
+    public static boolean useNearFutureNotifications() { return getTheSettings()._useNearFutureNotifications; }
+
+    public static boolean useAnyTypeOfNotifications() {
+        ESSettings theSettings = getTheSettings();
+        return (theSettings._useNearPastNotifications || theSettings._useNearFutureNotifications);
+    }
     /**
      * Get the notification interval - the time interval between scheduled notification checks.
      * (in each check, if necessary a notification will pop to the user).
@@ -185,6 +199,13 @@ public class ESSettings {
      */
     public static boolean savePredictionFiles() { return getTheSettings()._savePredictionFiles; }
 
+    /**
+     * Should the app save to files the user-reported labels.
+     * These files will be available for other apps to read.
+     * @return Save user-labels files or not?
+     */
+    public static boolean saveUserLabelsFiles() { return getTheSettings()._saveUserLabelsFiles; }
+
 
     // Setters:
 
@@ -198,11 +219,20 @@ public class ESSettings {
     }
 
     /**
-     * Set should the app use the notification mechanism
-     * @param useNotifications Use notifications or not?
+     * Set should the app use the near-past notification mechanism
+     * @param useNearPastNotifications Use near-past notifications or not?
      */
-    public static void setUseNotifications(boolean useNotifications) {
-        _settings = getTheDBAccessor().setSettingsUseNotifications(useNotifications);
+    public static void setUseNearPastNotifications(boolean useNearPastNotifications) {
+        _settings = getTheDBAccessor().setSettingsUseNearPastNotifications(useNearPastNotifications);
+        ((ESApplication)ESApplication.getTheAppContext()).checkShouldWeCollectDataAndManageAppropriately();
+    }
+
+    /**
+     * Set should the app use the near-future notification mechanism
+     * @param useNearFutureNotifications Use near-future notifications or not?
+     */
+    public static void setUseNearFutureNotifications(boolean useNearFutureNotifications) {
+        _settings = getTheDBAccessor().setSettingsUseNearFutureNotifications(useNearFutureNotifications);
         ((ESApplication)ESApplication.getTheAppContext()).checkShouldWeCollectDataAndManageAppropriately();
     }
 
@@ -322,6 +352,15 @@ public class ESSettings {
      */
     public static void setSavePredictionFiles(boolean savePredictionFiles) {
         _settings = getTheDBAccessor().setSettingsSavePredictionFiles(savePredictionFiles);
+    }
+
+    /**
+     * Set whether or not the app should save to files the user-reported labels.
+     * These files can be accessed by other apps.
+     * @param saveUserLabelsFiles Save user-labels to files or not?
+     */
+    public static void setSaveUserLabelsFiles(boolean saveUserLabelsFiles) {
+        _settings = getTheDBAccessor().setSettingsSaveUserLabelsFiles(saveUserLabelsFiles);
     }
 
     private static ESDatabaseAccessor getTheDBAccessor() {

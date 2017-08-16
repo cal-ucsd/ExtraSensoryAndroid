@@ -76,5 +76,8 @@
     <string name="save_pred_files_on">on</string>
     <string name="save_pred_files_off">off</string>
     <string name="dummy_main_activity">Not sure</string>
+    <string name="checkbox_use_near_past_notifications">To confirm near-past context</string>
+    <string name="checkbox_use_near_future_notifications">To report near-future context</string>
+    <string name="save_user_labels_files">Save user-labels files:</string>
 
 </resources>

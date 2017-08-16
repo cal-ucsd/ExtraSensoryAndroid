@@ -16,31 +16,21 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <LinearLayout
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_weight="3"
+                android:layout_height="wrap_content"
+                android:text="@string/use_notifications"/>
+            <CheckBox
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_weight="3"
-                    android:layout_height="wrap_content"
-                    android:text="@string/use_notifications"/>
-                <RadioGroup xmlns:android="http://schemas.android.com/apk/res/android"
-                    android:id="@+id/radio_group_use_notifications"
-                    android:layout_width="0dp"
-                    android:layout_weight="2"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-                    <RadioButton android:id="@+id/radio_use_notifications_off"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/notifications_off"/>
-                    <RadioButton android:id="@+id/radio_use_notifications_on"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/notifications_on"/>
-                </RadioGroup>
-            </LinearLayout>
+                android:id="@+id/checkbox_near_past_notifications"
+                android:text="@string/checkbox_use_near_past_notifications"/>
+            <CheckBox
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/checkbox_near_future_notifications"
+                android:text="@string/checkbox_use_near_future_notifications"/>
             <LinearLayout
                 android:orientation="horizontal"
                 android:layout_width="match_parent"
@@ -278,6 +268,32 @@
                         android:layout_height="wrap_content"
                         android:text="@string/save_pred_files_off"/>
                     <RadioButton android:id="@+id/radio_save_pred_files_on"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/save_pred_files_on"/>
+                </RadioGroup>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_weight="3"
+                    android:layout_height="wrap_content"
+                    android:text="@string/save_user_labels_files"/>
+                <RadioGroup xmlns:android="http://schemas.android.com/apk/res/android"
+                    android:id="@+id/radio_group_save_user_labels_files"
+                    android:layout_width="0dp"
+                    android:layout_weight="2"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+                    <RadioButton android:id="@+id/radio_save_user_labels_files_off"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/save_pred_files_off"/>
+                    <RadioButton android:id="@+id/radio_save_user_labels_files_on"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/save_pred_files_on"/>

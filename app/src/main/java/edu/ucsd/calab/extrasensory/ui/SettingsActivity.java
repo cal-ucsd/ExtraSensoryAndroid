@@ -62,6 +62,24 @@ public class SettingsActivity extends BaseActivity {
             }
         });
         // Use notifications:
+        CheckBox useNearPastNotifications = (CheckBox)findViewById(R.id.checkbox_near_past_notifications);
+        useNearPastNotifications.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                ESSettings.setUseNearPastNotifications(isChecked);
+                notificationIntervalSeekBar.setEnabled(ESSettings.useAnyTypeOfNotifications());
+            }
+        });
+        CheckBox useNearFutureNotifications = (CheckBox)findViewById(R.id.checkbox_near_future_notifications);
+        useNearFutureNotifications.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                ESSettings.setUseNearFutureNotifications(isChecked);
+                notificationIntervalSeekBar.setEnabled(ESSettings.useAnyTypeOfNotifications());
+            }
+        });
+
+/*
         RadioGroup useNotificationsRG = (RadioGroup)findViewById(R.id.radio_group_use_notifications);
         useNotificationsRG.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
@@ -80,6 +98,7 @@ public class SettingsActivity extends BaseActivity {
                 }
             }
         });
+*/
 
 
         // Num examples stored before sending:
@@ -215,6 +234,24 @@ public class SettingsActivity extends BaseActivity {
             }
         });
 
+        // Save user-labels files:
+        RadioGroup saveUserLabelsFilesRG = (RadioGroup)findViewById(R.id.radio_group_save_user_labels_files);
+        saveUserLabelsFilesRG.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                switch (checkedId) {
+                    case R.id.radio_save_user_labels_files_on:
+                        ESSettings.setSaveUserLabelsFiles(true);
+                        break;
+                    case R.id.radio_save_user_labels_files_off:
+                        ESSettings.setSaveUserLabelsFiles(false);
+                        break;
+                    default:
+                        Log.e(LOG_TAG,"got unexpected id for radio group of save-prediction-files");
+                }
+            }
+        });
+
 
         // Classifier settings:
         RadioGroup classifierSettingsRG = (RadioGroup)findViewById(R.id.radio_group_classifier_setting);
@@ -285,16 +322,13 @@ public class SettingsActivity extends BaseActivity {
         intervalSeekBar.setProgress(intervalMinutes);
 
         // Set should use notifications or not:
-        boolean useNotifications = ESSettings.useNotifications();
-        RadioGroup useNotificationsRG = (RadioGroup)findViewById(R.id.radio_group_use_notifications);
-        if (useNotifications) {
-            useNotificationsRG.check(R.id.radio_use_notifications_on);
-            intervalSeekBar.setEnabled(true);
-        }
-        else {
-            useNotificationsRG.check(R.id.radio_use_notifications_off);
-            intervalSeekBar.setEnabled(false);
-        }
+        CheckBox useNearPastNotificationsCB = (CheckBox)findViewById(R.id.checkbox_near_past_notifications);
+        useNearPastNotificationsCB.setChecked(ESSettings.useNearPastNotifications());
+        CheckBox useNearFutureNotificationsCB = (CheckBox)findViewById(R.id.checkbox_near_future_notifications);
+        useNearFutureNotificationsCB.setChecked(ESSettings.useNearFutureNotifications());
+
+        intervalSeekBar.setEnabled(ESSettings.useAnyTypeOfNotifications());
+
 
         // Set the number of examples stored before sending:
         int numExamplesStoreBeforeSend = ESSettings.numExamplesStoreBeforeSend();
@@ -359,6 +393,15 @@ public class SettingsActivity extends BaseActivity {
         }
         else {
             savePredFilesRG.check(R.id.radio_save_pred_files_off);
+        }
+
+        // should save user-labels files:
+        RadioGroup saveUserLabelsFilesRG = (RadioGroup)findViewById(R.id.radio_group_save_user_labels_files);
+        if (ESSettings.saveUserLabelsFiles()) {
+            saveUserLabelsFilesRG.check(R.id.radio_save_user_labels_files_on);
+        }
+        else {
+            saveUserLabelsFilesRG.check(R.id.radio_save_user_labels_files_off);
         }
 
         // Classifier settings:
