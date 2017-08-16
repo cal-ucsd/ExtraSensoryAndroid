@@ -402,7 +402,7 @@ public class ESApplication extends Application {
 
         ESActivity latestVerifiedActivity = ESDatabaseAccessor.getESDatabaseAccessor().getLatestVerifiedActivity(lookBackFrom);
 
-        if (latestVerifiedActivity == null || SelectionFromListActivity.DONT_REMEMBER.equals(latestVerifiedActivity.get_mainActivityUserCorrection())) {
+        if (latestVerifiedActivity == null || SelectionFromListActivity.NOT_SURE.equals(latestVerifiedActivity.get_mainActivityUserCorrection())) {
             // Then there hasn't been a verified activity in a long time. Need to call for active feedback
             Log.i(LOG_TAG,"Notification: Latest activity was too long ago. Need to prompt for active feedback.");
             if (isAppInForeground()) {

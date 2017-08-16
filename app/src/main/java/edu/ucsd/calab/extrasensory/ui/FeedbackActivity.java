@@ -138,6 +138,11 @@ public class FeedbackActivity extends BaseActivity {
             _presentServerGuesses = !_parameters._continuousActivityToEdit.hasUserProvidedLabels();
         }
 
+        // Put a dummy main activity, in case it is empty:
+        if (_labelStruct._mainActivity == null) {
+            _labelStruct._mainActivity = SelectionFromListActivity.NOT_SURE;
+        }
+
         feedbackFlag = false;
         presentFeedbackView();
 
@@ -251,9 +256,7 @@ public class FeedbackActivity extends BaseActivity {
                     case ROW_MAIN:
                         intent = new Intent(ESApplication.getTheAppContext(), SelectionFromListActivity.class);
                         intent.putExtra(SelectionFromListActivity.LIST_TYPE_KEY, SelectionFromListActivity.LIST_TYPE_MAIN_ACTIVITY);
-                        if (_parameters._feedbackType == FEEDBACK_TYPE_HISTORY_CONTINUOUS_ACTIVITY) {
-                            intent.putExtra(SelectionFromListActivity.ADD_DONT_REMEMBER_LABEL_KEY,true);
-                        }
+                        intent.putExtra(SelectionFromListActivity.ADD_NOT_SURE_LABEL_KEY,true);
                         intent.putExtra(SelectionFromListActivity.PRESELECTED_LABELS_KEY,new String[] {_labelStruct._mainActivity});
                         startActivityForResult(intent, ROW_MAIN);
                         break;
@@ -305,16 +308,19 @@ public class FeedbackActivity extends BaseActivity {
             public void onClick(View arg0) {
                 boolean initiatedByNotification = getIntent().hasExtra(KEY_INITIATED_BY_NOTIFICATION);
 
-                //user must enter main activity before submitting feedback
-                if(_labelStruct._mainActivity == null){
+                //user must enter some labels before submitting feedback
+                boolean emptyMain = (_labelStruct._mainActivity == null) || (_labelStruct._mainActivity == SelectionFromListActivity.NOT_SURE);
+                boolean emptySec = (_labelStruct._secondaryActivities == null) || (_labelStruct._secondaryActivities.length <= 0);
+                boolean emptyMood = (_labelStruct._moods == null) || (_labelStruct._moods.length <= 0);
+                if(emptyMain && emptySec && emptyMood){
                     // custom dialog
                     final Dialog dialog = new Dialog(context);
                     dialog.setContentView(R.layout.activity_feedback_dialog);
-                    dialog.setTitle("ExtraSensory");
+                    dialog.setTitle(R.string.dialog_title);
 
                     // set the custom dialog components - text, image and button
                     TextView text = (TextView) dialog.findViewById(R.id.feedback_dialog_text);
-                    text.setText("Feedback must have a Main Activity.");
+                    text.setText(R.string.message_cant_report_zero_labels);
 
                     Button dialogButton = (Button) dialog.findViewById(R.id.feedback_dialogButtonOK);
                     // if button is clicked, close the custom dialog

@@ -18,6 +18,8 @@
     <string name="action_active_feedback">active feedback</string>
     <string name="title_activity_setting">Setting</string>
     <string name="title_activity_feedback">Feedback</string>
+    <string name="dialog_title">ExtraSensory</string>
+    <string name="message_cant_report_zero_labels">Feedback must have Some label.</string>
     <string name="api_upload_zip">upload_sensor_data</string>
     <string name="api_feedback">user_labels</string>
     <string name="REC">REC</string>
@@ -73,5 +75,6 @@
     <string name="save_pred_files">Save prediction files:</string>
     <string name="save_pred_files_on">on</string>
     <string name="save_pred_files_off">off</string>
+    <string name="dummy_main_activity">Not sure</string>
 
 </resources>
