@@ -308,31 +308,33 @@ public class FeedbackActivity extends BaseActivity {
             public void onClick(View arg0) {
                 boolean initiatedByNotification = getIntent().hasExtra(KEY_INITIATED_BY_NOTIFICATION);
 
-                //user must enter some labels before submitting feedback
-                boolean emptyMain = (_labelStruct._mainActivity == null) || (_labelStruct._mainActivity == SelectionFromListActivity.NOT_SURE);
-                boolean emptySec = (_labelStruct._secondaryActivities == null) || (_labelStruct._secondaryActivities.length <= 0);
-                boolean emptyMood = (_labelStruct._moods == null) || (_labelStruct._moods.length <= 0);
-                if(emptyMain && emptySec && emptyMood){
-                    // custom dialog
-                    final Dialog dialog = new Dialog(context);
-                    dialog.setContentView(R.layout.activity_feedback_dialog);
-                    dialog.setTitle(R.string.dialog_title);
+                //user must enter some labels before submitting active feedback
+                if (_parameters._feedbackType == FEEDBACK_TYPE_ACTIVE) {
+                    boolean emptyMain = (_labelStruct._mainActivity == null) || (_labelStruct._mainActivity.equals(SelectionFromListActivity.NOT_SURE));
+                    boolean emptySec = (_labelStruct._secondaryActivities == null) || (_labelStruct._secondaryActivities.length <= 0);
+                    boolean emptyMood = (_labelStruct._moods == null) || (_labelStruct._moods.length <= 0);
+                    if (emptyMain && emptySec && emptyMood) {
+                        // custom dialog
+                        final Dialog dialog = new Dialog(context);
+                        dialog.setContentView(R.layout.activity_feedback_dialog);
+                        dialog.setTitle(R.string.dialog_title);
 
-                    // set the custom dialog components - text, image and button
-                    TextView text = (TextView) dialog.findViewById(R.id.feedback_dialog_text);
-                    text.setText(R.string.message_cant_report_zero_labels);
+                        // set the custom dialog components - text, image and button
+                        TextView text = (TextView) dialog.findViewById(R.id.feedback_dialog_text);
+                        text.setText(R.string.message_cant_report_zero_labels);
 
-                    Button dialogButton = (Button) dialog.findViewById(R.id.feedback_dialogButtonOK);
-                    // if button is clicked, close the custom dialog
-                    dialogButton.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            dialog.dismiss();
-                        }
-                    });
+                        Button dialogButton = (Button) dialog.findViewById(R.id.feedback_dialogButtonOK);
+                        // if button is clicked, close the custom dialog
+                        dialogButton.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                dialog.dismiss();
+                            }
+                        });
 
-                    dialog.show();
-                    return;
+                        dialog.show();
+                        return;
+                    }
                 }
 
                 if(_parameters._feedbackType == FEEDBACK_TYPE_ACTIVE){
