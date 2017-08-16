@@ -102,8 +102,11 @@ public class SelectionFromListActivity extends BaseActivity {
             int numSelectedBeforeChanging = _selectedLabels.size();
 
             if (_selectedLabels.contains(clickedLabel)) {
-                // Then this click was to de-select this label:
-                _selectedLabels.remove(clickedLabel);
+                if (_allowMultiSelection) {
+                    // Then this click was to de-select this label:
+                    _selectedLabels.remove(clickedLabel);
+                }
+                // Else (select exactly 1 option): don't do anything (leave the already selected value)
             }
             else {
                 // Then this click was to select this label:
