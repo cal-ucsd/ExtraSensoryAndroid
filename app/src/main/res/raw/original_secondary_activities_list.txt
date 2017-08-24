@@ -1,0 +1,112 @@
+Lifting weights|Sports
+Playing baseball|Sports
+Playing basketball|Sports
+Playing lacrosse|Sports
+Skateboarding|Sports,Transportation
+Playing soccer|Sports
+Playing frisbee|Sports
+Exercising|Sports
+Stretching|Sports
+Yoga|Sports
+Elliptical machine|Sports
+Treadmill|Sports
+Stationary bike|Sports
+Surfing|Sports
+Cooking|Housework
+Cleaning|Housework
+Gardening|Housework
+Doing laundry|Housework
+Mowing the lawn|Housework
+Raking leaves|Housework
+Vacuuming|Housework
+Washing dishes|Housework
+Washing car|Housework
+Manual labor|Housework
+Dancing|Leisure
+Listening to music (with earphones)|Leisure
+Listening to music (no earphones)|Leisure
+Listening to audio (with earphones)|Leisure
+Listening to audio (no earphones)|Leisure
+Playing musical instrument|Leisure
+Singing|Leisure
+Whistling|Leisure
+Playing videogames|Leisure
+Playing phone-games|Leisure
+Relaxing|Leisure
+Strolling|Leisure
+Hiking|Leisure
+Shopping|Housework,Leisure,Basic needs
+Watching TV|Leisure
+Talking|Leisure,Physical,Work,Company
+Reading a book|Leisure
+Drinking (alcohol)|Leisure
+Smoking|Leisure,Basic needs
+Eating|Basic needs,Functional independence
+Drinking (non-alcohol)|Leisure,Basic needs
+Sleeping|Basic needs
+Toilet|Basic needs,Functional independence
+Bathing - bath|Basic needs,Functional independence
+Bathing - shower|Basic needs,Functional independence
+Grooming|Basic needs,Functional independence
+Dressing|Basic needs,Functional independence
+Stairs - going up|Physical,Functional independence
+Stairs - going down|Physical,Functional independence
+Limping|Physical
+Jumping|Physical
+Laughing|Physical
+Crying|Physical
+Using crutches|Physical,Transportation,Functional independence
+Wheelchair|Physical,Transportation,Functional independence
+Lab work|Work
+Written work|Work
+Drawing|Work
+Texting|Work,Leisure
+Surfing the internet|Work,Leisure
+Computer work|Work
+Studying|Work
+In class|Location
+In a meeting|Work,Location
+At home|Location,Housework
+At work|Location,Work
+At school|Location,Work
+At a bar|Location,Leisure
+At a concert|Location,Leisure
+At a party|Location,Leisure
+At a sports event|Location,Leisure,Sports
+At the beach|Location,Leisure
+At sea|Location,Leisure
+At the pool|Sports,Location,Leisure
+At the gym|Sports,Location,Leisure
+At a restaurant|Location,Leisure
+Outside|Location
+Indoors|Location
+On a bus|Location,Transportation
+On a plane|Location,Transportation
+On a train|Location,Transportation
+On a boat|Location,Transportation,Leisure
+Elevator|Location,Transportation
+Motorbike|Location,Transportation
+Riding an animal|Location,Transportation
+Drive - I'm the driver|Transportation
+Drive - I'm a passenger|Transportation
+In a car|Location,Transportation
+Phone in pocket|Phone
+Phone in hand|Phone
+Phone in bag|Phone
+Phone on table|Phone
+Phone away from me|Phone
+Phone - someone else using it|Phone,Company
+Phone strapped|Phone
+Transfer - bed to wheelchair|Functional independence
+Transfer - bed to stand|Functional independence
+Transfer - wheelchair to bed|Functional independence
+Transfer - stand to bed|Functional independence
+On a date|Company,Leisure,Location
+Walking the dog|Company,Housework,Leisure
+With co-workers|Company,Work
+With family|Company
+With friends|Company,Leisure
+With kids|Company
+With a pet|Company,Leisure
+Taking care of kids|Company,Housework
+Taking care of pet|Company,Housework

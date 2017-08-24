@@ -1,112 +1,143 @@
-Lifting weights|Sports
-Playing baseball|Sports
-Playing basketball|Sports
-Playing lacrosse|Sports
+Lying down|Body-state
+Kneeling|Body-state
+Sitting|Body-state
+Standing|Body-state
+Walking|Body-state
+Running|Body-state,Sports
+Bicycling|Body-state,Sports,Transportation
+Dancing|Body-state,Entertainment
+Stairs - going up|Body-state
+Stairs - going down|Body-state
+Weights workout|Sports
+Playing ballgame|Sports
 Skateboarding|Sports,Transportation
-Playing soccer|Sports
-Playing frisbee|Sports
 Exercising|Sports
 Stretching|Sports
 Yoga|Sports
-Elliptical machine|Sports
+Cardio workout|Sports
 Treadmill|Sports
 Stationary bike|Sports
-Surfing|Sports
+Playing sports|Sports
+Watching sports|Sports,Entertainment
 Cooking|Housework
 Cleaning|Housework
-Gardening|Housework
 Doing laundry|Housework
-Mowing the lawn|Housework
-Raking leaves|Housework
 Vacuuming|Housework
 Washing dishes|Housework
-Washing car|Housework
-Manual labor|Housework
-Dancing|Leisure
-Listening to music (with earphones)|Leisure
-Listening to music (no earphones)|Leisure
-Listening to audio (with earphones)|Leisure
-Listening to audio (no earphones)|Leisure
-Playing musical instrument|Leisure
+Listening to music|Entertainment
+Listening to audio|Entertainment
+Using earphones|Entertainment
+Playing videogames|Entertainment
+Playing phone-games|Entertainment
+Watching TV|Entertainment,Leisure
+Playing musical instrument|Entertainment
 Singing|Leisure
-Whistling|Leisure
-Playing videogames|Leisure
-Playing phone-games|Leisure
-Relaxing|Leisure
 Strolling|Leisure
 Hiking|Leisure
 Shopping|Housework,Leisure,Basic needs
-Watching TV|Leisure
-Talking|Leisure,Physical,Work,Company
-Reading a book|Leisure
+Talking|Leisure,Work,Social
 Drinking (alcohol)|Leisure
 Smoking|Leisure,Basic needs
-Eating|Basic needs,Functional independence
+Eating|Basic needs
 Drinking (non-alcohol)|Leisure,Basic needs
 Sleeping|Basic needs
-Toilet|Basic needs,Functional independence
-Bathing - bath|Basic needs,Functional independence
-Bathing - shower|Basic needs,Functional independence
-Grooming|Basic needs,Functional independence
-Dressing|Basic needs,Functional independence
-Stairs - going up|Physical,Functional independence
-Stairs - going down|Physical,Functional independence
-Limping|Physical
-Jumping|Physical
-Laughing|Physical
-Crying|Physical
-Using crutches|Physical,Transportation,Functional independence
-Wheelchair|Physical,Transportation,Functional independence
+Toilet|Basic needs
+Bathing - bath|Basic needs
+Bathing - shower|Basic needs
+Grooming|Basic needs
+Dressing|Basic needs
 Lab work|Work
 Written work|Work
-Drawing|Work
-Texting|Work,Leisure
 Surfing the internet|Work,Leisure
 Computer work|Work
 Studying|Work
+Teaching|Work
 In class|Location
 In a meeting|Work,Location
 At home|Location,Housework
 At work|Location,Work
 At school|Location,Work
-At a bar|Location,Leisure
-At a concert|Location,Leisure
-At a party|Location,Leisure
-At a sports event|Location,Leisure,Sports
-At the beach|Location,Leisure
-At sea|Location,Leisure
-At the pool|Sports,Location,Leisure
-At the gym|Sports,Location,Leisure
-At a restaurant|Location,Leisure
+At a bar|Location
+At a party|Location,Social
+At a sports event|Location,Sports
+At the beach|Location
+At the pool|Sports,Location
+At the gym|Sports,Location
+At a restaurant|Location
+At a live performance|Location,Entertainment
 Outside|Location
 Indoors|Location
-On a bus|Location,Transportation
-On a plane|Location,Transportation
-On a train|Location,Transportation
-On a boat|Location,Transportation,Leisure
+On a bus|Transportation
+On a plane|Transportation
+On a train|Transportation
 Elevator|Location,Transportation
-Motorbike|Location,Transportation
-Riding an animal|Location,Transportation
+Motorbike|Transportation
 Drive - I'm the driver|Transportation
 Drive - I'm a passenger|Transportation
-In a car|Location,Transportation
+In a car|Transportation
+Commuting|Transportation
 Phone in pocket|Phone
 Phone in hand|Phone
 Phone in bag|Phone
 Phone on table|Phone
 Phone away from me|Phone
-Phone - someone else using it|Phone,Company
+Phone - someone else using it|Phone,Social
 Phone strapped|Phone
-Transfer - bed to wheelchair|Functional independence
-Transfer - bed to stand|Functional independence
-Transfer - wheelchair to bed|Functional independence
-Transfer - stand to bed|Functional independence
-On a date|Company,Leisure,Location
-Walking the dog|Company,Housework,Leisure
-With co-workers|Company,Work
-With family|Company
-With friends|Company,Leisure
-With kids|Company
-With a pet|Company,Leisure
-Taking care of kids|Company,Housework
-Taking care of pet|Company,Housework
+On a date|Social,Leisure,Location
+Walking the dog|Social,Housework
+With co-workers|Social,Work
+With family|Social
+With friends|Social,Leisure
+With kids|Social
+With a pet|Social,Leisure
+Taking care of kids|Social,Housework
+Taking care of pet|Social,Housework
+Active|Mood
+Afraid|Mood
+Alert|Mood
+Amused|Mood
+Angry|Mood
+Ashamed|Mood
+Attentive|Mood
+Bored|Mood
+Calm|Mood
+Crazy|Mood
+Determined|Mood
+Disgusted|Mood
+Distressed|Mood
+Dreamy|Mood
+Energetic|Mood
+Enthusiastic|Mood
+Excited|Mood
+Frustrated|Mood
+Guilty|Mood
+Happy|Mood
+High|Mood
+Hostile|Mood
+Hungry|Mood
+In emotional pain|Mood
+In love|Mood
+In physical pain|Mood
+Inspired|Mood
+Interested|Mood
+Irritable|Mood
+Jittery|Mood
+Lonely|Mood
+Nervous|Mood
+Normal|Mood
+Nostalgic|Mood
+Optimistic|Mood
+Physically sick|Mood
+Proud|Mood
+Romantic|Mood
+Sad|Mood
+Scared|Mood
+Serious|Mood
+Sexy|Mood
+Sleepy|Mood
+Stressed|Mood
+Strong|Mood
+Tired|Mood
+Untroubled|Mood
+Upset|Mood
+Worried|Mood
