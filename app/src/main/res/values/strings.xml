@@ -79,5 +79,6 @@
     <string name="checkbox_use_near_past_notifications">To confirm near-past context</string>
     <string name="checkbox_use_near_future_notifications">To report near-future context</string>
     <string name="save_user_labels_files">Save user-labels files:</string>
+    <string name="not_sure_dummy_label">not sure</string>
 
 </resources>

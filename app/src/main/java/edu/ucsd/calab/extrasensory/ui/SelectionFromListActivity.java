@@ -69,7 +69,6 @@ public class SelectionFromListActivity extends BaseActivity {
     private static final String MOODS_HEADER = "Mood";
     private static final String VALID_FOR_HEADER = "Valid For";
     private static final String ALL_LABELS = "All labels";
-    public static final String NOT_SURE = "not sure";
 
     private static final int LIST_TYPE_MISSING = -1;
     public static final int LIST_TYPE_MAIN_ACTIVITY = 0;
@@ -167,7 +166,7 @@ public class SelectionFromListActivity extends BaseActivity {
                     for (int i=0; i < _labelChoices.length; i++) {
                         newArray[i] = _labelChoices[i];
                     }
-                    newArray[_labelChoices.length] = NOT_SURE;
+                    newArray[_labelChoices.length] = getString(R.string.not_sure_dummy_label);
                     _labelChoices = newArray;
                 }
                 _allowMultiSelection = false;

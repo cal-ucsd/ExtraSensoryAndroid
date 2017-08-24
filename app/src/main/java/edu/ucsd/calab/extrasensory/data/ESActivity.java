@@ -6,6 +6,8 @@ import java.security.InvalidParameterException;
 import java.util.HashMap;
 import java.util.Map;
 
+import edu.ucsd.calab.extrasensory.ESApplication;
+import edu.ucsd.calab.extrasensory.R;
 import edu.ucsd.calab.extrasensory.ui.SelectionFromListActivity;
 
 /**
@@ -163,7 +165,7 @@ public class ESActivity {
     }
 
     public boolean hasUserReportedNondummyMainLabel() {
-        return (_mainActivityUserCorrection != null) && (!_mainActivityUserCorrection.equals(SelectionFromListActivity.NOT_SURE));
+        return (_mainActivityUserCorrection != null) && (!_mainActivityUserCorrection.equals(ESApplication.getTheAppContext().getString(R.string.not_sure_dummy_label)));
     }
 
     public boolean hasUserReportedSecondaryLabels() {

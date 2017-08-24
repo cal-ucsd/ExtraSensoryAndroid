@@ -140,7 +140,7 @@ public class FeedbackActivity extends BaseActivity {
 
         // Put a dummy main activity, in case it is empty:
         if (_labelStruct._mainActivity == null) {
-            _labelStruct._mainActivity = SelectionFromListActivity.NOT_SURE;
+            _labelStruct._mainActivity = getString(R.string.not_sure_dummy_label);
         }
 
         feedbackFlag = false;
@@ -310,7 +310,7 @@ public class FeedbackActivity extends BaseActivity {
 
                 //user must enter some labels before submitting active feedback
                 if (_parameters._feedbackType == FEEDBACK_TYPE_ACTIVE) {
-                    boolean emptyMain = (_labelStruct._mainActivity == null) || (_labelStruct._mainActivity.equals(SelectionFromListActivity.NOT_SURE));
+                    boolean emptyMain = (_labelStruct._mainActivity == null) || (_labelStruct._mainActivity.equals(getString(R.string.not_sure_dummy_label)));
                     boolean emptySec = (_labelStruct._secondaryActivities == null) || (_labelStruct._secondaryActivities.length <= 0);
                     boolean emptyMood = (_labelStruct._moods == null) || (_labelStruct._moods.length <= 0);
                     if (emptyMain && emptySec && emptyMood) {
