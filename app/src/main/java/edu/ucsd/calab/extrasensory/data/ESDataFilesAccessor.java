@@ -27,7 +27,7 @@ import edu.ucsd.calab.extrasensory.R;
 public class ESDataFilesAccessor {
 
     private static final String LOG_TAG = "[ESDataFilesAccessor]";
-    private static final String LABEL_DATA_DIRNAME = "extrasensory.labels." + ESSettings.uuid().substring(0,7);
+    private static final String LABEL_DATA_DIRNAME = "extrasensory.labels." + ESSettings.uuid().substring(0,8);
     private static final Context CONTEXT = ESApplication.getTheAppContext();
     private static final String LABEL_NAMES_KEY = "label_names";
     private static final String LABEL_PROBS_KEY = "label_probs";
