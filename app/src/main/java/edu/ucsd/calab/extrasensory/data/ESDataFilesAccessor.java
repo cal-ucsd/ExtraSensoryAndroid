@@ -14,8 +14,11 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 
 import edu.ucsd.calab.extrasensory.ESApplication;
+import edu.ucsd.calab.extrasensory.R;
 
 /**
  * Created by Yonatan on 6/21/2017.
@@ -59,7 +62,7 @@ public class ESDataFilesAccessor {
     public static boolean writeServerPredictions(ESTimestamp timestamp,String[] predictedLabelNames,double[] predictedLabelProbs) {
         final File instanceLabelsFile;
         try {
-            instanceLabelsFile = new File(getLabelFilesDir(),timestamp.toString() + ".json");
+            instanceLabelsFile = new File(getLabelFilesDir(),timestamp.toString() + ".server_predictions.json");
         } catch (IOException e) {
             return false;
         }
@@ -92,6 +95,74 @@ public class ESDataFilesAccessor {
         try {
             FileOutputStream fos = new FileOutputStream(instanceLabelsFile);
             fos.write(jsonObject.toString().getBytes());
+            fos.close();
+        } catch (FileNotFoundException e) {
+            Log.e(LOG_TAG,"!!! File not found: " + instanceLabelsFile.getPath());
+            return false;
+        } catch (IOException e) {
+            Log.e(LOG_TAG,"!!! Failed to write to json file: " + instanceLabelsFile.getPath());
+            return false;
+        }
+
+        // If we reached here, everything was fine and we were able to write the JSON file
+        Log.d(LOG_TAG,">> Saved labels file: " + instanceLabelsFile.getPath());
+        // Add it to the media scanner:
+        MediaScannerConnection.scanFile(CONTEXT,
+                new String[]{instanceLabelsFile.getAbsolutePath()}, new String[]{"application/json"},
+                new MediaScannerConnection.OnScanCompletedListener() {
+                    @Override
+                    public void onScanCompleted(String path, Uri uri) {
+                        Log.d(LOG_TAG,"++ Completed scan for file " + instanceLabelsFile.getPath());
+                    }
+                });
+
+        return true;
+    }
+
+    /**
+     * Write the user-reported labels for an instance to a textual file that will be available to other apps.
+     * @param timestamp The timestamp of the minute-instance
+     * @param mainActivityUserCorrection - the main-activity labels, corrected by the user
+     * @param secondaryActivities - the secondary activities reported by the user
+     * @param moods - the mood labels provided by the user
+     * @return Did we succeed writing the file
+     */
+    public static boolean writeUserReportedLabels(ESTimestamp timestamp,String mainActivityUserCorrection,String[] secondaryActivities,String[] moods) {
+        final File instanceLabelsFile;
+        try {
+            instanceLabelsFile = new File(getLabelFilesDir(),timestamp.toString() + ".user_reported_labels.json");
+        } catch (IOException e) {
+            return false;
+        }
+
+        // Prepare a set of reported labels (all combined together):
+        Set<String> userLabelsSet = new HashSet<>(10);
+        String dummyLabel = ESApplication.getTheAppContext().getString(R.string.not_sure_dummy_label);
+        if (mainActivityUserCorrection != null && !mainActivityUserCorrection.equals(dummyLabel)) {
+            userLabelsSet.add(mainActivityUserCorrection);
+        }
+        if (secondaryActivities != null) {
+            for (String secLabel : secondaryActivities) {
+                userLabelsSet.add(secLabel);
+            }
+        }
+        if (moods != null) {
+            for (String moodLabel : moods) {
+                userLabelsSet.add(moodLabel);
+            }
+        }
+
+        // Construct the JSON structure:
+        JSONArray labelNamesJsonArray = new JSONArray();
+        String[] userLabels = new String[userLabelsSet.size()];
+        userLabelsSet.toArray(userLabels);
+        for (String userLabel : userLabels) {
+            labelNamesJsonArray.put(userLabel);
+        }
+
+        try {
+            FileOutputStream fos = new FileOutputStream(instanceLabelsFile);
+            fos.write(labelNamesJsonArray.toString().getBytes());
             fos.close();
         } catch (FileNotFoundException e) {
             Log.e(LOG_TAG,"!!! File not found: " + instanceLabelsFile.getPath());
