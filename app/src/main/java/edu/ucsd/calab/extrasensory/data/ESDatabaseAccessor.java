@@ -599,6 +599,15 @@ public class ESDatabaseAccessor {
                 predictedLabelNames,predictedLabelProbs,
                 locationLatLong,
                 false);
+
+        // Write the prediction information to file that will be accessible to other apps:
+        if (ESSettings.savePredictionFiles()) {
+            ESDataFilesAccessor.writeServerPredictions(activity.get_timestamp(), predictedLabelNames, predictedLabelProbs);
+        }
+        else {
+            Log.d(LOG_TAG,"Requested to not save prediction files, so not saving.");
+        }
+
     }
 
     /**
