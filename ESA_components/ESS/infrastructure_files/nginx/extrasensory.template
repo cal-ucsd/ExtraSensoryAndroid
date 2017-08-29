@@ -1,8 +1,8 @@
 server {
 	listen 80;
-	listen 443 ssl;
-    ssl_certificate ssh/server_certificate.crt;
-    ssl_certificate_key ssh/lab.univ.edu.private.key;
+#	listen 443 ssl;
+#   ssl_certificate ssh/server_certificate.crt;
+#   ssl_certificate_key ssh/lab.univ.edu.private.key;
 	server_name lab.univ.edu;
 
 	location /extrasensory {
