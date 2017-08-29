@@ -192,7 +192,12 @@ def read_datafile(hf_file):
     return (raw_acc,raw_magnet,raw_gyro,proc_timeref,proc_acc,proc_magnet,proc_gyro,proc_gravity,proc_attitude,location,lf_data,watch_acc,watch_compass,location_quick,proc_rotation);
 
 def get_tmp_dir_to_unpack_data(UUID,UTime):
-	tmp_dir				= os.path.join(g__data_dir,'tmp','%s.%s.tmp' % (UUID,str(UTime)));
+	tmp_supdir			= os.path.join(g__data_dir,'tmp');
+	if not os.path.exists(tmp_supdir):
+		os.mkdir(tmp_supdir);
+		print("++ Created superdir for tmp files: %s" % tmp_supdir);
+		pass;
+	tmp_dir				= os.path.join(tmp_supdir,'%s.%s.tmp' % (UUID,str(UTime)));
 	return tmp_dir;
 
 ## Unpacking
