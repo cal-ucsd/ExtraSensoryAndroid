@@ -602,7 +602,7 @@ public class ESDatabaseAccessor {
 
         // Write the prediction information to file that will be accessible to other apps:
         if (ESSettings.savePredictionFiles()) {
-            ESDataFilesAccessor.writeServerPredictions(activity.get_timestamp(), predictedLabelNames, predictedLabelProbs);
+            ESDataFilesAccessor.writeServerPredictions(activity.get_timestamp(), predictedLabelNames, predictedLabelProbs, locationLatLong);
         }
         else {
             Log.d(LOG_TAG,"Requested to not save prediction files, so not saving.");

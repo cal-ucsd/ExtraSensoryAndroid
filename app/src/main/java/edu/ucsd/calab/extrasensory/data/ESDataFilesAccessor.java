@@ -31,6 +31,7 @@ public class ESDataFilesAccessor {
     private static final Context CONTEXT = ESApplication.getTheAppContext();
     private static final String LABEL_NAMES_KEY = "label_names";
     private static final String LABEL_PROBS_KEY = "label_probs";
+    private static final String LOCATION_LAT_LONG_KEY = "location_lat_long";
 
     private static File getLabelFilesDir() throws IOException {
         String state = Environment.getExternalStorageState();
@@ -57,9 +58,10 @@ public class ESDataFilesAccessor {
      * @param timestamp The timestamp of the instance
      * @param predictedLabelNames The array of labels in the prediction
      * @param predictedLabelProbs The corresponding probabilities assigned to the labels
+     * @param locationLatLong The location coordinates [latitude, longitude] of the representative location for this minute, analyzed by the server.
      * @return Did we succeed writing the file
      */
-    public static boolean writeServerPredictions(ESTimestamp timestamp,String[] predictedLabelNames,double[] predictedLabelProbs) {
+    public static boolean writeServerPredictions(ESTimestamp timestamp,String[] predictedLabelNames,double[] predictedLabelProbs,double[] locationLatLong) {
         final File instanceLabelsFile;
         try {
             instanceLabelsFile = new File(getLabelFilesDir(),timestamp.toString() + ".server_predictions.json");
@@ -71,6 +73,7 @@ public class ESDataFilesAccessor {
         JSONObject jsonObject = new JSONObject();
         JSONArray labelNamesArray = new JSONArray();
         JSONArray labelProbsArray = new JSONArray();
+        JSONArray latLongArray = null;
         try {
             if (predictedLabelNames != null && predictedLabelProbs != null) {
                 if (predictedLabelNames.length != predictedLabelProbs.length) {
@@ -86,6 +89,14 @@ public class ESDataFilesAccessor {
 
             jsonObject.put(LABEL_NAMES_KEY,labelNamesArray);
             jsonObject.put(LABEL_PROBS_KEY,labelProbsArray);
+
+            // Add the location coordinates:
+            if (locationLatLong != null && locationLatLong.length == 2) {
+                latLongArray = new JSONArray();
+                latLongArray.put(locationLatLong[0]);
+                latLongArray.put(locationLatLong[1]);
+            }
+            jsonObject.put(LOCATION_LAT_LONG_KEY,latLongArray);
         }
         catch (JSONException e) {
             Log.e(LOG_TAG,"Failed forming a json object for server predictions");
