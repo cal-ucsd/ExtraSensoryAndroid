@@ -1,6 +1,7 @@
 package edu.ucsd.calab.extrasensory.data;
 
 import android.content.Context;
+import android.content.Intent;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Environment;
@@ -32,6 +33,10 @@ public class ESDataFilesAccessor {
     private static final String LABEL_NAMES_KEY = "label_names";
     private static final String LABEL_PROBS_KEY = "label_probs";
     private static final String LOCATION_LAT_LONG_KEY = "location_lat_long";
+
+    public static final String BROADCAST_SAVED_PRED_FILE = "edu.ucsd.calab.extrasensory.broadcast.saved_prediction_file";
+    public static final String BROADCAST_EXTRA_KEY_TIMESTAMP = "timestamp";
+
 
     private static File getLabelFilesDir() throws IOException {
         String state = Environment.getExternalStorageState();
@@ -126,6 +131,12 @@ public class ESDataFilesAccessor {
                         Log.d(LOG_TAG,"++ Completed scan for file " + instanceLabelsFile.getPath());
                     }
                 });
+
+        // Announce to whoever is listening that there is a new saved file:
+        Intent intent = new Intent(BROADCAST_SAVED_PRED_FILE);
+        intent.putExtra(BROADCAST_EXTRA_KEY_TIMESTAMP,timestamp.toString());
+        ESApplication.getTheAppContext().sendBroadcast(intent);
+        Log.d(LOG_TAG,"Sent broadcast message about saving prediction file for timestamp " + timestamp.toString());
 
         return true;
     }
