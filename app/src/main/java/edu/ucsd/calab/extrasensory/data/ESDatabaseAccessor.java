@@ -40,7 +40,7 @@ public class ESDatabaseAccessor {
 
     private static final String LOG_TAG = "[ESDatabaseAccessor]";
     private static final int MAX_STORED_EXAMPLES_DEFAULT = 600;
-    private static final boolean USE_NEAR_PAST_NOTIFICATIONS_DEFAULT = true;
+    private static final boolean USE_NEAR_PAST_NOTIFICATIONS_DEFAULT = false;
     private static final boolean USE_NEAR_FUTURE_NOTIFICATIONS_DEFAULT = false;
     private static final int NOTIFICATION_INTERVAL_DEFAULT = 1800;
     private static final int NUM_EXAMPLES_STORE_BEFORE_SEND_DEFAULT = 0;
@@ -50,11 +50,11 @@ public class ESDatabaseAccessor {
     private static final double LOCATION_BUBBLE_CENTER_LAT_DEFAULT = 0.0;
     private static final String LOCATION_BUBBLE_LOCATION_PROVIDER = "BubbleCenter";
     private static final String CLASSIFIER_TYPE_DEFAULT = "es_mlp";
-    private static final String CLASSIFIER_NAME_DEFAULT = "es6sensors";
+    private static final String CLASSIFIER_NAME_DEFAULT = "es5sensors";
     private static final boolean RECORD_AUDIO_DEFAULT = true;
     private static final boolean RECORD_LOCATION_DEFAULT = true;
     private static final boolean RECORD_WATCH_DEFAULT = false;
-    private static final boolean SAVE_PREDICTION_FILES_DEFAULT = false;
+    private static final boolean SAVE_PREDICTION_FILES_DEFAULT = true;
     private static final boolean SAVE_USER_LABELS_FILES_DEFAULT = false;
 
     private static ArrayList<Integer> defaultHFSensorsToRecord() {
