@@ -30,7 +30,16 @@ import edu.ucsd.calab.extrasensory.network.ESNetworkAccessor;
 import edu.ucsd.calab.extrasensory.sensors.ESSensorManager;
 
 /**
+ * This is the base for the UI classes:
+ * all the UI pages have some things in common - they have the action bar, and they should display the "red light" whenever sensor-recording is active.
+ *
  * Created by Yonatan on 2/24/2015.
+ * ========================================
+ * The ExtraSensory App
+ * @author Yonatan Vaizman yvaizman@ucsd.edu
+ * Please see ExtraSensory App website for details and citation requirements:
+ * http://extrasensory.ucsd.edu/ExtraSensoryApp
+ * ========================================
  */
 public class BaseActivity extends ActionBarActivity {
 

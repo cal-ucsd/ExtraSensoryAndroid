@@ -65,14 +65,21 @@ import edu.ucsd.calab.extrasensory.sensors.ESSensorManager;
 
 /**
  * This class handles the networking with the server.
- * The two main features is uploading a sensor-measurements bundle to the server
- * and sending user label-feedback to the server.
+ * The two main features are:
+ * 1) uploading a sensor-measurements bundle to the server (and getting server predictions in return)
+ * 2) and sending user label-feedback to the server.
  *
  * This class is designed as a singleton.
  * We need a single network agent to know the current state
  * (e.g. waiting for server response, so not available to upload new examples).
  *
  * Created by Yonatan on 1/17/2015.
+ * ========================================
+ * The ExtraSensory App
+ * @author Yonatan Vaizman yvaizman@ucsd.edu
+ * Please see ExtraSensory App website for details and citation requirements:
+ * http://extrasensory.ucsd.edu/ExtraSensoryApp
+ * ========================================
  */
 public class ESNetworkAccessor {
 

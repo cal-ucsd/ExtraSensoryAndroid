@@ -39,6 +39,12 @@ import static edu.ucsd.calab.extrasensory.data.ESDatabaseAccessor.getESDatabaseA
  * In addition, if this feedback activity is initiated from a notification
  * (or from an alert-dialog that was initiated by a notification/reminder),
  * you should add an extra with key KEY_INITIATED_BY_NOTIFICATION to the intent that starts this activity.
+ * ========================================
+ * The ExtraSensory App
+ * @author Yonatan Vaizman yvaizman@ucsd.edu
+ * Please see ExtraSensory App website for details and citation requirements:
+ * http://extrasensory.ucsd.edu/ExtraSensoryApp
+ * ========================================
  */
 public class FeedbackActivity extends BaseActivity {
 

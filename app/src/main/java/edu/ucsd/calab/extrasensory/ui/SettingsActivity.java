@@ -29,6 +29,16 @@ import edu.ucsd.calab.extrasensory.data.ESSettings;
 import edu.ucsd.calab.extrasensory.network.ESNetworkAccessor;
 import edu.ucsd.calab.extrasensory.sensors.ESSensorManager;
 
+/**
+ * This class operates the main settings page of the UI. It interfaces with the database for changing the settings.
+ *
+ * ========================================
+ * The ExtraSensory App
+ * @author Yonatan Vaizman yvaizman@ucsd.edu
+ * Please see ExtraSensory App website for details and citation requirements:
+ * http://extrasensory.ucsd.edu/ExtraSensoryApp
+ * ========================================
+ */
 public class SettingsActivity extends BaseActivity {
 
     private static final String LOG_TAG = "[SettingsActivity]";

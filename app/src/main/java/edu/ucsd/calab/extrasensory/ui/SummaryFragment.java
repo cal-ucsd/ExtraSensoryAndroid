@@ -27,7 +27,13 @@ import edu.ucsd.calab.extrasensory.data.ESDatabaseAccessor;
 import edu.ucsd.calab.extrasensory.data.ESLabelStrings;
 
 /**
- * A simple {@link Fragment} subclass.
+ * This class provides a visual summary page for the UI
+ * ========================================
+ * The ExtraSensory App
+ * @author Yonatan Vaizman yvaizman@ucsd.edu
+ * Please see ExtraSensory App website for details and citation requirements:
+ * http://extrasensory.ucsd.edu/ExtraSensoryApp
+ * ========================================
  */
 public class SummaryFragment extends BaseTabFragment {
 

@@ -14,7 +14,15 @@ import edu.ucsd.calab.extrasensory.network.ESNetworkAccessor;
 import edu.ucsd.calab.extrasensory.sensors.ESSensorManager;
 
 /**
+ * This class is the base class for the different UI fragments of the main page
+ *
  * Created by Yonatan on 3/3/2015.
+ * ========================================
+ * The ExtraSensory App
+ * @author Yonatan Vaizman yvaizman@ucsd.edu
+ * Please see ExtraSensory App website for details and citation requirements:
+ * http://extrasensory.ucsd.edu/ExtraSensoryApp
+ * ========================================
  */
 public class BaseTabFragment extends Fragment {
 

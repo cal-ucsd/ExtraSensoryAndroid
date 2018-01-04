@@ -44,6 +44,12 @@ import edu.ucsd.calab.extrasensory.data.ESSettings;
  * Then you can catch the result by implementing onActivityResult() and checking the requestCode is the one you started the activity with.
  * In onActivityResult() you'll get the "response" intent with the results from this activity.
  * Specifically, the result intent should contain a key SELECTED_LABELS_OUTPUT_KEY with a value of string[] with the selected labels.
+ * ========================================
+ * The ExtraSensory App
+ * @author Yonatan Vaizman yvaizman@ucsd.edu
+ * Please see ExtraSensory App website for details and citation requirements:
+ * http://extrasensory.ucsd.edu/ExtraSensoryApp
+ * ========================================
  */
 public class SelectionFromListActivity extends BaseActivity {
 

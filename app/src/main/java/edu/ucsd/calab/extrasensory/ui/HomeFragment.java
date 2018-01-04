@@ -23,7 +23,14 @@ import edu.ucsd.calab.extrasensory.sensors.AudioProcessing.MFCC;
 import edu.ucsd.calab.extrasensory.sensors.WatchProcessing.ESWatchProcessor;
 
 /**
- * A simple {@link Fragment} subclass.
+ * This class is for the "home page", which acts as a dashboard for the user to know what is going on and to help debug problems.
+ *
+ * ========================================
+ * The ExtraSensory App
+ * @author Yonatan Vaizman yvaizman@ucsd.edu
+ * Please see ExtraSensory App website for details and citation requirements:
+ * http://extrasensory.ucsd.edu/ExtraSensoryApp
+ * ========================================
  */
 public class HomeFragment extends BaseTabFragment {
 

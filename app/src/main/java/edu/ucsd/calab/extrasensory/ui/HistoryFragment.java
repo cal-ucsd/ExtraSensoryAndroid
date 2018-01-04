@@ -32,7 +32,14 @@ import edu.ucsd.calab.extrasensory.data.ESLabelStrings;
 import edu.ucsd.calab.extrasensory.data.ESTimestamp;
 
 /**
- * Fragment to display the history of activities (one day at a time)
+ * Fragment to display the history of activities (one day at a time),
+ * and to enable the user to edit the context-labels of today and yesterday.
+ * ========================================
+ * The ExtraSensory App
+ * @author Yonatan Vaizman yvaizman@ucsd.edu
+ * Please see ExtraSensory App website for details and citation requirements:
+ * http://extrasensory.ucsd.edu/ExtraSensoryApp
+ * ========================================
  */
 public class HistoryFragment extends BaseTabFragment {
 

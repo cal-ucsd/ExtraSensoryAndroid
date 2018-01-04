@@ -30,7 +30,16 @@ import edu.ucsd.calab.extrasensory.data.ESDatabaseAccessor;
 import edu.ucsd.calab.extrasensory.data.ESTimestamp;
 import edu.ucsd.calab.extrasensory.sensors.ESSensorManager;
 
-
+/**
+ * The MainActivity handles the "main page" of the UI (which includes several tab-fragements).
+ *
+ * ========================================
+ * The ExtraSensory App
+ * @author Yonatan Vaizman yvaizman@ucsd.edu
+ * Please see ExtraSensory App website for details and citation requirements:
+ * http://extrasensory.ucsd.edu/ExtraSensoryApp
+ * ========================================
+ */
 public class MainActivity extends BaseActivity {
 
     private static final String LOG_TAG = "[MainActivity]";

@@ -5,7 +5,8 @@ import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 
-/*
+/**
+ * This class was adopted from an external source on the web
 
 Usage:
 
@@ -16,6 +17,12 @@ Usage:
     }
   }
 
+ * ========================================
+ * The ExtraSensory App
+ * @author Yonatan Vaizman yvaizman@ucsd.edu
+ * Please see ExtraSensory App website for details and citation requirements:
+ * http://extrasensory.ucsd.edu/ExtraSensoryApp
+ * ========================================
 */
 public class OnSwipeTouchListener implements View.OnTouchListener {
 

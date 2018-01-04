@@ -25,7 +25,17 @@ import edu.ucsd.calab.extrasensory.ESApplication;
  * This class handles the sensing from the microphone:
  * recording audio and processing it to a time series of MFCC features.
  *
+ * It makes use of two components from other sources:
+ * 1) Calculating FFT, from Junan Zhang
+ * 2) Calculating MFCC features, from Aldebaro Klautau
+ *
  * Created by Yonatan on 4/17/2015.
+ * ========================================
+ * The ExtraSensory App
+ * @author Yonatan Vaizman yvaizman@ucsd.edu
+ * Please see ExtraSensory App website for details and citation requirements:
+ * http://extrasensory.ucsd.edu/ExtraSensoryApp
+ * ========================================
  */
 public class ESAudioProcessor {
 

@@ -56,6 +56,12 @@ import edu.ucsd.calab.extrasensory.sensors.WatchProcessing.ESWatchProcessor;
  * in order to avoid collisions and to make sure only a single thread uses the sensors at any time.
  *
  * Created by Yonatan on 1/15/2015.
+ * ========================================
+ * The ExtraSensory App
+ * @author Yonatan Vaizman yvaizman@ucsd.edu
+ * Please see ExtraSensory App website for details and citation requirements:
+ * http://extrasensory.ucsd.edu/ExtraSensoryApp
+ * ========================================
  */
 public class ESSensorManager
         implements SensorEventListener,

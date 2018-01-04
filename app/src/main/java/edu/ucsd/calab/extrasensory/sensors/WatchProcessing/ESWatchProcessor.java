@@ -23,7 +23,16 @@ import edu.ucsd.calab.extrasensory.data.ESContinuousActivity;
 import edu.ucsd.calab.extrasensory.data.ESDatabaseAccessor;
 
 /**
+ * This class handles the interface of ExtraSensory App's Android-phone component (ESP) with the Pebble-watch component (ESW).
+ * This class, and the watch code, were implemented by Rafael Aguayo.
+ *
  * Created by rafaelaguayo on 6/1/15.
+ * ========================================
+ * The ExtraSensory App
+ * @author Yonatan Vaizman yvaizman@ucsd.edu
+ * Please see ExtraSensory App website for details and citation requirements:
+ * http://extrasensory.ucsd.edu/ExtraSensoryApp
+ * ========================================
  */
 public class ESWatchProcessor {
 
