@@ -10,6 +10,7 @@ import android.hardware.SensorManager;
 
 import android.location.Location;
 import android.media.AudioManager;
+import android.os.AsyncTask;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -38,6 +39,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.concurrent.ExecutionException;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -669,7 +671,35 @@ public class ESSensorManager
 
     private void finishSessionIfReady() {
         if (checkIfShouldFinishSession()) {
+            //finishSession();
+
+            // Because finishing a session can take some resources (mainly for calculating audio MFCC features),
+            // the "finishSession" operation should be done in a background thread (to keep UI thread from stalling).
+            Log.d(LOG_TAG, "Before call to background finishSession");
+            new FinishSessionInBackground().execute();
+            Log.d(LOG_TAG, "After call to background finishSession");
+        }
+    }
+
+    private class FinishSessionInBackground extends AsyncTask<Void,Void,Void> {
+        /**
+         * Override this method to perform a computation on a background thread. The
+         * specified parameters are the parameters passed to {@link #execute}
+         * by the caller of this task.
+         * <p>
+         * This method can call {@link #publishProgress} to publish updates
+         * on the UI thread.
+         *
+         * @param params The parameters of the task.
+         * @return A result, defined by the subclass of this task.
+         * @see #onPreExecute()
+         * @see #onPostExecute
+         * @see #publishProgress
+         */
+        @Override
+        protected Void doInBackground(Void... params) {
             finishSession();
+            return null;
         }
     }
 
