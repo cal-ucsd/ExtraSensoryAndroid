@@ -4,6 +4,12 @@ package edu.ucsd.calab.extrasensory.data;
  * This class provides the contract for our database, the definitions of schema, tables and columns.
  *
  * Created by Yonatan on 1/16/2015.
+ * ========================================
+ * The ExtraSensory App
+ * @author Yonatan Vaizman yvaizman@ucsd.edu
+ * Please see ExtraSensory App website for details and citation requirements:
+ * http://extrasensory.ucsd.edu/ExtraSensoryApp
+ * ========================================
  */
 final class ESDatabaseContract {
 

@@ -9,6 +9,12 @@ import java.util.Arrays;
  * Use instances of this class to temporarily maintain a set of labels.
  *
  * Created by Yonatan on 4/15/2015.
+ * ========================================
+ * The ExtraSensory App
+ * @author Yonatan Vaizman yvaizman@ucsd.edu
+ * Please see ExtraSensory App website for details and citation requirements:
+ * http://extrasensory.ucsd.edu/ExtraSensoryApp
+ * ========================================
  */
 public class ESLabelStruct {
 

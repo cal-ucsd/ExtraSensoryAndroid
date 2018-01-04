@@ -10,9 +10,15 @@ import edu.ucsd.calab.extrasensory.ESApplication;
 
 /**
  * This class represents the global settings for the app,
- * some of which have to be fixed and some are mutable by the user interface.
+ * some of which have to be fixed (e.g. UUID is set once and stays fixed) and some are mutable by the user interface.
  *
  * Created by Yonatan on 2/4/2015.
+ * ========================================
+ * The ExtraSensory App
+ * @author Yonatan Vaizman yvaizman@ucsd.edu
+ * Please see ExtraSensory App website for details and citation requirements:
+ * http://extrasensory.ucsd.edu/ExtraSensoryApp
+ * ========================================
  */
 public class ESSettings {
 

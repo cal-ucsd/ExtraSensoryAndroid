@@ -22,9 +22,21 @@ import edu.ucsd.calab.extrasensory.ESApplication;
 import edu.ucsd.calab.extrasensory.R;
 
 /**
+ * This class handles the main interface of ExtraSensory App with external apps on the phone that wish to use data from ExtraSensory App.
+ * This is done through writing to text files (in JSON format) to the internal storage of the phone,
+ * in a way that any other app can read these files.
+ *
+ * This can be useful, if you want to develop an app that uses context-recognition (provided by ExtraSensory App, running in the background)
+ * without manipulating the code of ExtraSensory App.
+ *
  * Created by Yonatan on 6/21/2017.
+ * ========================================
+ * The ExtraSensory App
+ * @author Yonatan Vaizman yvaizman@ucsd.edu
+ * Please see ExtraSensory App website for details and citation requirements:
+ * http://extrasensory.ucsd.edu/ExtraSensoryApp
+ * ========================================
  */
-
 public class ESDataFilesAccessor {
 
     private static final String LOG_TAG = "[ESDataFilesAccessor]";

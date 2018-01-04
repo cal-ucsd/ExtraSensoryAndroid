@@ -35,6 +35,12 @@ import edu.ucsd.calab.extrasensory.sensors.ESSensorManager;
  * It is designed as a singleton, to prevent inconsistencies.
  *
  * Created by Yonatan on 1/16/2015.
+ * ========================================
+ * The ExtraSensory App
+ * @author Yonatan Vaizman yvaizman@ucsd.edu
+ * Please see ExtraSensory App website for details and citation requirements:
+ * http://extrasensory.ucsd.edu/ExtraSensoryApp
+ * ========================================
  */
 public class ESDatabaseAccessor {
 

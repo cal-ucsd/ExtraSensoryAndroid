@@ -38,6 +38,12 @@ import edu.ucsd.calab.extrasensory.ui.MainActivity;
  * and as a shared place to be reached from all the components of the application.
  *
  * Created by Yonatan on 1/15/2015.
+ * ========================================
+ * The ExtraSensory App
+ * @author Yonatan Vaizman yvaizman@ucsd.edu
+ * Please see ExtraSensory App website for details and citation requirements:
+ * http://extrasensory.ucsd.edu/ExtraSensoryApp
+ * ========================================
  */
 public class ESApplication extends Application {
 

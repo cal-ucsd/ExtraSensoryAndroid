@@ -15,6 +15,12 @@ import edu.ucsd.calab.extrasensory.ui.SelectionFromListActivity;
  * relevant to this instance.
  *
  * Created by Yonatan on 1/16/2015.
+ * ========================================
+ * The ExtraSensory App
+ * @author Yonatan Vaizman yvaizman@ucsd.edu
+ * Please see ExtraSensory App website for details and citation requirements:
+ * http://extrasensory.ucsd.edu/ExtraSensoryApp
+ * ========================================
  */
 public class ESActivity {
 

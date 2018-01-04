@@ -19,6 +19,12 @@ import java.util.Set;
  * In case the activities have user-correction main activity label, the server prediction will be disregarded.
  *
  * Created by Yonatan on 1/20/2015.
+ * ========================================
+ * The ExtraSensory App
+ * @author Yonatan Vaizman yvaizman@ucsd.edu
+ * Please see ExtraSensory App website for details and citation requirements:
+ * http://extrasensory.ucsd.edu/ExtraSensoryApp
+ * ========================================
  */
 public class ESContinuousActivity {
 

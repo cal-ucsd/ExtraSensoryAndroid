@@ -9,9 +9,15 @@ import java.util.Locale;
 import java.util.TimeZone;
 
 /**
- * This class represents a timepoint with the relevant resolution for our application
+ * This class represents a timepoint with the relevant time-resolution for our application
  *
  * Created by Yonatan on 2/3/2015.
+ * ========================================
+ * The ExtraSensory App
+ * @author Yonatan Vaizman yvaizman@ucsd.edu
+ * Please see ExtraSensory App website for details and citation requirements:
+ * http://extrasensory.ucsd.edu/ExtraSensoryApp
+ * ========================================
  */
 public class ESTimestamp {
 
