@@ -442,7 +442,12 @@ public class HistoryFragment extends BaseTabFragment {
             }
             else{
                 mainActivityForColor = continuousActivity.getMainActivityServerPrediction();
-                activityLabel = mainActivityForColor + "?";
+                if (mainActivityForColor == null) {
+                    activityLabel = "in process...";
+                }
+                else {
+                    activityLabel = mainActivityForColor + "?";
+                }
             }
 
             // Add location coordinates (each instance may have a representative location point):
