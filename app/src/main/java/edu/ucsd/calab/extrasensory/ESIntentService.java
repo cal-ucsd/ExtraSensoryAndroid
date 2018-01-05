@@ -80,7 +80,12 @@ public class ESIntentService extends IntentService {
                 ESDatabaseAccessor.getESDatabaseAccessor().setESActivityUserCorrectedValuesAndPossiblySendFeedback(
                         newActivity,labelSource,
                         predeterminedLabels._mainActivity,predeterminedLabels._secondaryActivities,
-                        predeterminedLabels._moods,false);
+                        predeterminedLabels._moods,
+                        ESApplication._predeterminedLabels.get_timestampOpenFeedbackForm(),
+                        ESApplication._predeterminedLabels.get_timestampPressSendButton(),
+                        ESApplication._predeterminedLabels.get_timestampNotification(),
+                        ESApplication._predeterminedLabels.get_timestampUserRespondToNotification(),
+                        false);
                 Log.i(LOG_TAG,"Applied predetermined labels to new activity.");
             }
             else {

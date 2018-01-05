@@ -52,6 +52,10 @@ public class ESApplication extends Application {
     public static final String ACTION_ALERT_PAST_FEEDBACK = "edu.ucsd.calab.extrasensory.action.ALERT_PAST_FEEDBACK";
     public static final String NOTIFICATION_TEXT_NO_VERIFIED = "Can you please report what you are doing?";
 
+    public static final String KEY_TIMEINSECONDS_NOTIFICATION = "edu.ucsd.calab.extrasensory.extra_key.notification_timestamp";
+    public static final String KEY_USER_RESPOND_TO_NOTIFICATION_TIMESTAPMS = "edu.ucsd.calab.extrasensory.extra_key.user_respond_to_notification_timestamp";
+
+
     private static final String LOG_TAG = "[ESApplication]";
     private static final long RECENT_TIME_PERIOD_IN_MILLIS = 20*ESApplication.MILLISECONDS_IN_MINUTE;
     private static final int NOTIFICATION_ID = 2;
@@ -74,12 +78,21 @@ public class ESApplication extends Application {
         private boolean _initiatedByNotification = false;
         private boolean _startedFirstActivityRecording = false;
         private ESTimestamp _validUntil = new ESTimestamp(0);
+        private ESTimestamp _timestampOpenFeedbackForm = null;
+        private ESTimestamp _timestampPressSendButton = null;
+        private ESTimestamp _timestampNotification = null;
+        private ESTimestamp _timestampUserRespondToNotification = null;
 
         private void clearLabels() {
             _labels = null;
             _initiatedByNotification = false;
             _startedFirstActivityRecording = false;
             _validUntil = new ESTimestamp(0);
+
+            _timestampOpenFeedbackForm = null;
+            _timestampPressSendButton = null;
+            _timestampNotification = null;
+            _timestampUserRespondToNotification = null;
         }
 
         public ESLabelStruct getLabels() {
@@ -96,11 +109,18 @@ public class ESApplication extends Application {
             return _startedFirstActivityRecording;
         }
 
+        ESTimestamp get_timestampOpenFeedbackForm() { return _timestampOpenFeedbackForm; }
+        ESTimestamp get_timestampPressSendButton() { return _timestampPressSendButton; }
+        ESTimestamp get_timestampNotification() { return _timestampNotification; }
+        ESTimestamp get_timestampUserRespondToNotification() { return _timestampUserRespondToNotification; }
+
         void set_startedFirstActivityRecording(boolean startedFirstActivityRecording) {
             _startedFirstActivityRecording = startedFirstActivityRecording;
         }
 
-        private void setPredeterminedLabels(ESLabelStruct labels,int validForHowManyMinutes,boolean initiatedByNotification) {
+        private void setPredeterminedLabels(ESLabelStruct labels,int validForHowManyMinutes,boolean initiatedByNotification,
+                                            ESTimestamp timestampOpenFeedbackForm, ESTimestamp timestampPressSendButton,
+                                            ESTimestamp timestampNotification, ESTimestamp timestampUserRespondToNotification) {
             _labels = new ESLabelStruct(labels);
             _initiatedByNotification = initiatedByNotification;
             _startedFirstActivityRecording = false;
@@ -108,6 +128,11 @@ public class ESApplication extends Application {
             long gracePeriod = (long)(1.5*MILLISECONDS_IN_MINUTE);
             Date validUntilDate = new Date(new Date().getTime() + validForHowManyMinutes*MILLISECONDS_IN_MINUTE + gracePeriod);
             _validUntil = new ESTimestamp(validUntilDate);
+
+            _timestampOpenFeedbackForm = timestampOpenFeedbackForm;
+            _timestampPressSendButton = timestampPressSendButton;
+            _timestampNotification = timestampNotification;
+            _timestampUserRespondToNotification = timestampUserRespondToNotification;
         }
     }
 
@@ -269,9 +294,16 @@ public class ESApplication extends Application {
      * @param labelsToAssign - The labels to assign to the following activities
      * @param validForHowManyMinutes - How many minutes should the given labels be automatically assigned?
      * @param initiatedByNotification - Was this active feedback initiated by a notification/reminder?
+     * @param timestampOpenFeedbackForm The timestamp of the time the user opened the feedback form for this activity (and actually sent feedback), or null in case this feedback did not involve the feedback form (e.g. confirmation-notification)
+     * @param timestampPressSendButton The timestamp of the time the user pressed the "send feedback" button for this activity, or null in case this feedback did not involve the feedback form (e.g. confirmation-notification)
+     * @param timestampNotification The timestamp of the time the notification showed, which eventually yielded this activity's update, or null if this feedback was not initiated by notification
+     * @param timestampUserRespondToNotification The timestamp of the time the user responded to the notification by pressing an answer button, which yielded this activity's update, or null if this feedback was not initiated by notification
      */
-    public void startActiveFeedback(ESLabelStruct labelsToAssign,int validForHowManyMinutes,boolean initiatedByNotification) {
-        _predeterminedLabels.setPredeterminedLabels(labelsToAssign, validForHowManyMinutes,initiatedByNotification);
+    public void startActiveFeedback(ESLabelStruct labelsToAssign,int validForHowManyMinutes,boolean initiatedByNotification,
+                                    ESTimestamp timestampOpenFeedbackForm, ESTimestamp timestampPressSendButton,
+                                    ESTimestamp timestampNotification, ESTimestamp timestampUserRespondToNotification) {
+        _predeterminedLabels.setPredeterminedLabels(labelsToAssign, validForHowManyMinutes,initiatedByNotification,
+                timestampOpenFeedbackForm,timestampPressSendButton,timestampNotification,timestampUserRespondToNotification);
         stopCurrentRecordingAndRecordingSchedule();
         startRecordingSchedule(0);
     }
@@ -400,6 +432,8 @@ public class ESApplication extends Application {
 
         ESActivity latestVerifiedActivity = ESDatabaseAccessor.getESDatabaseAccessor().getLatestVerifiedActivity(lookBackFrom);
 
+
+
 //        if (latestVerifiedActivity == null || SelectionFromListActivity.NOT_SURE.equals(latestVerifiedActivity.get_mainActivityUserCorrection())) {
         if (latestVerifiedActivity == null || !latestVerifiedActivity.hasAnyUserReportedLabelsNotDummyLabel()) {
             // Then there hasn't been a verified activity in a long time. Need to call for active feedback
@@ -408,14 +442,16 @@ public class ESApplication extends Application {
                 Log.d(LOG_TAG,"Notification: near-future notifications are disabled.");
                 return;
             }
+            ESTimestamp timestampNotification = new ESTimestamp();
             if (isAppInForeground()) {
                 // Don't deal with notifications. Send broadcast to show alert:
                 Intent broadcast = new Intent(ACTION_ALERT_ACTIVE_FEEDBACK);
+                broadcast.putExtra(KEY_TIMEINSECONDS_NOTIFICATION,timestampNotification.get_secondsSinceEpoch());
                 LocalBroadcastManager manager = LocalBroadcastManager.getInstance(this);
                 manager.sendBroadcast(broadcast);
                 // Notify on the watch also:
                 if (_watchProcessor.isWatchConnected()) {
-                    _watchProcessor.alertUserWithQuestion(NOTIFICATION_TEXT_NO_VERIFIED);
+                    _watchProcessor.alertUserWithQuestion(NOTIFICATION_TEXT_NO_VERIFIED,timestampNotification);
                 }
                 return;
             }
@@ -423,6 +459,7 @@ public class ESApplication extends Application {
             // Then we're in the background and we need to raise user's attention with notification:
             Intent defaultActionIntent = new Intent(this, FeedbackActivity.class);
             defaultActionIntent.putExtra(FeedbackActivity.KEY_INITIATED_BY_NOTIFICATION,true);
+            defaultActionIntent.putExtra(KEY_TIMEINSECONDS_NOTIFICATION,timestampNotification.get_secondsSinceEpoch());
             PendingIntent defaultActionPendingIntent = PendingIntent.getActivity(this, 0, defaultActionIntent, 0);
 
             Notification notification = createNotification(NOTIFICATION_TEXT_NO_VERIFIED,defaultActionPendingIntent);
@@ -432,7 +469,7 @@ public class ESApplication extends Application {
             notificationManager.notify(NOTIFICATION_ID,notification);
             // Notify on the watch also:
             if (_watchProcessor.isWatchConnected()) {
-                _watchProcessor.alertUserWithQuestion(NOTIFICATION_TEXT_NO_VERIFIED);
+                _watchProcessor.alertUserWithQuestion(NOTIFICATION_TEXT_NO_VERIFIED,timestampNotification);
             }
         }
         else {
@@ -460,13 +497,14 @@ public class ESApplication extends Application {
                 manager.sendBroadcast(intent);
                 // Notify on the watch also:
                 if (_watchProcessor.isWatchConnected()) {
-                    _watchProcessor.alertUserWithQuestion(question);
+                    _watchProcessor.alertUserWithQuestion(question,nowTimestamp);
                 }
                 return;
             }
 
             // Then we're in the background and we need to raise user's attention with notification:
             intent.setClass(this,MainActivity.class);
+            intent.putExtra(KEY_TIMEINSECONDS_NOTIFICATION,nowTimestamp.get_secondsSinceEpoch());
             PendingIntent defaultActionPendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
 
             Notification notification = createNotification(question,defaultActionPendingIntent);
@@ -476,7 +514,7 @@ public class ESApplication extends Application {
 
             // Notify on the watch also:
             if (_watchProcessor.isWatchConnected()) {
-                _watchProcessor.alertUserWithQuestion(question);
+                _watchProcessor.alertUserWithQuestion(question,nowTimestamp);
             }
         }
     }

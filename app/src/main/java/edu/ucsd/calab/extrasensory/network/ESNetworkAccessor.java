@@ -801,6 +801,17 @@ public class ESNetworkAccessor {
                     secondaryStr + "&" +
                     moodStr;
 
+            // Adding more information (including about interaction of the user with the app):
+            String sendTimeStr = "timestampOfSendingFeedback=" + new ESTimestamp().toString();
+            apiParams += "&" + sendTimeStr;
+            // Adding information about user interaction with the app:
+            String openFeedbackFormTimeStr = "timestampOfOpeningFeedbackForm=" + activity.get_timestampOpenFeedbackForm();
+            String sendButtonPressTimeStr = "timestampOfPressingSendFeedbackButton=" + activity.get_timestampPressSendButton();
+            String notificationTimeStr = "timestampOfNotificationAppear=" + activity.get_timestampNotification();
+            String userResToNotifTimeStr = "timestampOfUserRespondToNotification=" + activity.get_timestampUserRespondToNotification();
+
+            apiParams += "&" + openFeedbackFormTimeStr + "&" + sendButtonPressTimeStr + "&" + notificationTimeStr + "&" + userResToNotifTimeStr;
+
             apiParams = apiParams.replaceAll(" ","_");
             return apiParams;
         }

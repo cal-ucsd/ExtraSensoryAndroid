@@ -3,6 +3,7 @@ package edu.ucsd.calab.extrasensory.data;
 import android.util.Log;
 
 import java.security.InvalidParameterException;
+import java.security.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -76,6 +77,10 @@ public class ESActivity {
     private String[] _predictedLabelNames;
     private double[] _predictedLabelProbs;
     private double[] _locationLatLong;
+    private ESTimestamp _timestampOpenFeedbackForm;
+    private ESTimestamp _timestampPressSendButton;
+    private ESTimestamp _timestampNotification;
+    private ESTimestamp _timestampUserRespondToNotification;
 
     // Constructors available only inside the package:
     ESActivity(ESTimestamp timestamp) {
@@ -88,13 +93,19 @@ public class ESActivity {
         _predictedLabelNames = null;
         _predictedLabelProbs = null;
         _locationLatLong = null;
+        _timestampOpenFeedbackForm = null;
+        _timestampPressSendButton = null;
+        _timestampNotification = null;
+        _timestampUserRespondToNotification = null;
     }
 
     ESActivity(ESTimestamp timestamp, ESLabelSource labelSource,
                String mainActivityServerPrediction, String mainActivityUserCorrection,
                String[] secondaryActivities, String[] moods,
                String[] predictedLabelNames, double[] predictedLabelProbs,
-               double[] locationLatLong) {
+               double[] locationLatLong,
+               ESTimestamp timestampOpenFeedbackForm, ESTimestamp timestampPressSendButton,
+               ESTimestamp timestampNotification, ESTimestamp timestampUserRespondToNotification) {
         _timestamp = timestamp;
         _labelSource = labelSource;
         _mainActivityServerPrediction = mainActivityServerPrediction;
@@ -122,6 +133,11 @@ public class ESActivity {
         else {
             _locationLatLong = locationLatLong;
         }
+
+        _timestampOpenFeedbackForm = timestampOpenFeedbackForm;
+        _timestampPressSendButton = timestampPressSendButton;
+        _timestampNotification = timestampNotification;
+        _timestampUserRespondToNotification = timestampUserRespondToNotification;
     }
 
     // Public getters:
@@ -163,6 +179,13 @@ public class ESActivity {
         return map;
     }
 
+    public ESTimestamp get_timestampOpenFeedbackForm() { return _timestampOpenFeedbackForm; }
+
+    public ESTimestamp get_timestampPressSendButton() { return _timestampPressSendButton; }
+
+    public ESTimestamp get_timestampNotification() { return _timestampNotification; }
+
+    public ESTimestamp get_timestampUserRespondToNotification() { return _timestampUserRespondToNotification; }
 
     // Utility public info functions:
     public boolean hasUserProvidedLabels() {return hasUserCorrectedMainLabel(); }
@@ -197,6 +220,10 @@ public class ESActivity {
                 ",predicted label names: {" + _predictedLabelNames + "}" +
                 ",predicted label probs: {" + _predictedLabelProbs + "}" +
                 ",location lat long: (" + _locationLatLong + ")" +
+                ",time opened feedback form: " + _timestampOpenFeedbackForm +
+                ",time press send button: " + _timestampPressSendButton +
+                ",time notification showed: " + _timestampNotification +
+                ",time user respond to notification: " + _timestampUserRespondToNotification +
                 ">";
     }
 
@@ -230,6 +257,11 @@ public class ESActivity {
         this._moods = _moods;
     }
 
+    void set_timestampOpenFeedbackForm(ESTimestamp timestampOpenFeedbackForm) { this._timestampOpenFeedbackForm = timestampOpenFeedbackForm; }
 
+    void set_timestampPressSendButton(ESTimestamp timestampPressSendButton) { this._timestampPressSendButton = timestampPressSendButton; }
 
+    void set_timestampNotification(ESTimestamp timestampNotification) { this._timestampNotification = timestampNotification; }
+
+    void set_timestampUserRespondToNotification(ESTimestamp timestampUserRespondToNotification) { this._timestampUserRespondToNotification = timestampUserRespondToNotification; }
 }

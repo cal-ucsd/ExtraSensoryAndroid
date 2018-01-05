@@ -29,6 +29,7 @@ import edu.ucsd.calab.extrasensory.data.ESActivity;
 import edu.ucsd.calab.extrasensory.data.ESContinuousActivity;
 import edu.ucsd.calab.extrasensory.data.ESDatabaseAccessor;
 import edu.ucsd.calab.extrasensory.data.ESLabelStruct;
+import edu.ucsd.calab.extrasensory.data.ESTimestamp;
 
 import static edu.ucsd.calab.extrasensory.data.ESDatabaseAccessor.getESDatabaseAccessor;
 
@@ -73,6 +74,8 @@ public class FeedbackActivity extends BaseActivity {
     private String _historyValidFor = "";
     private boolean _presentServerGuesses;
 
+    private ESTimestamp _timestampOpenFeedbackForm = null;
+
     /**
      * This parameter type is to be used to transfer parameters to the feedback view,
      * that indicate what kind of feedback to perform and pass relevant data.
@@ -80,22 +83,47 @@ public class FeedbackActivity extends BaseActivity {
     public static final class FeedbackParameters {
         private int _feedbackType;
         private ESContinuousActivity _continuousActivityToEdit;
+        private ESTimestamp _timestampNotification = null;
+        private ESTimestamp _timestampUserRespondToNotification = null;
 
         /**
-         * Default parameters - for doing active feedback
+         * Parameters - for doing active feedback
+         * @param timestampNotification if this is active feedback initiated by notification, the timestamp of notification. Otherwise, null
+         * @param timestampUserRespondToNotification if this is active feedback initiated by notification, the timestamp of user respond to notification. Otherwise, null
          */
-        public FeedbackParameters() {
+        public FeedbackParameters(ESTimestamp timestampNotification, ESTimestamp timestampUserRespondToNotification) {
             _feedbackType = FEEDBACK_TYPE_ACTIVE;
             _continuousActivityToEdit = null;
+            _timestampNotification = timestampNotification;
+            _timestampUserRespondToNotification = timestampUserRespondToNotification;
+        }
+
+        /**
+         * Default feedback parameters: doing active feedback that was initiated by user without notification
+         */
+        public FeedbackParameters() {
+            this(null,null);
         }
 
         /**
          * Parameters for doing feedback to edit the labels of a continuous activity
          * @param continuousActivityToEdit The continuous activity whose labels to edit
+         * @param timestampNotification if this is past-feedback initiated by notification, the timestamp of notification. Otherwise, null
+         * @param timestampUserRespondToNotification if this is past-feedback initiated by notification, the timestamp of user respond to notification. Otherwise, null
          */
-        public FeedbackParameters(ESContinuousActivity continuousActivityToEdit) {
+        public FeedbackParameters(ESContinuousActivity continuousActivityToEdit,ESTimestamp timestampNotification, ESTimestamp timestampUserRespondToNotification) {
             _feedbackType = FEEDBACK_TYPE_HISTORY_CONTINUOUS_ACTIVITY;
             _continuousActivityToEdit = continuousActivityToEdit;
+            _timestampNotification = timestampNotification;
+            _timestampUserRespondToNotification = timestampUserRespondToNotification;
+        }
+
+        /**
+         * Parameters for doing feedback to edit the labels of a continuous activity from the past, initiated by user via the history.
+         * @param continuousActivityToEdit The continuous activity whose labels to edit
+         */
+        public FeedbackParameters(ESContinuousActivity continuousActivityToEdit) {
+            this(continuousActivityToEdit,null,null);
         }
     }
 
@@ -116,6 +144,10 @@ public class FeedbackActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_feedback);
         Log.d(LOG_TAG,"activity being created");
+
+        _timestampOpenFeedbackForm = new ESTimestamp();
+        Log.d(LOG_TAG,"Opened the form at time: " + _timestampOpenFeedbackForm +
+                ". Minute: " + _timestampOpenFeedbackForm.getMinuteOfHour());
 
         // Check if anyone set the transient input parameters:
         if (_transientInputParameters == null) {
@@ -312,6 +344,7 @@ public class FeedbackActivity extends BaseActivity {
 
             @Override
             public void onClick(View arg0) {
+                ESTimestamp timestampPressSendButton = new ESTimestamp();
                 boolean initiatedByNotification = getIntent().hasExtra(KEY_INITIATED_BY_NOTIFICATION);
 
                 //user must enter some labels before submitting active feedback
@@ -345,7 +378,8 @@ public class FeedbackActivity extends BaseActivity {
 
                 if(_parameters._feedbackType == FEEDBACK_TYPE_ACTIVE){
                     Log.d(LOG_TAG,"ACTIVE FEEDBACK");
-                    ((ESApplication)getApplication()).startActiveFeedback(_labelStruct, _validForHowManyMinutes, initiatedByNotification);
+                    ((ESApplication)getApplication()).startActiveFeedback(_labelStruct, _validForHowManyMinutes, initiatedByNotification,
+                            _timestampOpenFeedbackForm, timestampPressSendButton, _parameters._timestampNotification , _parameters._timestampUserRespondToNotification);
                     finish();
                     return;
                 }
@@ -364,7 +398,9 @@ public class FeedbackActivity extends BaseActivity {
                                 labelSource,
                                 _labelStruct._mainActivity,
                                 _labelStruct._secondaryActivities,
-                                _labelStruct._moods);
+                                _labelStruct._moods,
+                                _timestampOpenFeedbackForm,timestampPressSendButton,
+                                _parameters._timestampNotification,_parameters._timestampUserRespondToNotification);
                     }
 
                     finish();

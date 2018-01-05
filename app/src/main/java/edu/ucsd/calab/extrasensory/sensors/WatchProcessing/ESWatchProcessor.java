@@ -21,6 +21,7 @@ import edu.ucsd.calab.extrasensory.ESApplication;
 import edu.ucsd.calab.extrasensory.data.ESActivity;
 import edu.ucsd.calab.extrasensory.data.ESContinuousActivity;
 import edu.ucsd.calab.extrasensory.data.ESDatabaseAccessor;
+import edu.ucsd.calab.extrasensory.data.ESTimestamp;
 
 /**
  * This class handles the interface of ExtraSensory App's Android-phone component (ESP) with the Pebble-watch component (ESW).
@@ -68,6 +69,7 @@ public class ESWatchProcessor {
     private Context getTheApplicationContext() {
         return ESApplication.getTheAppContext();
     }
+    private ESTimestamp _timestampLatestNotification = null;
 
     public void setTheESApplicationReference(ESApplication esApplicationReference) {
         _theApplication = esApplicationReference;
@@ -219,8 +221,9 @@ public class ESWatchProcessor {
     }
 
     /* Send activity question to watch */
-    public void alertUserWithQuestion(String question)//,ESApplication.DataForAlertForPastFeedback dataForAlertForPastFeedback)
+    public void alertUserWithQuestion(String question, ESTimestamp timestampNotification)//,ESApplication.DataForAlertForPastFeedback dataForAlertForPastFeedback)
     {
+        _timestampLatestNotification = timestampNotification;
         Log.i(LOG_TAG, "Nagging user with question: " + question);
         PebbleDictionary data = new PebbleDictionary();
 
@@ -317,6 +320,7 @@ public class ESWatchProcessor {
     }
 
     private void applySameLabelForRecentActivity() {
+        ESTimestamp timestampUserRespondToWatchNotification = new ESTimestamp();
         if (_theApplication == null || _theApplication.get_dataForAlertForPastFeedback() == null) {
             Log.i(LOG_TAG,"We have no data for alert about past activity.");
             return;
@@ -336,7 +340,9 @@ public class ESWatchProcessor {
                     ESActivity.ESLabelSource.ES_LABEL_SOURCE_NOTIFICATION_ANSWER_CORRECT_FROM_WATCH,
                     latestVerified.get_mainActivityUserCorrection(),
                     latestVerified.get_secondaryActivities(),
-                    latestVerified.get_moods()
+                    latestVerified.get_moods(),
+                    null, null,
+                    _timestampLatestNotification,timestampUserRespondToWatchNotification
             );
         }
     }

@@ -32,6 +32,10 @@ final class ESDatabaseContract {
         public static final String COLUMN_NAME_PREDICTED_LABEL_NAMES_CSV = "predicted_label_names";
         public static final String COLUMN_NAME_PREDICTED_LABEL_PROBS_CSV = "predicted_label_probs";
         public static final String COLUMN_NAME_LOCATION_REPRESENTATIVE_LAT_LONG_CSV = "location_rep_lat_long";
+        public static final String COLUMN_NAME_TIMESTAMP_OPEN_FEEDBACK_FORM = "timestamp_open_feedback_form";
+        public static final String COLUMN_NAME_TIMESTAMP_PRESS_SEND_BUTTON = "timestamp_press_send_feedback_button";
+        public static final String COLUMN_NAME_TIMESTAMP_NOTIFICATION = "timestamp_notification";
+        public static final String COLUMN_NAME_TIMESTAMP_USER_RESPOND_TO_NOTIFICATION = "timestamp_user_respond_to_notification";
     }
 
     /**

@@ -208,6 +208,14 @@ def handle_user_labels():
 		fback[ 'moods' ]                    = request.args.get( 'moods' ).upper().split( ',' )
 		fback[ 'label_source' ]             = request.args.get( 'label_source' ).upper();
 
+		# Are there any other properties in the request? Add them to the feedback object:
+		for key in request.args.keys():
+			if key not in fback:
+				fback[key] = request.args.get(key);
+				pass;
+			pass;
+		
+		
 		UUID 	= str(fback['uuid'])
 		UTime 	= str(fback['timestamp'])
 		instance_dir = get_and_create_upload_instance_dir(UUID,UTime);

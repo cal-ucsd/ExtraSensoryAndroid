@@ -71,9 +71,18 @@ public class BaseActivity extends ActionBarActivity {
                 checkRecordingStateAndSetRedLight();
                 return;
             }
+
+            ESTimestamp timestampNotification = null;
+            if (intent.hasExtra(ESApplication.KEY_TIMEINSECONDS_NOTIFICATION)) {
+                int timeOfNotification = intent.getIntExtra(ESApplication.KEY_TIMEINSECONDS_NOTIFICATION,-1);
+                if (timeOfNotification > 0) {
+                    timestampNotification = new ESTimestamp(timeOfNotification);
+                }
+            }
+
             if (ESApplication.ACTION_ALERT_ACTIVE_FEEDBACK.equals(intent.getAction())) {
                 Log.v(LOG_TAG,"Caught 'display alert for active feedback' broadcast");
-                displayAlertForActiveFeedback();
+                displayAlertForActiveFeedback(timestampNotification);
                 return;
             }
             if (ESApplication.ACTION_ALERT_PAST_FEEDBACK.equals(intent.getAction())) {
@@ -131,14 +140,19 @@ public class BaseActivity extends ActionBarActivity {
         }
     }
 
-    private void displayAlertForActiveFeedback() {
+    /**
+     *
+     * @param timestampNotification - the timestamp of the time the notification appeared
+     */
+    private void displayAlertForActiveFeedback(final ESTimestamp timestampNotification) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setIcon(R.drawable.ic_launcher).setMessage(ALERT_TEXT_NO_VERIFIED);
         builder.setPositiveButton(ALERT_BUTTON_TEXT_YES, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
+                ESTimestamp timestampUserRespondToNotification = new ESTimestamp();
                 Intent intent = new Intent(getApplicationContext(),FeedbackActivity.class);
-                FeedbackActivity.setFeedbackParametersBeforeStartingFeedback(new FeedbackActivity.FeedbackParameters());
+                FeedbackActivity.setFeedbackParametersBeforeStartingFeedback(new FeedbackActivity.FeedbackParameters(timestampNotification,timestampUserRespondToNotification));
                 startActivity(intent);
                 dialog.dismiss();
             }
@@ -182,6 +196,7 @@ public class BaseActivity extends ActionBarActivity {
         final ESActivity latestVerifiedActivity = dataForAlertForPastFeedback.get_latestVerifiedActivity();
         String question = dataForAlertForPastFeedback.get_question();
         ESTimestamp toTimestamp = dataForAlertForPastFeedback.get_untilTimestamp();
+        final ESTimestamp timestampNotification = toTimestamp;
         if (latestVerifiedActivity == null) {
             Log.e(LOG_TAG,"Got request for alert, but with null verified activity");
             return;
@@ -193,6 +208,7 @@ public class BaseActivity extends ActionBarActivity {
         builder.setPositiveButton(ALERT_BUTTON_TEXT_CORRECT,new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
+                ESTimestamp timestampUserRespondToNotification = new ESTimestamp();
                 // Update the labels (and send feedback) of all the minutes in the range:
                 for (ESActivity minuteActivity : entireRange.getMinuteActivities()) {
                     ESDatabaseAccessor.getESDatabaseAccessor().setESActivityValues(
@@ -200,7 +216,9 @@ public class BaseActivity extends ActionBarActivity {
                             ESActivity.ESLabelSource.ES_LABEL_SOURCE_NOTIFICATION_ANSWER_CORRECT,
                             latestVerifiedActivity.get_mainActivityUserCorrection(),
                             latestVerifiedActivity.get_secondaryActivities(),
-                            latestVerifiedActivity.get_moods());
+                            latestVerifiedActivity.get_moods(),
+                            null,null,
+                            timestampNotification,timestampUserRespondToNotification);
                 }
                 getTheESApplication().clearDataForAlertForPastFeedback();
                 dialog.dismiss();
@@ -209,9 +227,10 @@ public class BaseActivity extends ActionBarActivity {
         builder.setNeutralButton(ALERT_BUTTON_NOT_EXACTLY,new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
+                ESTimestamp timestampUserRespondToNotification = new ESTimestamp();
                 Intent intent = new Intent(getApplicationContext(),FeedbackActivity.class);
                 intent.putExtra(FeedbackActivity.KEY_INITIATED_BY_NOTIFICATION,true);
-                FeedbackActivity.setFeedbackParametersBeforeStartingFeedback(new FeedbackActivity.FeedbackParameters(entireRange));
+                FeedbackActivity.setFeedbackParametersBeforeStartingFeedback(new FeedbackActivity.FeedbackParameters(entireRange,timestampNotification,timestampUserRespondToNotification));
                 startActivity(intent);
                 getTheESApplication().clearDataForAlertForPastFeedback();
                 dialog.dismiss();
