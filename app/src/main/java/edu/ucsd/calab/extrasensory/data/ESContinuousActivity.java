@@ -32,9 +32,8 @@ public class ESContinuousActivity {
 
     private static final int MAX_TIME_GAP_FOR_MERGING_ACTIVITIES = 370;
 
-    public static int basicTimeUnitMinutes = 1;
     private static int basicTimeUnitSeconds() {
-        return 60*basicTimeUnitMinutes;
+        return 60*ESSettings.historyTimeUnitInMinutes();
     }
 
     private static boolean needGap(int timeGapSeconds) {
@@ -122,16 +121,29 @@ public class ESContinuousActivity {
             return null;
         }
 
+        Map<String,Integer> labelCounts = new HashMap<>(_minuteActivities.length);
+        int maxCount = 0;
+        String winningLabel = null;
         for (ESActivity minuteActivity : _minuteActivities) {
             if (minuteActivity != null) {
                 String pred = minuteActivity.get_mainActivityServerPrediction();
                 if (pred != null) {
-                    return pred;
+                    if (labelCounts.containsKey(pred)) {
+                        labelCounts.put(pred,labelCounts.get(pred) + 1);
+                    }
+                    else {
+                        labelCounts.put(pred,1);
+                    }
+
+                    if (labelCounts.get(pred) > maxCount) {
+                        winningLabel = pred;
+                        maxCount = labelCounts.get(pred);
+                    }
                 }
             }
         }
 
-        return null;
+        return winningLabel;
     }
 
     /**

@@ -42,6 +42,7 @@ public class ESSettings {
     private ArrayList<Integer> _lfSensorTypesToRecord;
     private boolean _savePredictionFiles;
     private boolean _saveUserLabelsFiles;
+    private int _historyTimeUnitInMinutes;
 
     ESSettings(String uuid,int maxStoredExamples,
                boolean useNearPastNotifications,boolean useNearFutureNotifications,int notificationIntervalInSeconds,
@@ -51,7 +52,8 @@ public class ESSettings {
                String classifierType,String classifierName,
                boolean recordAudio,boolean recordLocation,boolean recordWatch,
                ArrayList<Integer> hfSensorTypesToRecord,ArrayList<Integer> lfSensorTypesToRecord,
-               boolean savePredictionFiles,boolean saveUserLabelsFiles) {
+               boolean savePredictionFiles,boolean saveUserLabelsFiles,
+               int historyTimeUnitInMinutes) {
         _uuid = uuid;
         _maxStoredExamples = maxStoredExamples;
         _useNearPastNotifications = useNearPastNotifications;
@@ -70,6 +72,7 @@ public class ESSettings {
         _lfSensorTypesToRecord = lfSensorTypesToRecord != null ? lfSensorTypesToRecord : new ArrayList<Integer>();
         _savePredictionFiles = savePredictionFiles;
         _saveUserLabelsFiles = saveUserLabelsFiles;
+        _historyTimeUnitInMinutes = historyTimeUnitInMinutes;
     }
 
     private static ESSettings _settings = null;
@@ -212,6 +215,11 @@ public class ESSettings {
      */
     public static boolean saveUserLabelsFiles() { return getTheSettings()._saveUserLabelsFiles; }
 
+    /**
+     * What is the basic time unit to present the events in the history
+     * @return basic time unit (in minutes)
+     */
+    public static int historyTimeUnitInMinutes() { return getTheSettings()._historyTimeUnitInMinutes; }
 
     // Setters:
 
@@ -368,6 +376,11 @@ public class ESSettings {
     public static void setSaveUserLabelsFiles(boolean saveUserLabelsFiles) {
         _settings = getTheDBAccessor().setSettingsSaveUserLabelsFiles(saveUserLabelsFiles);
     }
+
+    public static void setHistoryTimeUnitInMinutes(int historyTimeUnitInMinutes) {
+        _settings = getTheDBAccessor().setHistoryTimeUnitInMinutes(historyTimeUnitInMinutes);
+    }
+
 
     private static ESDatabaseAccessor getTheDBAccessor() {
         return ESDatabaseAccessor.getESDatabaseAccessor();

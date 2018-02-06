@@ -33,6 +33,7 @@ import edu.ucsd.calab.extrasensory.data.ESActivity;
 import edu.ucsd.calab.extrasensory.data.ESContinuousActivity;
 import edu.ucsd.calab.extrasensory.data.ESDatabaseAccessor;
 import edu.ucsd.calab.extrasensory.data.ESLabelStrings;
+import edu.ucsd.calab.extrasensory.data.ESSettings;
 import edu.ucsd.calab.extrasensory.data.ESTimestamp;
 
 /**
@@ -136,13 +137,18 @@ public class HistoryFragment extends BaseTabFragment {
         presentHistoryContent();
     }
 
-    private static final String[] TIME_UNIT_LABELS = new String[]{"1 minute","5 minutes","10 minutes"};
-    private static final int[] TIME_UNIT_VALS_MINUTES = new int[]{1,5,10};
+    private static final String[] TIME_UNIT_LABELS = new String[]{"1 minute","5 minutes","10 minutes","15 minutes","20 minutes","30 minutes"};
+    private static final int[] TIME_UNIT_VALS_MINUTES = new int[]{1,5,10,15,20,30};
     private void setTimeUnitSelectorContent() {
+        int latestSelectedTimeUnit = ESSettings.historyTimeUnitInMinutes();
+        int latestSelectedPos = 0;
         Spinner timeUnitSelector = (Spinner)(getView().findViewById(R.id.spinner_time_unit_in_history));
         List<String> timeUnitStrings = new ArrayList(TIME_UNIT_LABELS.length);
-        for (String timeUnitLabel : TIME_UNIT_LABELS) {
-            timeUnitStrings.add(timeUnitLabel);
+        for (int i = 0; i < TIME_UNIT_VALS_MINUTES.length; i ++) {
+            timeUnitStrings.add(TIME_UNIT_LABELS[i]);
+            if (latestSelectedTimeUnit == TIME_UNIT_VALS_MINUTES[i]) {
+                latestSelectedPos = i;
+            }
         }
         ArrayAdapter<String> timeUnitAdapter = new ArrayAdapter<String>(getActivity(),
                 android.R.layout.simple_spinner_item, timeUnitStrings);
@@ -152,7 +158,7 @@ public class HistoryFragment extends BaseTabFragment {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 int timeUnitMinutes = TIME_UNIT_VALS_MINUTES[position];
-                ESContinuousActivity.basicTimeUnitMinutes = timeUnitMinutes;
+                ESSettings.setHistoryTimeUnitInMinutes(timeUnitMinutes);
                 calculateAndPresentDaysHistory();
             }
 
@@ -161,6 +167,8 @@ public class HistoryFragment extends BaseTabFragment {
                 // Do nothing
             }
         });
+
+        timeUnitSelector.setSelection(latestSelectedPos);
     }
 
     private void presentHistoryContent() {

@@ -62,5 +62,6 @@ final class ESDatabaseContract {
         public static final String COLUMN_NAME_LF_SENSOR_TYPES_TO_RECORD_JSON = "lf_sensors_to_record";
         public static final String COLUMN_NAME_SAVE_PREDICTION_FILES = "save_prediction_files";
         public static final String COLUMN_NAME_SAVE_USER_LABELS_FILES = "save_user_labels_files";
+        public static final String COLUMN_NAME_HISTORY_TIME_UNIT_MINUTES = "history_basic_time_unit_in_minutes";
     }
 }

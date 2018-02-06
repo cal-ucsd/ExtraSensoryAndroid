@@ -62,6 +62,7 @@ public class ESDatabaseAccessor {
     private static final boolean RECORD_WATCH_DEFAULT = false;
     private static final boolean SAVE_PREDICTION_FILES_DEFAULT = true;
     private static final boolean SAVE_USER_LABELS_FILES_DEFAULT = false;
+    private static final int HISTORY_TIME_UNIT_MINUTES_DEFAULT = 1;
 
     private static ArrayList<Integer> defaultHFSensorsToRecord() {
         ArrayList<Integer> highFreqSensorTypesToRecordDefault = new ArrayList<>(2);
@@ -153,7 +154,8 @@ public class ESDatabaseAccessor {
                         ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_HF_SENSOR_TYPES_TO_RECORD_JSON + " TEXT," +
                         ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_LF_SENSOR_TYPES_TO_RECORD_JSON + " TEXT," +
                         ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_SAVE_PREDICTION_FILES + " INTEGER," +
-                        ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_SAVE_USER_LABELS_FILES + " INTEGER" +
+                        ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_SAVE_USER_LABELS_FILES + " INTEGER," +
+                        ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_HISTORY_TIME_UNIT_MINUTES + " INTEGER" +
                         ")";
         private static final String SQL_DELETE_ES_SETTINGS_TABLE =
                 "DROP TABLE IF EXISTS " + ESDatabaseContract.ESSettingsEntry.TABLE_NAME;
@@ -240,6 +242,7 @@ public class ESDatabaseAccessor {
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_LF_SENSOR_TYPES_TO_RECORD_JSON,intArrayToJsonStr(defaultLFSensors));
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_SAVE_PREDICTION_FILES,SAVE_PREDICTION_FILES_DEFAULT ? 1 : 0);
         values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_SAVE_USER_LABELS_FILES,SAVE_USER_LABELS_FILES_DEFAULT ? 1 : 0);
+        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_HISTORY_TIME_UNIT_MINUTES,HISTORY_TIME_UNIT_MINUTES_DEFAULT);
 
         db.insert(ESDatabaseContract.ESSettingsEntry.TABLE_NAME,null,values);
         Location bubbleCenter = new Location(LOCATION_BUBBLE_LOCATION_PROVIDER);
@@ -255,7 +258,8 @@ public class ESDatabaseAccessor {
                 CLASSIFIER_TYPE_DEFAULT,CLASSIFIER_NAME_DEFAULT,
                 RECORD_AUDIO_DEFAULT,RECORD_LOCATION_DEFAULT,RECORD_WATCH_DEFAULT,
                 defaultHFSensors,defaultLFSensors,
-                SAVE_PREDICTION_FILES_DEFAULT,SAVE_USER_LABELS_FILES_DEFAULT
+                SAVE_PREDICTION_FILES_DEFAULT,SAVE_USER_LABELS_FILES_DEFAULT,
+                HISTORY_TIME_UNIT_MINUTES_DEFAULT
                 );
 
         _dbHelper.close();
@@ -291,7 +295,8 @@ public class ESDatabaseAccessor {
                 ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_HF_SENSOR_TYPES_TO_RECORD_JSON,
                 ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_LF_SENSOR_TYPES_TO_RECORD_JSON,
                 ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_SAVE_PREDICTION_FILES,
-                ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_SAVE_USER_LABELS_FILES
+                ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_SAVE_USER_LABELS_FILES,
+                ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_HISTORY_TIME_UNIT_MINUTES
         };
 
         Cursor cursor = db.query(ESDatabaseContract.ESSettingsEntry.TABLE_NAME,
@@ -426,6 +431,12 @@ public class ESDatabaseAccessor {
         return updateSettingsAndReturnUpdatedRecord(values);
     }
 
+    synchronized ESSettings setHistoryTimeUnitInMinutes(int historyTimeUnitInMinutes) {
+        ContentValues values = new ContentValues();
+        values.put(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_HISTORY_TIME_UNIT_MINUTES,historyTimeUnitInMinutes);
+        return updateSettingsAndReturnUpdatedRecord(values);
+    }
+
 
 
     private synchronized ESSettings updateSettingsAndReturnUpdatedRecord(ContentValues values) {
@@ -489,6 +500,8 @@ public class ESDatabaseAccessor {
         boolean savePredictionFiles = cursor.getInt(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_SAVE_PREDICTION_FILES)) > 0;
         boolean saveUserLabelsFiles = cursor.getInt(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_SAVE_USER_LABELS_FILES)) > 0;
 
+        int historyTimeUnitInMinutes = cursor.getInt(cursor.getColumnIndexOrThrow(ESDatabaseContract.ESSettingsEntry.COLUMN_NAME_HISTORY_TIME_UNIT_MINUTES));
+
         return new ESSettings(uuid,maxStored,
                 useNearPastNotifications,useNearFutureNotifications,notificationInterval,
                 numExamplesStoreBeforeSend,allowCellular,
@@ -496,7 +509,8 @@ public class ESDatabaseAccessor {
                 classifierType,classifierName,
                 recordAudio,recordLocation,recordWatch,
                 hfSensors,lfSensors,
-                savePredictionFiles,saveUserLabelsFiles);
+                savePredictionFiles,saveUserLabelsFiles,
+                historyTimeUnitInMinutes);
     }
 
 
