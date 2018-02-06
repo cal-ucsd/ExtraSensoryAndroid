@@ -28,7 +28,18 @@ import java.util.Set;
  */
 public class ESContinuousActivity {
 
+    private static final String LOG_TAG = "[ESContinuousActivity]";
+
     private static final int MAX_TIME_GAP_FOR_MERGING_ACTIVITIES = 370;
+
+    public static int basicTimeUnitMinutes = 1;
+    private static int basicTimeUnitSeconds() {
+        return 60*basicTimeUnitMinutes;
+    }
+
+    private static boolean needGap(int timeGapSeconds) {
+        return ((timeGapSeconds > MAX_TIME_GAP_FOR_MERGING_ACTIVITIES) && (timeGapSeconds > basicTimeUnitSeconds()));
+    }
 
     private ESActivity[] _minuteActivities;
     private boolean _isUnrecordedGap;
@@ -377,7 +388,8 @@ public class ESContinuousActivity {
                 // Should we insert a dummy-activity representing a gap?
                 if (addGapDummies) {
                     int timeGap = minuteActivity.get_timestamp().differenceInSeconds(latestActivity.get_timestamp());
-                    if (timeGap > MAX_TIME_GAP_FOR_MERGING_ACTIVITIES) {
+                    //if (timeGap > MAX_TIME_GAP_FOR_MERGING_ACTIVITIES) {
+                    if (needGap(timeGap)) {
                         ESContinuousActivity dummy = new ESContinuousActivity(timeGap);
                         continuousActivities.add(dummy);
                     }
@@ -421,10 +433,93 @@ public class ESContinuousActivity {
         return set;
     }
 
+    private static boolean exactSameUserReportedLabels(ESActivity firstActivity,ESActivity secondActivity) {
+        // Compare main activity:
+        if (firstActivity.hasUserCorrectedMainLabel() && !secondActivity.hasUserCorrectedMainLabel()) {
+            return false;
+        }
+        if (!firstActivity.hasUserCorrectedMainLabel() && secondActivity.hasUserCorrectedMainLabel()) {
+            return false;
+        }
+        String main1 = firstActivity.get_mainActivityUserCorrection();
+        String main2 = secondActivity.get_mainActivityUserCorrection();
+        if (main1 != null) {
+            if (!main1.equals(main2)) {
+                return false;
+            }
+        }
+        else {
+            if (main2 != null) {
+                return false;
+            }
+        }
+        // If reached here, main activity compares fine (although they may be 'dummy label').
+
+        // Compare secondary activities:
+        String[] firstActSecondaries = firstActivity.get_secondaryActivities();
+        if ((firstActSecondaries != null) &&
+                (!areTwoSetsOfLabelsTheSame(firstActSecondaries,secondActivity.get_secondaryActivities()))) {
+            return false;
+        }
+
+        // Compare moods:
+        String[] firstActMoods = firstActivity.get_moods();
+        if ((firstActMoods != null) &&
+                (!areTwoSetsOfLabelsTheSame(firstActMoods,secondActivity.get_moods()))) {
+            return false;
+        }
+
+        // If reached here, main, secondary and mood are the same:
+        return true;
+    }
+
     private static boolean shouldMergeTwoAtomicActivities(ESActivity firstActivity,ESActivity secondActivity) {
         // Compare timestamps:
         int timeGap = secondActivity.get_timestamp().differenceInSeconds(firstActivity.get_timestamp());
-        if (timeGap > MAX_TIME_GAP_FOR_MERGING_ACTIVITIES) {
+        if (needGap(timeGap)) {
+            return false;
+        }
+
+        // If there are user-provided labels for either of the atomic activities, they will overrule other considerations:
+        if (firstActivity.hasAnyUserReportedLabelsNotDummyLabel() && !secondActivity.hasAnyUserReportedLabelsNotDummyLabel()) {
+            return false;
+        }
+        if (!firstActivity.hasAnyUserReportedLabelsNotDummyLabel() && secondActivity.hasAnyUserReportedLabelsNotDummyLabel()) {
+            return false;
+        }
+
+        if (firstActivity.hasAnyUserReportedLabelsNotDummyLabel()) {
+            // Then also secondActivity has user reported labels. We need to check if they are exactly the same:
+            return exactSameUserReportedLabels(firstActivity,secondActivity);
+        }
+
+        // If reached here, both activities have no user-reported labels.
+
+        // If they both belong to the same time-slot, then merge them:
+        int firstTimeSlot = firstActivity.get_timestamp().get_secondsSinceEpoch() / basicTimeUnitSeconds();
+        int secondTimeSlot = secondActivity.get_timestamp().get_secondsSinceEpoch() / basicTimeUnitSeconds();
+        if (firstTimeSlot == secondTimeSlot) {
+            return true;
+        }
+
+        // Otherwise, consider the server-predictions:
+        // for now, use the prediction of "main activity", but future versions should somehow decide how to regard to some activities as "main":
+//        if (firstActivity.get_timestamp().getHourOfDayOutOf24() == 11) {
+//            Log.d(LOG_TAG,"===" + firstActivity.get_timestamp().getMinuteOfHour() + " " + firstActivity.get_mainActivityServerPrediction() + " vs. " + secondActivity.get_timestamp().getMinuteOfHour() + " " + secondActivity.get_mainActivityServerPrediction());
+//        }
+        if (firstActivity.get_mainActivityServerPrediction() == null) {
+            return (secondActivity.get_mainActivityServerPrediction() == null);
+        }
+        else {
+            return (firstActivity.get_mainActivityServerPrediction().equals(secondActivity.get_mainActivityServerPrediction()));
+        }
+    }
+
+    private static boolean shouldMergeTwoAtomicActivitiesOldMechanism(ESActivity firstActivity,ESActivity secondActivity) {
+        // Compare timestamps:
+        int timeGap = secondActivity.get_timestamp().differenceInSeconds(firstActivity.get_timestamp());
+        //if (timeGap > MAX_TIME_GAP_FOR_MERGING_ACTIVITIES) {
+        if (needGap(timeGap)) {
             return false;
         }
 
@@ -462,5 +557,4 @@ public class ESContinuousActivity {
         // If reached here, everything compares fine.
         return true;
     }
-
 }

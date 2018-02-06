@@ -80,5 +80,6 @@
     <string name="checkbox_use_near_future_notifications">To report near-future context</string>
     <string name="save_user_labels_files">Save user-labels files:</string>
     <string name="not_sure_dummy_label">not sure</string>
+    <string name="text_basic_time_unit">Time resolution:</string>
 
 </resources>

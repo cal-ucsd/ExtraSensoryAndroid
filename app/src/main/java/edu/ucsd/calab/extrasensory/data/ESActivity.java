@@ -209,6 +209,7 @@ public class ESActivity {
         return hasUserReportedNondummyMainLabel() || hasUserReportedSecondaryLabels() || hasUserReportedMoodLabels();
     }
 
+
     @Override
     public String toString() {
         return "<timestamp: " + _timestamp +

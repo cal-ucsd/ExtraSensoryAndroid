@@ -23,9 +23,14 @@
             android:text="@string/previous_history"
             style="?android:attr/borderlessButtonStyle" />
 
-        <TextView android:id="@+id/text_history_header_title"
+        <LinearLayout
             android:layout_width="200dip"
-            android:layout_height="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+        <TextView android:id="@+id/text_history_header_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:gravity="center"
             android:layout_alignParentTop="true"
             android:layout_alignParentBottom="true"
@@ -33,6 +38,23 @@
             android:textSize="18dp"
             android:padding="5dp"
             android:text="Date Header Here"/>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/text_basic_time_unit"/>
+            <Spinner
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/spinner_time_unit_in_history"
+                android:textColor="#8800CC"/>
+        </LinearLayout>
+
+        </LinearLayout>
 
         <Button
             android:id="@+id/button_next_day_in_history_header"
