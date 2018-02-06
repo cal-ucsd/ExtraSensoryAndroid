@@ -144,7 +144,7 @@ public class HistoryFragment extends BaseTabFragment {
         for (String timeUnitLabel : TIME_UNIT_LABELS) {
             timeUnitStrings.add(timeUnitLabel);
         }
-        ArrayAdapter<String> timeUnitAdapter = new ArrayAdapter<String>(ESApplication.getTheAppContext(),
+        ArrayAdapter<String> timeUnitAdapter = new ArrayAdapter<String>(getActivity(),
                 android.R.layout.simple_spinner_item, timeUnitStrings);
         timeUnitAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         timeUnitSelector.setAdapter(timeUnitAdapter);
